@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://fo8cxmul5tv8"]
+
+[ext_resource type="Script" path="res://скрипты/скрипт glow.gd" id="1_gds1f"]
+
+[node name="Button" type="Button"]
+offset_right = 8.0
+offset_bottom = 8.0
+pivot_offset = Vector2(4, 4)
+script = ExtResource("1_gds1f")

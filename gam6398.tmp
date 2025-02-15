@@ -1,0 +1,151 @@
+[gd_scene load_steps=5 format=3 uid="uid://76njdkfx4roi"]
+
+[ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_jragl"]
+[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
+[ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://char_select.tscn" id="3_8jq0o"]
+[ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
+
+[node name="Поле" type="Node2D"]
+position = Vector2(-10, -5)
+script = ExtResource("1_jragl")
+
+[node name="GUI" type="CanvasLayer" parent="."]
+
+[node name="host_buttons" type="VBoxContainer" parent="GUI"]
+visible = false
+offset_right = 99.0
+offset_bottom = 66.0
+
+[node name="start" type="Button" parent="GUI/host_buttons"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "start"
+
+[node name="reset" type="Button" parent="GUI/host_buttons"]
+layout_mode = 2
+text = "restart field"
+
+[node name="make_action" type="Button" parent="GUI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -115.0
+offset_right = 115.0
+offset_bottom = 50.0
+grow_horizontal = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 30
+disabled = true
+text = "MAKE ACTIONS"
+
+[node name="actions_buttons" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
+
+[node name="Attack" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "ATTACK"
+
+[node name="Move" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "MOVE"
+
+[node name="Skill" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "SKILL"
+
+[node name="Cancel" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "CANCEL"
+
+[node name="action" type="HBoxContainer" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.111111
+anchor_top = -0.00154321
+anchor_right = 0.375
+anchor_bottom = 0.0632716
+metadata/_edit_use_anchors_ = true
+
+[node name="Label" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "CURRENT ACTIONS:"
+
+[node name="current_actions" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "3"
+
+[node name="End_turn" type="Button" parent="GUI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -161.0
+offset_top = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 30
+text = "END TURN"
+
+[node name="character_selection_container" type="VBoxContainer" parent="GUI"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -223.0
+offset_top = -169.5
+offset_right = 223.0
+offset_bottom = 169.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Current_players_ready" type="Label" parent="GUI/character_selection_container"]
+layout_mode = 2
+text = "Current users ready 0/?"
+horizontal_alignment = 1
+
+[node name="Char_select" parent="GUI/character_selection_container" instance=ExtResource("3_8jq0o")]
+layout_mode = 2
+
+[node name="get_selected_character" type="Button" parent="GUI/character_selection_container"]
+layout_mode = 2
+text = "Confirm"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1746, 983)
+zoom = Vector2(0.33, 0.33)
+script = ExtResource("2_bpvk8")
+
+[node name="players_handler" type="Node2D" parent="."]
+script = ExtResource("4_f845x")
+
+[connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]
+[connection signal="pressed" from="GUI/make_action" to="." method="_on_make_action_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Attack" to="." method="_on_attack_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Move" to="." method="_on_move_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Skill" to="." method="_on_skill_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Cancel" to="." method="_on_cancel_pressed"]
+[connection signal="pressed" from="GUI/End_turn" to="." method="_on_end_turn_pressed"]
+[connection signal="pressed" from="GUI/character_selection_container/get_selected_character" to="players_handler" method="get_selected_servant"]

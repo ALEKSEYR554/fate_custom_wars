@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpwt6601esmp2"]
+
+[ext_resource type="Script" path="res://host_script.gd" id="1_1yc4k"]
+
+[node name="Host_scene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1yc4k")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 278.0
+offset_right = 632.0
+offset_bottom = 355.0
+theme_override_font_sizes/font_size = 50
+text = "HOST"
+
+[node name="SpinBox" type="SpinBox" parent="."]
+layout_mode = 0
+offset_left = 854.0
+offset_top = 154.0
+offset_right = 937.063
+offset_bottom = 185.0
+max_value = 4.0
+
+[node name="Label" type="Label" parent="SpinBox"]
+layout_mode = 0
+offset_left = -3.0
+offset_top = -52.0
+offset_right = 78.0
+offset_bottom = -3.0
+text = "Number
+ of players"
+horizontal_alignment = 1
+
+[node name="game_start_button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 452.0
+offset_top = 394.0
+offset_right = 679.0
+offset_bottom = 481.0
+text = "START"
+
+[node name="nickname" type="LineEdit" parent="."]
+offset_left = 47.0
+offset_top = 494.0
+offset_right = 452.0
+offset_bottom = 614.0
+theme_override_font_sizes/font_size = 50
+text = "Host"
+placeholder_text = "YOU NICKNAME"
+
+[connection signal="button_up" from="Button" to="." method="_on_button_button_up"]
+[connection signal="button_up" from="game_start_button" to="." method="_on_game_start_button_button_up"]

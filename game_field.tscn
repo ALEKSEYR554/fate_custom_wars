@@ -1,0 +1,780 @@
+[gd_scene load_steps=8 format=3 uid="uid://76njdkfx4roi"]
+
+[ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_jragl"]
+[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
+[ext_resource type="Texture2D" uid="uid://bnutk2ndwtnja" path="res://comand_1.png" id="2_tf81c"]
+[ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://dice_control.tscn" id="3_0ils4"]
+[ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://char_select.tscn" id="3_8jq0o"]
+[ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
+[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_u7yvv"]
+
+[node name="game_field" type="Node2D"]
+position = Vector2(-10, -5)
+script = ExtResource("1_jragl")
+
+[node name="GUI" type="CanvasLayer" parent="."]
+
+[node name="host_buttons" type="VBoxContainer" parent="GUI"]
+visible = false
+offset_right = 99.0
+offset_bottom = 66.0
+metadata/_edit_lock_ = true
+
+[node name="start" type="Button" parent="GUI/host_buttons"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "start"
+
+[node name="reset" type="Button" parent="GUI/host_buttons"]
+layout_mode = 2
+text = "restart field"
+
+[node name="command_spells_button" type="TextureButton" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.710938
+anchor_top = 0.00617284
+anchor_right = 0.815972
+anchor_bottom = 0.186728
+texture_normal = ExtResource("2_tf81c")
+ignore_texture_size = true
+stretch_mode = 5
+metadata/_edit_use_anchors_ = true
+
+[node name="command_spell_choices_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -85.0
+offset_top = -50.0
+offset_right = 101.0
+offset_bottom = 51.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="command_spell_heal_button" type="Button" parent="GUI/command_spell_choices_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Heal 70% of max HP"
+
+[node name="command_spell_np_charge_button" type="Button" parent="GUI/command_spell_choices_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Get 6 np charges"
+
+[node name="command_spell_add_moves_button" type="Button" parent="GUI/command_spell_choices_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Get 3 additional moves"
+
+[node name="make_action" type="Button" parent="GUI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -115.0
+offset_right = 115.0
+offset_bottom = 50.0
+grow_horizontal = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 30
+disabled = true
+text = "MAKE ACTIONS"
+metadata/_edit_lock_ = true
+
+[node name="alert_label" type="Label" parent="GUI"]
+visible = false
+offset_left = 332.0
+offset_top = 57.0
+offset_right = 817.0
+offset_bottom = 168.0
+theme_override_font_sizes/font_size = 30
+text = "Placeholder text"
+horizontal_alignment = 1
+
+[node name="actions_buttons" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -89.0
+offset_top = -150.5
+offset_right = 89.0
+offset_bottom = 150.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
+
+[node name="Attack" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "ATTACK"
+
+[node name="Move" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "MOVE"
+
+[node name="Skill" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "SKILL"
+
+[node name="Phantasm" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Phantasm"
+
+[node name="Items" type="Button" parent="GUI/actions_buttons"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "ITEMS"
+
+[node name="Cancel" type="Button" parent="GUI/actions_buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "CANCEL"
+
+[node name="custom_choices_tab_container" type="TabContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -305.0
+offset_top = -197.0
+offset_right = 303.0
+offset_bottom = 113.0
+grow_horizontal = 2
+grow_vertical = 2
+tab_alignment = 1
+
+[node name="use_custom_but_label_container" type="VBoxContainer" parent="GUI"]
+visible = false
+offset_left = 524.0
+offset_top = 471.0
+offset_right = 564.0
+offset_bottom = 511.0
+
+[node name="use_custom_label" type="Label" parent="GUI/use_custom_but_label_container"]
+layout_mode = 2
+text = "Cooldown: 0"
+
+[node name="use_custom_button" type="Button" parent="GUI/use_custom_but_label_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "USE"
+
+[node name="Skill_info_tab_container" type="TabContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -305.0
+offset_top = -197.0
+offset_right = 305.0
+offset_bottom = 115.0
+grow_horizontal = 2
+grow_vertical = 2
+tab_alignment = 1
+
+[node name="First Skill" type="TextEdit" parent="GUI/Skill_info_tab_container"]
+layout_mode = 2
+editable = false
+wrap_mode = 1
+
+[node name="Second Skill" type="TextEdit" parent="GUI/Skill_info_tab_container"]
+visible = false
+layout_mode = 2
+editable = false
+wrap_mode = 1
+
+[node name="Third Skill" type="TextEdit" parent="GUI/Skill_info_tab_container"]
+visible = false
+layout_mode = 2
+editable = false
+wrap_mode = 1
+
+[node name="Class Skills" type="TabContainer" parent="GUI/Skill_info_tab_container"]
+visible = false
+layout_mode = 2
+tab_alignment = 1
+
+[node name="use_skill_but_label_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.424479
+anchor_top = 0.739198
+anchor_right = 0.569444
+anchor_bottom = 0.884259
+offset_top = -1.0
+offset_bottom = -1.0
+metadata/_edit_use_anchors_ = true
+
+[node name="current_skill_cooldown_label" type="Label" parent="GUI/use_skill_but_label_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "Cooldown: 1"
+horizontal_alignment = 1
+
+[node name="Use_skill_button" type="Button" parent="GUI/use_skill_but_label_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+disabled = true
+text = "USE SKILL"
+
+[node name="action" type="HBoxContainer" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.111111
+anchor_top = -0.00154321
+anchor_right = 0.375
+anchor_bottom = 0.0632716
+metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
+
+[node name="Label" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "ACTIONS:"
+
+[node name="current_actions" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "3"
+
+[node name="Label2" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = " NP:"
+
+[node name="np_points_number_label" type="Label" parent="GUI/action"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "0"
+
+[node name="current_hp_container" type="HBoxContainer" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.616
+anchor_top = -0.00154321
+anchor_right = 0.625
+anchor_bottom = 0.0632716
+metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
+
+[node name="Label" type="Label" parent="GUI/current_hp_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "HP:"
+
+[node name="current_hp_value_label" type="Label" parent="GUI/current_hp_container"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "3"
+
+[node name="right_ange_buttons_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -161.0
+offset_top = -101.0
+grow_horizontal = 0
+grow_vertical = 0
+metadata/_edit_lock_ = true
+
+[node name="self_info_show_button" type="Button" parent="GUI/right_ange_buttons_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 31
+text = "Self info"
+
+[node name="Skill_info_show_button" type="Button" parent="GUI/right_ange_buttons_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 33
+text = "Skills info"
+
+[node name="dices_toggle_button" type="Button" parent="GUI/right_ange_buttons_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 31
+text = "Dices"
+
+[node name="End_turn" type="Button" parent="GUI/right_ange_buttons_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "END TURN"
+metadata/_edit_lock_ = true
+
+[node name="character_selection_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -223.0
+offset_top = -169.5
+offset_right = 223.0
+offset_bottom = 169.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+metadata/_edit_lock_ = true
+
+[node name="Current_players_ready" type="Label" parent="GUI/character_selection_container"]
+layout_mode = 2
+text = "Current users ready 0/?"
+horizontal_alignment = 1
+
+[node name="Char_select" parent="GUI/character_selection_container" instance=ExtResource("3_8jq0o")]
+layout_mode = 2
+
+[node name="get_selected_character" type="Button" parent="GUI/character_selection_container"]
+layout_mode = 2
+text = "Confirm"
+
+[node name="players_info_buttons_container" type="VBoxContainer" parent="GUI"]
+offset_left = 1.0
+offset_top = 96.0
+offset_right = 68.0
+offset_bottom = 336.0
+metadata/_edit_lock_ = true
+
+[node name="Label" type="Label" parent="GUI/players_info_buttons_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "Players"
+
+[node name="type_of_damage_choose_buttons_box" type="HBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_lock_ = true
+
+[node name="regular_damage_button" type="Button" parent="GUI/type_of_damage_choose_buttons_box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 31
+text = "Regular"
+
+[node name="magical_damage_button" type="Button" parent="GUI/type_of_damage_choose_buttons_box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 31
+text = "Magical"
+
+[node name="Current_roll_container" type="PanelContainer" parent="GUI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -104.0
+offset_right = 98.0
+grow_vertical = 0
+metadata/_edit_lock_ = true
+
+[node name="Current_roll_marg_conta" type="MarginContainer" parent="GUI/Current_roll_container"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="Current_roll_vbox" type="VBoxContainer" parent="GUI/Current_roll_container/Current_roll_marg_conta"]
+layout_mode = 2
+alignment = 2
+
+[node name="Main_label_dont_touch" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
+layout_mode = 2
+text = "Yours last:"
+
+[node name="Attack_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
+layout_mode = 2
+text = "Attack roll:"
+
+[node name="Crit_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
+layout_mode = 2
+text = "Crit roll:"
+
+[node name="Defence_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
+layout_mode = 2
+text = "Defence roll:"
+
+[node name="ChatLog_container" type="VBoxContainer" parent="GUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+theme_override_constants/separation = 1
+metadata/_edit_lock_ = true
+
+[node name="ChatLog_main" type="TextEdit" parent="GUI/ChatLog_container"]
+custom_minimum_size = Vector2(200, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+editable = false
+wrap_mode = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/ChatLog_container"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Chat_send_button" type="Button" parent="GUI/ChatLog_container/HBoxContainer"]
+layout_mode = 2
+disabled = true
+text = "SEND"
+
+[node name="Message_LineEdit" type="LineEdit" parent="GUI/ChatLog_container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Message"
+
+[node name="Chat_hide_show_button" type="Button" parent="GUI"]
+modulate = Color(1, 1, 1, 0.470588)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -17.0
+offset_bottom = 26.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 13
+text = "X"
+flat = true
+metadata/_edit_lock_ = true
+
+[node name="You_were_attacked_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_lock_ = true
+
+[node name="You_were_attacked_label" type="Label" parent="GUI/You_were_attacked_container"]
+layout_mode = 2
+text = "You were attacked with this dice rolls:
+Attack: 3 Crit: 2
+What do you do?"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/You_were_attacked_container"]
+layout_mode = 2
+
+[node name="Evade_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Evade"
+
+[node name="Defence_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Defence"
+
+[node name="Parry_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Parry"
+
+[node name="Phantasm_evation_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Phantasm"
+
+[node name="are_you_sure_main_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_lock_ = true
+
+[node name="are_you_sure_label" type="Label" parent="GUI/are_you_sure_main_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Are you sure you want to:
+"
+horizontal_alignment = 1
+
+[node name="are_you_sure_buttons_container" type="HBoxContainer" parent="GUI/are_you_sure_main_container"]
+layout_mode = 2
+
+[node name="im_sure_button" type="Button" parent="GUI/are_you_sure_main_container/are_you_sure_buttons_container"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "Yes, I'm sure"
+
+[node name="im_not_sure_button" type="Button" parent="GUI/are_you_sure_main_container/are_you_sure_buttons_container"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "No, take me back"
+
+[node name="roll_dice_control_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -117.5
+offset_top = -52.0
+offset_right = 117.5
+offset_bottom = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_lock_ = true
+
+[node name="roll_dice_optional_label" type="Label" parent="GUI/roll_dice_control_container"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Enemy parried, reroll"
+
+[node name="roll_dices_button" type="Button" parent="GUI/roll_dice_control_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "Roll dices"
+
+[node name="dice_holder_hbox" type="HBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -149.5
+offset_top = 56.0
+offset_right = 149.5
+offset_bottom = 114.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="main_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="crit_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="defence_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+layout_mode = 2
+
+[node name="Servant_info_main_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -249.5
+offset_top = -209.0
+offset_right = 249.5
+offset_bottom = 209.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="servant_info_picture_and_stats_container" type="HBoxContainer" parent="GUI/Servant_info_main_container"]
+layout_mode = 2
+
+[node name="servant_info_picture" type="TextureRect" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+texture = ExtResource("5_u7yvv")
+expand_mode = 2
+
+[node name="servant_info_stats_textedit" type="TextEdit" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Name:aa
+HP
+Class
+Ideology
+Agility
+Endurance
+Luck
+Magic
+"
+editable = false
+
+[node name="servant_info_skills_textedit" type="TextEdit" parent="GUI/Servant_info_main_container"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+text = "Skills:"
+editable = false
+
+[node name="Button" type="Button" parent="GUI"]
+offset_left = 128.0
+offset_top = 545.0
+offset_right = 264.0
+offset_bottom = 644.0
+text = "FREE PHANTASM
+CLICK HERE"
+
+[node name="buffs_temp_container" type="VBoxContainer" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.940104
+anchor_top = 0.263889
+anchor_right = 0.999132
+anchor_bottom = 0.353395
+offset_bottom = -1.52588e-05
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="refresh_buffs_button" type="Button" parent="GUI/buffs_temp_container"]
+layout_mode = 2
+text = "Refresh"
+
+[node name="buffs_label" type="Label" parent="GUI/buffs_temp_container"]
+layout_mode = 2
+text = "Buffs:"
+
+[node name="turns_label" type="Label" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.872396
+anchor_top = 0.603395
+anchor_right = 0.991319
+anchor_bottom = 0.652778
+theme_override_font_sizes/font_size = 19
+text = "Turn: "
+metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
+
+[node name="info_label_panel" type="Panel" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.253472
+anchor_top = 0.158951
+anchor_right = 0.715278
+anchor_bottom = 0.450617
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="info_label" type="Label" parent="GUI/info_label_panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 30
+text = "Placeholder info table"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="info_ok_button" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.460938
+anchor_top = 0.50463
+anchor_right = 0.517361
+anchor_bottom = 0.601852
+offset_bottom = -3.05176e-05
+theme_override_font_sizes/font_size = 40
+text = "OK"
+metadata/_edit_use_anchors_ = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1746, 983)
+zoom = Vector2(0.33, 0.33)
+script = ExtResource("2_bpvk8")
+
+[node name="players_handler" type="Node2D" parent="."]
+script = ExtResource("4_f845x")
+
+[connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]
+[connection signal="pressed" from="GUI/command_spells_button" to="." method="_on_command_spells_button_pressed"]
+[connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_heal_button" to="." method="_on_command_spell_heal_button_pressed"]
+[connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_np_charge_button" to="." method="_on_command_spell_np_charge_button_pressed"]
+[connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_add_moves_button" to="." method="_on_command_spell_add_moves_button_pressed"]
+[connection signal="pressed" from="GUI/make_action" to="." method="_on_make_action_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Attack" to="." method="_on_attack_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Move" to="." method="_on_move_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Skill" to="." method="_on_skill_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Phantasm" to="players_handler" method="_on_phantasm_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Items" to="players_handler" method="_on_items_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Cancel" to="." method="_on_cancel_pressed"]
+[connection signal="tab_changed" from="GUI/custom_choices_tab_container" to="players_handler" method="_on_custom_choices_tab_container_tab_changed"]
+[connection signal="pressed" from="GUI/use_custom_but_label_container/use_custom_button" to="players_handler" method="_on_use_custom_button_pressed"]
+[connection signal="tab_changed" from="GUI/Skill_info_tab_container" to="." method="_on_skill_info_tab_container_tab_changed"]
+[connection signal="tab_changed" from="GUI/Skill_info_tab_container/Class Skills" to="." method="_on_class_skill_tab_changed"]
+[connection signal="pressed" from="GUI/use_skill_but_label_container/Use_skill_button" to="players_handler" method="_on_use_skill_button_pressed"]
+[connection signal="pressed" from="GUI/right_ange_buttons_container/self_info_show_button" to="." method="_on_self_info_show_button_pressed"]
+[connection signal="pressed" from="GUI/right_ange_buttons_container/Skill_info_show_button" to="." method="_on_skill_info_show_button_pressed"]
+[connection signal="pressed" from="GUI/right_ange_buttons_container/dices_toggle_button" to="." method="_on_dices_toggle_button_pressed"]
+[connection signal="pressed" from="GUI/right_ange_buttons_container/End_turn" to="." method="_on_end_turn_pressed"]
+[connection signal="pressed" from="GUI/character_selection_container/get_selected_character" to="players_handler" method="get_selected_servant"]
+[connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/regular_damage_button" to="." method="_on_regular_damage_button_pressed"]
+[connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/magical_damage_button" to="." method="_on_magical_damage_button_pressed"]
+[connection signal="mouse_entered" from="GUI/ChatLog_container" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/ChatLog_container" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="mouse_entered" from="GUI/ChatLog_container/ChatLog_main" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/ChatLog_container/ChatLog_main" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="pressed" from="GUI/ChatLog_container/HBoxContainer/Chat_send_button" to="." method="_on_chat_send_button_pressed"]
+[connection signal="pressed" from="GUI/Chat_hide_show_button" to="." method="_on_chat_hide_show_button_pressed"]
+[connection signal="pressed" from="GUI/You_were_attacked_container/HBoxContainer/Evade_button" to="." method="_on_evade_button_pressed"]
+[connection signal="pressed" from="GUI/You_were_attacked_container/HBoxContainer/Defence_button" to="." method="_on_defence_button_pressed"]
+[connection signal="pressed" from="GUI/You_were_attacked_container/HBoxContainer/Parry_button" to="." method="_on_parry_button_pressed"]
+[connection signal="pressed" from="GUI/You_were_attacked_container/HBoxContainer/Phantasm_evation_button" to="." method="_on_phantasm_evation_button_pressed"]
+[connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_sure_button" to="." method="_on_im_sure_button_pressed"]
+[connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_not_sure_button" to="." method="_on_im_not_sure_button_pressed"]
+[connection signal="pressed" from="GUI/roll_dice_control_container/roll_dices_button" to="." method="_roll_dices_button_pressed"]
+[connection signal="mouse_entered" from="GUI/Servant_info_main_container" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/Servant_info_main_container" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_entered_gui_element"]
+[connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="pressed" from="GUI/Button" to="players_handler" method="_on_free_phantasm_pressed"]
+[connection signal="pressed" from="GUI/buffs_temp_container/refresh_buffs_button" to="." method="_on_refresh_buffs_button_pressed"]
+[connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]

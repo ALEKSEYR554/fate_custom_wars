@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://cgsfmntkgxx1r"]
+
+[ext_resource type="Script" path="res://скрипты/test.gd" id="1_3a6d2"]
+[ext_resource type="PackedScene" uid="uid://dx87jt83y8o7n" path="res://клетка.tscn" id="2_uwgvj"]
+
+[node name="Node" type="Node"]
+script = ExtResource("1_3a6d2")
+
+[node name="основная камера" type="Camera2D" parent="."]
+position = Vector2(573, 322)
+
+[node name="клетка" parent="." instance=ExtResource("2_uwgvj")]
+visible = false
+position = Vector2(266, 135)

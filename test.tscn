@@ -1,0 +1,141 @@
+[gd_scene load_steps=5 format=3 uid="uid://76njdkfx4roi"]
+
+[ext_resource type="Script" path="res://скрипты/test.gd" id="1_jinan"]
+[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_1e068"]
+[ext_resource type="Texture2D" uid="uid://c4aostfoor2a6" path="res://icon.svg" id="3_k1sna"]
+[ext_resource type="Script" path="res://players_handler.gd" id="4_qc82w"]
+
+[node name="Поле" type="Node2D"]
+position = Vector2(-10, -5)
+script = ExtResource("1_jinan")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1746, 983)
+zoom = Vector2(0.33, 0.33)
+script = ExtResource("2_1e068")
+
+[node name="GUI" type="Control" parent="Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -1736.0
+offset_top = -978.0
+offset_right = 1732.0
+offset_bottom = 969.0
+
+[node name="start" type="Button" parent="Camera2D/GUI"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 185.0
+offset_bottom = 144.0
+size_flags_vertical = 0
+text = "start"
+icon = ExtResource("3_k1sna")
+
+[node name="reset" type="Button" parent="Camera2D/GUI"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 164.0
+offset_right = 231.0
+offset_bottom = 387.0
+icon = ExtResource("3_k1sna")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Attack" type="Button" parent="Camera2D/GUI"]
+visible = false
+layout_mode = 0
+offset_left = 1308.0
+offset_top = 696.0
+offset_right = 2183.0
+offset_bottom = 873.0
+theme_override_font_sizes/font_size = 123
+text = "ATTACK"
+
+[node name="Move" type="Button" parent="Camera2D/GUI"]
+visible = false
+layout_mode = 0
+offset_left = 1311.0
+offset_top = 498.0
+offset_right = 2186.0
+offset_bottom = 675.0
+theme_override_font_sizes/font_size = 123
+text = "MOVE"
+
+[node name="Cancel" type="Button" parent="Camera2D/GUI"]
+visible = false
+layout_mode = 0
+offset_left = 1313.0
+offset_top = 1267.0
+offset_right = 2188.0
+offset_bottom = 1444.0
+theme_override_font_sizes/font_size = 123
+text = "CANCEL"
+
+[node name="Skill" type="Button" parent="Camera2D/GUI"]
+visible = false
+layout_mode = 0
+offset_left = 1310.0
+offset_top = 910.0
+offset_right = 2185.0
+offset_bottom = 1087.0
+theme_override_font_sizes/font_size = 123
+text = "SKILL"
+
+[node name="Label" type="Label" parent="Camera2D/GUI"]
+layout_mode = 0
+offset_left = 275.0
+offset_top = 11.0
+offset_right = 838.0
+offset_bottom = 94.0
+theme_override_font_sizes/font_size = 60
+text = "CURRENT ACTIONS:"
+
+[node name="current_actions" type="Label" parent="Camera2D/GUI"]
+layout_mode = 0
+offset_left = 844.0
+offset_top = 11.0
+offset_right = 878.0
+offset_bottom = 94.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "3"
+
+[node name="make_action" type="Button" parent="Camera2D/GUI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -223.5
+offset_right = 223.5
+offset_bottom = 91.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 60
+disabled = true
+text = "MAKE ACTIONS"
+
+[node name="End_turn" type="Button" parent="Camera2D/GUI"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -323.0
+offset_top = -91.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 60
+text = "END TURN"
+
+[node name="players_handler" type="Node2D" parent="."]
+script = ExtResource("4_qc82w")
+
+[connection signal="pressed" from="Camera2D/GUI/start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/reset" to="." method="_on_reset_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/Attack" to="." method="_on_attack_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/Move" to="." method="_on_move_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/Cancel" to="." method="_on_cancel_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/Skill" to="." method="_on_skill_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/make_action" to="." method="_on_make_action_pressed"]
+[connection signal="pressed" from="Camera2D/GUI/End_turn" to="." method="_on_end_turn_pressed"]
