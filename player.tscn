@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://df72537s1nd5h"]
+
+[ext_resource type="Script" path="res://скрипты/player.gd" id="1_5tcre"]
+[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="2_2icsf"]
+
+[node name="angra" type="Node2D"]
+script = ExtResource("1_5tcre")
+
+[node name="Jopa" type="Sprite2D" parent="."]
+position = Vector2(0, -74)
+scale = Vector2(0.191081, 0.191081)
+texture = ExtResource("2_2icsf")
+
+[node name="Button" type="Button" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0)
+offset_left = -65.0
+offset_top = -136.0
+offset_right = 69.0
+offset_bottom = -4.0
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

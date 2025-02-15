@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwp4u07m523wm"]
+
+[ext_resource type="Script" path="res://connect_scene.gd" id="1_df7gr"]
+
+[node name="Connect_scene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_df7gr")
+
+[node name="IP" type="LineEdit" parent="."]
+layout_mode = 0
+offset_left = 152.0
+offset_top = 116.0
+offset_right = 644.0
+offset_bottom = 221.0
+theme_override_font_sizes/font_size = 70
+text = "127.0.0.1"
+placeholder_text = "IP"
+virtual_keyboard_type = 2
+
+[node name="connect" type="Button" parent="."]
+layout_mode = 0
+offset_left = 416.0
+offset_top = 251.0
+offset_right = 805.0
+offset_bottom = 427.0
+theme_override_font_sizes/font_size = 80
+text = "CONNECT"
+
+[node name="Port" type="LineEdit" parent="."]
+layout_mode = 0
+offset_left = 662.0
+offset_top = 121.0
+offset_right = 1038.0
+offset_bottom = 225.0
+theme_override_font_sizes/font_size = 70
+text = "9999"
+placeholder_text = "PORT"
+
+[node name="nickname" type="LineEdit" parent="."]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 494.0
+offset_right = 452.0
+offset_bottom = 614.0
+theme_override_font_sizes/font_size = 50
+text = "Nick"
+placeholder_text = "YOU NICKNAME"
+
+[connection signal="button_up" from="connect" to="." method="_on_connect_button_up"]

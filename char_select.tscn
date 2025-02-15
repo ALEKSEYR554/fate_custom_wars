@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=3 uid="uid://ct6q5ory650sj"]
+
+[ext_resource type="Script" path="res://servant_selection.gd" id="1_clfld"]
+[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="2_buxd3"]
+
+[node name="Char_select" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -3.0
+offset_right = 532.0
+offset_bottom = 370.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_clfld")
+
+[node name="_HBoxContainer_3" type="HBoxContainer" parent="."]
+layout_mode = 1
+offset_right = 444.0
+offset_bottom = 304.0
+size_flags_horizontal = 0
+
+[node name="_Button_4" type="Button" parent="_HBoxContainer_3"]
+layout_mode = 2
+text = "<"
+
+[node name="_VBoxContainer_5" type="VBoxContainer" parent="_HBoxContainer_3"]
+layout_mode = 2
+
+[node name="_TextureRect_6" type="TextureRect" parent="_HBoxContainer_3/_VBoxContainer_5"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+texture = ExtResource("2_buxd3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="_Label_7" type="Label" parent="_HBoxContainer_3/_VBoxContainer_5"]
+custom_minimum_size = Vector2(400, 100)
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="_Button_8" type="Button" parent="_HBoxContainer_3"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = ">"
+
+[connection signal="pressed" from="_HBoxContainer_3/_Button_4" to="." method="_on_left_button_pressed"]
+[connection signal="pressed" from="_HBoxContainer_3/_Button_8" to="." method="_on_right_button_pressed"]
