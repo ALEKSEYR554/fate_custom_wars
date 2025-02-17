@@ -787,7 +787,7 @@ func trigger_buffs_on(peer_id,trigger):
 		var cu_klet_config=field.kletka_preference[field.current_kletka]
 		#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
 		#print("type="+str(typeof(cu_klet_config)))
-		if typeof(cu_klet_config)==4:
+		if typeof(cu_klet_config)==4:#if string
 			return
 		
 		
@@ -952,9 +952,20 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 	var attacker_damage
 	var self_defence=0
 	var buffs_to_ignore=[]
+	var is_field_ignore_magic_defence=false
+	
+
 	
 	if damage_type=="Magical":
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].magic["Power"]
+		
+		var cur_kletka_conf=field.kletka_preference[field.current_kletka]
+		if typeof(cur_kletka_conf)==4:
+			is_field_ignore_magic_defence=false
+		else:
+			if cur_kletka_conf["Owner"]==attacker_peer_id and cur_kletka_conf["Ignore Magical Defence"]:
+				is_field_ignore_magic_defence=true
+		
 	else:
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].attack_power
 	
@@ -989,6 +1000,9 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 				damage_to_take*=skill["Power"]
 		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
 	
+	if enemies_dice_results["crit_dice"]==enemies_dice_results["main_dice"]:
+		damage_to_take*=2
+		print("CRITTTT"+ str(" damage_to_take=",damage_to_take))
 	
 	#calculating self defence
 	print("calculating self defence")
@@ -1019,16 +1033,20 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
 	
 	
-	
-	if damage_type=="Magical":
-		damage_to_take-=Globals.self_servant_node.magic["resistance"]
-		print(str("magical resistange=",Globals.self_servant_node.magic["resistance"]," damage_to_take=",damage_to_take))
-		if peer_id_player_info[attacker_peer_id]["servant_node"].servant_class=="Saber":
-			damage_to_take=floor(damage_to_take/2)
-			print(str("Saber resistance", "damage_to_take=",damage_to_take))
 	if special=="Halfed Damage":
 		damage_to_take=floor(damage_to_take/2)
 		print("Halfed Damage   damage_to_take="+str(damage_to_take))
+	
+	if damage_type=="Magical":
+		if not is_field_ignore_magic_defence:
+			damage_to_take-=Globals.self_servant_node.magic["resistance"]
+			print(str("magical resistange=",Globals.self_servant_node.magic["resistance"]," damage_to_take=",damage_to_take))
+		else:
+			print("field is ignoring magical defence")
+		if peer_id_player_info[attacker_peer_id]["servant_node"].servant_class=="Saber":
+			damage_to_take=floor(damage_to_take/2)
+			print(str("Saber resistance", "damage_to_take=",damage_to_take))
+
 	elif special=="Defence":
 		var ignore=false
 		for skill_to_ignore in buffs_to_ignore:
@@ -1039,9 +1057,6 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 		else:
 			damage_to_take-=field.dice_roll_result_list["defence_dice"]
 			print(str("defending=",field.dice_roll_result_list["defence_dice"]," damage_to_take=",damage_to_take))
-	
-	
-	
 	if damage_to_take<=1:
 		damage_to_take=1
 		
@@ -1052,7 +1067,6 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 	print(str("damage_to_take=",damage_to_take," type=",damage_type,"\n\n"))
 	
 	return damage_to_take
-	
 
 @rpc("any_peer","reliable","call_local")
 func take_damage_to_peer_id(peer_id,damage_amount):
@@ -1063,10 +1077,31 @@ func take_damage_to_peer_id(peer_id,damage_amount):
 	if peer_id==Globals.self_peer_id:
 		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
 	print(str(peer_id_to_nickname[peer_id]," HP is ",new_hp," now"))
+	
 	if new_hp<=0:
+		trigger_death_to_peer_id(peer_id)
+
+
+func trigger_death_to_peer_id(peer_id):
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Guts":
+				update_hp_on_peer_id(peer_id,skill["Power"])
+				return
+	
+	if peer_id_to_command_spells_int[peer_id]>=3:
+		var max_hp=peer_id_player_info[peer_id]["servant_node"].default_stats["hp"]
+		update_hp_on_peer_id(peer_id,max_hp)
+		reduce_command_spell_on_peer_id(peer_id)
+		reduce_command_spell_on_peer_id(peer_id)
+		reduce_command_spell_on_peer_id(peer_id)
+	else:
 		for i in range(9):
-			peer_id_player_info[peer_id]["servant_node"].rotation+=10
+			peer_id_player_info[peer_id]["servant_node"].rotation_degrees+=10
+			await get_tree().create_timer(0.1).timeout
 			turns_order_by_peer_id.erase(peer_id)
+	
+
 
 @rpc("any_peer","reliable","call_local")
 func update_hp_on_peer_id(peer_id,hp_to_set):
