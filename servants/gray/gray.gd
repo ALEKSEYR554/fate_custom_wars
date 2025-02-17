@@ -152,21 +152,26 @@ var skills={
 	"weapons":{#first is base weapon
 		"Scythe":{
 			"Description":"(Стандарное) радиус 1 стандарт урон, магическая защита - 6, при получении магического урона увеличивает себе силу на 1 до конца следующего хода",
-			"is_one_hit_per_turn":false,"Damage":4,"range":1,"buff":
-				{"Name":"Magical Damage Get + attack",
+			"Is One Hit Per Turn":false,"Damage":4,"Range":1,"Buff":
+				{"Name":"Magical Damage Get + Attack",
+				"Trigger": "Magical Damage Taken",
+				"Effect On Trigger":
+					{"Name":"ATK Up",
+						"Duration":2,
+						"Power":1},
 				"Duration":"Passive",
 				"Power":1},
 		},
 		"Hammer":{
 			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
-			"is_one_hit_per_turn":true,"Damage":6,"range":1,"buff":
+			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":
 				{"Name":"ignore def and def buffs",
 				"Duration":"Passive",
 				"Power":1}
 		},
 		"Boomerang":{
 			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
-			"is_one_hit_per_turn":false,"Damage":0,"range":5,"buff":
+			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
 				{"Name":"pull enemies on attack",
 				"Duration":"Passive",
 				"Trigger":"success attack",
@@ -174,11 +179,11 @@ var skills={
 		},
 		"Bow":{
 			"Description":"Радиус 3, урон 2",
-			"is_one_hit_per_turn":false,"Damage":2,"range":2
+			"Is One Hit Per Turn":false,"Damage":2,"range":2
 		},
 		"Alebard":{
 			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
-			"is_one_hit_per_turn":false,"Damage":3,"range":2
+			"Is One Hit Per Turn":false,"Damage":3,"range":2
 		}
 	}
 }

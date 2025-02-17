@@ -508,6 +508,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 	match current_action:
 		"initial_spawn":
 			current_action="wait"
+			players_handler.set_random_command_spell_set()
 			make_action_button.visible=true
 			#if Globals.host_or_user!="host":
 				#Globals.self_servant_node=instance_from_id(Globals.self_servant_node.object_id)
