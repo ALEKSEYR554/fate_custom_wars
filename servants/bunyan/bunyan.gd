@@ -2,7 +2,7 @@ extends Node2D
 #Bynyan
 @onready var players_handler = self.get_parent()
 const default_stats={
-"hp":30,
+"hp":1,
 "servant_class":"Berserker",
 "ideology":["Balanced","Neutral"],
 "attack_range":1,

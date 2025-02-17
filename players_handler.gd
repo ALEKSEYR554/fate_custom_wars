@@ -46,6 +46,7 @@ var peer_id_to_np_points={}
 var peer_id_to_inventory_array={}
 var player_info_button_current_peed_id=-1
 
+var self_command_spell_type=""
 var servant_name_to_peer_id={}
 @onready var host_buttons = $"../GUI/host_buttons"
 @onready var get_selected_character_button = $"../GUI/character_selection_container/get_selected_character"
@@ -233,6 +234,7 @@ func turns_loop():
 	while true:
 		turns_counter+=1
 		for peer_id in turns_order_by_peer_id:
+			print("\n\nNow "+str(peer_id)+" turn\n\n")
 			current_player_peer_id_turn=peer_id
 			field.rpc_id(peer_id,"start_turn")
 			await next_turn_pass
@@ -748,17 +750,20 @@ func trigger_buffs_on(peer_id,trigger):
 	for buff in buffs:
 		if buff.has("Trigger"):
 			if buff["Trigger"]==trigger:
-				match buff["Effect On Trigger"]:
-					"owner takes damage by power":
-						rpc("take_damage_to_peer_id",peer_id,buff["Power"])
-					"pull enemies on attack":
-						field.pull_enemy(field.attacking_peer_id)
-						
-		match buff["Name"]:
-			"Invincibility":
-				if buff.has("hit times"):
-					rpc("reduce_custom_param",peer_id,i,"hit times")
-					return
+				if typeof(buff["Effect On Trigger"])==4:
+					match buff["Effect On Trigger"]:
+						"owner takes damage by power":
+							rpc("take_damage_to_peer_id",peer_id,buff["Power"])
+						"pull enemies on attack":
+							field.pull_enemy(field.attacking_peer_id)
+				else:
+					use_skill(buff["Effect On Trigger"])
+		if trigger=="Damage Taken":
+			match buff["Name"]:
+				"Invincibility":
+					if buff.has("hit times"):
+						rpc("reduce_custom_param",peer_id,i,"hit times")
+						return
 		
 		i+=1
 
@@ -1079,6 +1084,7 @@ func take_damage_to_peer_id(peer_id,damage_amount):
 	print(str(peer_id_to_nickname[peer_id]," HP is ",new_hp," now"))
 	
 	if new_hp<=0:
+		print("death")
 		trigger_death_to_peer_id(peer_id)
 
 
@@ -1091,7 +1097,7 @@ func trigger_death_to_peer_id(peer_id):
 	
 	if peer_id_to_command_spells_int[peer_id]>=3:
 		var max_hp=peer_id_player_info[peer_id]["servant_node"].default_stats["hp"]
-		update_hp_on_peer_id(peer_id,max_hp)
+		rpc("update_hp_on_peer_id",peer_id,max_hp)
 		reduce_command_spell_on_peer_id(peer_id)
 		reduce_command_spell_on_peer_id(peer_id)
 		reduce_command_spell_on_peer_id(peer_id)
@@ -1205,7 +1211,7 @@ func change_weapon(weapon_name_to_change_to,class_skill_number):
 	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_range",weapons_array[weapon_name_to_change_to]["range"])
 	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
 	
-	if weapons_array[weapon_name_to_change_to]["is_one_hit_per_turn"]:
+	if weapons_array[weapon_name_to_change_to]["Is One Hit Per Turn"]:
 		rpc("add_buff",[Globals.self_peer_id],{"Buffs":[{"Name":"Charge NP","Duration":"Passive"}]})
 	else:
 		rpc("remove_buff",[Globals.self_peer_id],"one attack per turn",true)
@@ -1241,6 +1247,48 @@ func _on_items_pressed():
 		
 	pass # Replace with function body.
 
+
+func set_random_command_spell_set():
+	var add=""
+	
+	if OS.has_feature("editor"):
+		add="res"
+	else:
+		add="user"
+		
+	var dir = DirAccess.open(add+"://command_spells/")
+	var files=dir.get_files()
+	var types=[]
+	for file in files:
+		if file.ends_with(" 3.png"):
+			print(file)
+			print(file.find(" 3.png"))
+			types.append(file.substr(0,file.find(" 3.png")))
+	self_command_spell_type=types.pick_random()
+	
+	field.command_spells_button.texture_normal=load(str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	pass
+
 @rpc("any_peer","call_local","reliable")
 func reduce_command_spell_on_peer_id(peer_id):
+	
+	print("peer_id_to_command_spells_int[peer_id]="+str(peer_id_to_command_spells_int[peer_id]))
+	
+
 	peer_id_to_command_spells_int[peer_id]-=1
+
+	if peer_id==Globals.self_peer_id:
+		var add
+		if OS.has_feature("editor"):
+			add="res"
+		else:
+			add="user"
+		var iin=peer_id_to_command_spells_int[peer_id]
+		if iin>3:
+			iin=3
+		if iin!=0:
+			field.command_spells_button.texture_normal=load(str(add,"://command_spells/",self_command_spell_type," ",iin,".png"))
+		else:
+			field.command_spells_button.texture_normal=load(str("res://empty.png"))
+
+
