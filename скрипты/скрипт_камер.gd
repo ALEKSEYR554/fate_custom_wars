@@ -27,14 +27,15 @@ func mouse_exited_gui_element():
 	#print("exited")
 	gui_focused=false
 
-func zoom():
+func zoom_():
 	if gui_focused:
 		return
 	if Input.is_action_just_released('zoom_in'):
 		set_zoom(get_zoom() + Vector2(0.25, 0.25))
 	if Input.is_action_just_released('zoom_out') and self.get_zoom().x > min_zoom and self.get_zoom().y > min_zoom:
 		set_zoom(get_zoom() - Vector2(0.25, 0.25))
-		
+	
+	#print("curr_zoom="+str(get_zoom())+"\n")
 func _input(event):
 	if event.is_action("drag"):
 		if event.is_pressed():
@@ -46,4 +47,4 @@ func _input(event):
 	elif event is InputEventMouseMotion and dragging and not gui_focused:
 		position =  (mouse_start_pos - event.position)/zoom + screen_start_position
 func _physics_process(delta):
-	zoom()
+	zoom_()

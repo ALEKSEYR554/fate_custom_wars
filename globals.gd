@@ -18,14 +18,20 @@ const buffs_types={
 	"Discharge Allies NP":[],
 	"Discharge Everyone NP":[],
 	"Heal":[],#instant
-	
+	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
+	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],
+	"Maximum Hits Per Turn":["Buff Negative Effect","Buff Decrease Damage"],
+	"Magical Damage Get + Attack":["Buff Positive Effect","Buff Increase Damage"],
+	"pull enemies on attack":["Buff Positive Effect","Buff Increase Damage"],
 	#FGO type buffs	
+	
+	
 	"Def Up":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
 	"Def Up X":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
 	"Def Down":["Buff Negative Effect", "Buff Decrease Defence", "Buff Defence Down"],
 	"Def Down X":["Buff Negative Effect", "Buff Decrease Defence", "Buff Defence Down"],
-	"Def UP against trait":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
-	"Def UP X against trait":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
+	"Def Up against trait":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
+	"Def Up X against trait":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
 	"Def Down against trait":["Buff Negative Effect", "Buff Decrease Defence", "Buff Defence Down"],
 	"Def Down X against trait":["Buff Negative Effect", "Buff Decrease Defence", "Buff Defence Down"],
 	"Invincible":["Buff Positive Effect","Buff Evade And Invincible","Buff Invincible","Buff Increase Defence"],
