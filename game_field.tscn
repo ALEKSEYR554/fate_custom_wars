@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=9 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_jragl"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://char_select.tscn" id="3_8jq0o"]
 [ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_u7yvv"]
+[ext_resource type="Texture2D" uid="uid://dr1uv4aclstox" path="res://white.png" id="8_iswnp"]
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
@@ -671,6 +672,7 @@ text = "Refresh"
 
 [node name="buffs_label" type="Label" parent="GUI/buffs_temp_container"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 10
 text = "Buffs:"
 
 [node name="turns_label" type="Label" parent="GUI"]
@@ -729,6 +731,15 @@ script = ExtResource("2_bpvk8")
 
 [node name="players_handler" type="Node2D" parent="."]
 script = ExtResource("4_f845x")
+
+[node name="TextureRect" type="TextureRect" parent="players_handler"]
+visible = false
+offset_left = 433.0
+offset_top = 209.0
+offset_right = 657.0
+offset_bottom = 379.0
+texture = ExtResource("8_iswnp")
+expand_mode = 2
 
 [connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]

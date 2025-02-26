@@ -62,7 +62,17 @@ var luck
 var magic #["C",0,3]
 var traits
 
-var buffs=[]
+var buffs=[{"Name":"Magical Damage Get + Attack",
+				"Trigger": "Magical Damage Taken",
+				"Effect On Trigger":
+					{"Buffs":[
+						{"Name":"ATK Up",
+							"Duration":2,
+							"Power":1}
+						],
+						"Cast":"Self"},
+				"Duration":"Passive",
+				"Power":1}]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
 var additional_moves=0
@@ -114,7 +124,7 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"ATK UP X",
+			{"Name":"ATK Up X",
 				"Duration":1,
 				"Power":2},
 			{"Name":"Invincible",
@@ -146,7 +156,7 @@ var skills={
 "Class Skill 1":{
 	"Type":"Weapon Change",
 	"Rank":"UNIQ",
-	"Cooldown":8,
+	"Cooldown":0,
 	"Description":"Владеет Оддом который может транформироваться в оружия (Куллдаун - 8, однако, если оружие нужно снять, то Куллдаун игнорируется)",
 	"free_unequip":true,
 	"weapons":{#first is base weapon
@@ -156,18 +166,25 @@ var skills={
 				{"Name":"Magical Damage Get + Attack",
 				"Trigger": "Magical Damage Taken",
 				"Effect On Trigger":
-					{"Name":"ATK Up",
-						"Duration":2,
-						"Power":1},
+					{"Buffs":[
+						{"Name":"ATK Up",
+							"Duration":2,
+							"Power":1}
+						],
+						"Cast":"Self"},
 				"Duration":"Passive",
 				"Power":1},
 		},
 		"Hammer":{
 			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
-			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":
-				{"Name":"ignore def and def buffs",
-				"Duration":"Passive",
-				"Power":1}
+			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
+				{"Name":"Ignore DEF Buffs",
+					"Duration":"Passive",
+					"Power":1},
+				{"Name":"Ignore Defence",
+					"Duration":"Passive",
+					"Power":1},
+			]
 		},
 		"Boomerang":{
 			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
@@ -179,11 +196,11 @@ var skills={
 		},
 		"Bow":{
 			"Description":"Радиус 3, урон 2",
-			"Is One Hit Per Turn":false,"Damage":2,"range":2
+			"Is One Hit Per Turn":false,"Damage":2,"Range":2
 		},
 		"Alebard":{
 			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
-			"Is One Hit Per Turn":false,"Damage":3,"range":2
+			"Is One Hit Per Turn":false,"Damage":3,"Range":2
 		}
 	}
 }

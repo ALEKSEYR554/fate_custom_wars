@@ -557,16 +557,16 @@ func glow_cletka_pressed(glow_kletka_selected):
 			attacking_peer_id=occupied_kletki[glowing_kletka_number_selected].name
 			attacking_peer_id=players_handler.servant_name_to_peer_id[attacking_peer_id]
 			#SHIT END
-			attack_player_on_kletka_id(attacking_player_on_kletka_id,damage_type)
-			
+			await attack_player_on_kletka_id(attacking_player_on_kletka_id,damage_type)
+			players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]+=1
 		"choose_allie":
 			print("occupied_kletki="+str(occupied_kletki))
 			players_handler.choosen_allie_return_value=occupied_kletki[glowing_kletka_number_selected]
 			players_handler.chosen_allie.emit()
 		"emeny pulling":
 			var atk_id=attacking_peer_id
-			move_player_from_kletka_id1_to_id2(atk_id,peer_id_to_kletka_number[atk_id],glowing_kletka_number_selected)
-
+			rpc("move_player_from_kletka_id1_to_id2",atk_id,peer_id_to_kletka_number[atk_id],glowing_kletka_number_selected)
+			
 			
 	glow_kletka_pressed_signal.emit()
 
@@ -725,22 +725,32 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 			if parry_count_max!=0:
 				current_action="wait"
 				rpc("systemlog_message",str(Globals.nickname," stamina left:",parry_count_max))
-				attack_player_on_kletka_id(kletka_id,damage_type)
-				players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy parried")
+				await attack_player_on_kletka_id(kletka_id,damage_type)
+				await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy parried",peer_id_to_attack)
 				return
-		"Halfed Damage","damaged","defending":
+		"Halfed Damage":
+			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			current_action="wait"
-			players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack")
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy halfed damage",peer_id_to_attack)
+		"damaged":
+			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			current_action="wait"
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+		"defending":
+			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			current_action="wait"
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy defended",peer_id_to_attack)
 		"evaded":
 			current_action="wait"
-			players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy evaded")
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy evaded",peer_id_to_attack)
 		
 	roll_dice_optional_label.visible=false
 	if attack_type=="Physical" and Globals.self_servant_node.attack_range<=2:
 		rpc("move_player_from_kletka_id1_to_id2",Globals.self_peer_id,kletka_id,current_kletka,true)
 	if attack_type!="Phantasm":
 		reduce_one_action_point()
-		players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 	dice_holder_hbox.visible=false
 	roll_dice_control_container.visible=false
 	disable_every_button(false)
@@ -864,7 +874,18 @@ func _on_defence_button_pressed():
 	await await_dice_roll()
 	rpc_id(attacked_by_peer_id,"answer_attack","defending")
 	var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_peer_id,recieved_dice_roll_result,recieved_damage_type,"Defence")
-	players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+		
+	if typeof(damage_to_take)==TYPE_STRING:
+		if damage_to_take=="evaded":
+			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
+			rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
+	else:
+		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+		players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+		rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
+	
+	
+	
 	rpc("systemlog_message",str(Globals.nickname," defending by throwing ",dice_roll_result_list["defence_dice"]))
 	
 	dice_holder_hbox.visible=false
@@ -1016,6 +1037,7 @@ func start_turn():
 	make_action_button.disabled=false
 	end_turn_button.disabled=false
 	paralyzed=false
+	players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
 		for buff in players_handler.peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
@@ -1167,6 +1189,26 @@ func _on_make_action_pressed():
 	else:
 		#{ "Name": &"Heal Potion", "Effect": [{ "Name": "Heal", "Power": 5 }] }
 		print("players_handler.peer_id_to_items_owned[Globals.self_peer_id]="+str(players_handler.peer_id_to_items_owned[Globals.self_peer_id]))
+	var max_hit= players_handler.peer_id_has_buff(Globals.self_peer_id,"Maximum Hits Per Turn")
+	
+	print("\nmax_hit="+str(max_hit or false))
+	if max_hit:
+		
+		print("\n\nmax hit is true")
+		print(max_hit)
+		var attacked_this_turn=players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]
+		print("attacked_this_turn="+str(attacked_this_turn))
+		
+		if attacked_this_turn>=max_hit["Power"]:
+			$GUI/actions_buttons/Attack.disabled=true
+			print("max hit reached")
+		else:
+			$GUI/actions_buttons/Attack.disabled=false
+			print("max hit not reached")
+	else:
+		$GUI/actions_buttons/Attack.disabled=false
+		
+	
 	hide_all_gui_windows("actions_buttons")
 	#actions_buttons.visible=!actions_buttons.visible
 	pass # Replace with function body.
@@ -1180,7 +1222,7 @@ func _on_end_turn_pressed():
 	disable_every_button(false)#if paralysis
 	make_action_button.disabled=true
 	end_turn_button.disabled=true
-	players_handler.trigger_buffs_on(Globals.self_peer_id,"turn_ended")
+	await players_handler.trigger_buffs_on(Globals.self_peer_id,"turn_ended")
 	players_handler.rpc("pass_next_turn",Globals.self_peer_id)
 	
 	pass # Replace with function body.
