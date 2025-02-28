@@ -649,7 +649,7 @@ func get_all_enemies_in_range(range):
 func use_skill(skill_info_dictionary,custom_cast=null):
 	#trait_name is used if "Damange 2х against trait"
 	#String
-	#rpc("zoom_out_in_camera_before_buff",true)
+	rpc("zoom_out_in_camera_before_buff",true)
 	if typeof(skill_info_dictionary)==TYPE_DICTIONARY:
 		skill_info_dictionary=[skill_info_dictionary]
 	print(str("using skills=",skill_info_dictionary))
@@ -700,16 +700,14 @@ func use_skill(skill_info_dictionary,custom_cast=null):
 					rpc("add_buff_against_trait",cast,single_skill_info)
 				"Potion creation":
 					create_potion(single_skill_info["Potions"])
-				"NP gauge":
-					pass
 				"Field Creation":
 					field.capture_field_kletki(single_skill_info["Amount"],single_skill_info["Config"])
 				"Roll dice for effect":
 					roll_dice_for_result(single_skill_info,cast)
 				_:#default/else
 					rpc("add_buff",cast,single_skill_info)
-	
-	#rpc("zoom_out_in_camera_before_buff",false)
+	await get_tree().create_timer(2).timeout
+	rpc("zoom_out_in_camera_before_buff",false)
 
 func create_potion(potions_dict):
 	"""[{"Name":"Heal Potion",
@@ -922,15 +920,19 @@ func add_buff(cast_array,skill_info):
 
 @rpc("any_peer","reliable","call_local")
 func zoom_out_in_camera_before_buff(zoom_out=true):
-	last_camera_positon=$"../Camera2D".position
-	last_camera_zoom=$"../Camera2D".zoom
+	print("\nzoom_out_in_camera_before_buff")
 	if zoom_out:
+		print("zoom out")
+		last_camera_positon=$"../Camera2D".position
+		last_camera_zoom=$"../Camera2D".zoom
+		await get_tree().create_timer(0.1).timeout
 		$"../Camera2D".position=start_camera_position
-		$"../Camera2D".position=start_camera_zoom
+		$"../Camera2D".zoom=start_camera_zoom
 	else:
+		print("zoom in")
+		await get_tree().create_timer(0.1).timeout
 		$"../Camera2D".position=last_camera_positon
-		$"../Camera2D".position=last_camera_zoom
-	pass
+		$"../Camera2D".zoom=last_camera_zoom
 
 @rpc("any_peer","reliable","call_local")
 func effect_on_buff(peer_id_buff_given_to,buff_name):
@@ -1213,13 +1215,13 @@ func update_hp_on_peer_id(peer_id,hp_to_set):
 	peer_id_player_info[peer_id]["servant_node"].hp=hp_to_set
 
 func get_peer_id_attack_range(peer_id):
-	var range=peer_id_player_info[peer_id]["servant_node"].attack_range
+	var atk_range=peer_id_player_info[peer_id]["servant_node"].attack_range
 	for buff in peer_id_player_info[peer_id]["servant_node"].buffs:
 			if buff["Name"]=="Attack Range Set":
-				range=buff["Power"]
+				atk_range=buff["Power"]
 			if buff["Name"]=="Attack Range Add":
-				range+=buff["Power"]
-	return range
+				atk_range+=buff["Power"]
+	return atk_range
 	
 
 func _on_texture_rect_gui_input(event):
