@@ -442,16 +442,27 @@ func glow_cletki_intiate():
 		if str(i.name).contains("клетка"):
 			var kletka_numebr=int(i.name.trim_prefix("клетка "))
 			var pos = cell_positions[int(kletka_numebr)]
-			var glow = Glow.instantiate()
-			glow.visible=false
-			glow_cletki_node.add_child(glow,true)
-			glow.position = pos
-			glow.name="glow "+str(kletka_numebr)
+			var glow_node=Node2D.new()
+			var glow = Button.new()
+			glow_node.visible=false
+			
+			glow_node.position = pos
+			glow_node.name="glow "+str(kletka_numebr)
 			#glow.button_down.connect(glow_cletka_pressed)
 			#print(glow.name)
-
-			glow.button_down.connect(glow_cletka_pressed.bind(glow))
-			glow_array.append(glow)
+			glow.button_down.connect(glow_cletka_pressed.bind(glow_node))
+			
+			glow.size=Vector2(100,100)
+			glow.modulate=Color(1,1,1,0)
+			
+			
+			glow_node.set_script(load("res://скрипты/скрипт glow.gd"))
+			glow_node.add_child(glow)
+			glow.set_anchors_preset(8)#PRESET_CENTER
+			glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
+			
+			glow_cletki_node.add_child(glow_node,true)
+			glow_array.append(glow_node)
 
 func add_all_additional_nodes():
 	print("add_all_additional_nodes")
