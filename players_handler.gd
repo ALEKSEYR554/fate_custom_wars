@@ -39,7 +39,8 @@ var last_camera_zoom
 var peer_id_player_info={}
 
 #peer_id={"total_kletki_moved":INT,"total_success_hit":INT,"kletki_moved_this_turn":INT,"attacked_this_turn":INT,
-#"total_crit_hit":INT,"total_damage_dealt":INT,"total_damage_taken":INT}
+#"total_crit_hit":INT,"total_damage_dealt":INT,"total_damage_taken":INT,"skill_used_this_turn":INT,
+#"skill_used_total":INT}
 var peer_id_player_game_stat_info={}
 
 var peer_id_to_nickname={}
@@ -210,8 +211,11 @@ func initialise_start_variables(peer_id_list):
 		peer_id_to_np_points[peer_id]=0
 		peer_id_to_command_spells_int[peer_id]=3
 		peer_id_player_game_stat_info[peer_id]={"total_kletki_moved":0,"total_success_hit":0,
-	"kletki_moved_this_turn":0,"attacked_this_turn":0,
-	"total_crit_hit":0,"total_damage_dealt":0,"total_damage_taken":0}
+		"kletki_moved_this_turn":0,"attacked_this_turn":0,
+		"total_crit_hit":0,"total_damage_dealt":0,"total_damage_taken":0,
+		"skill_used_this_turn":0,"total_skill_used":0}
+		Globals.self_field_color = Color(randf(), randf(), randf())
+		
 	start_camera_position=$"../Camera2D".position
 	start_camera_zoom=$"../Camera2D".zoom
 
@@ -262,9 +266,24 @@ func start():
 	turns_loop()
 	
 
+func is_only_one_team_stand():
+	var peer_id_alive=[]+turns_order_by_peer_id
+	if get_all_peer_ids().size()==1:
+		return false
+	var teams_alive=[]
+	for team in teams_by_peer_id:
+		for member in team:
+			if team in teams_alive:
+				break
+			if member in peer_id_alive:
+				teams_alive.append(team)
+	print("teams_alive="+str(teams_alive))
+	print(teams_alive.size()==1)
+	return teams_alive.size()==1
+
 func turns_loop():
 	print("turns_loop started")
-	while true:
+	while !is_only_one_team_stand():
 		turns_counter+=1
 		for peer_id in turns_order_by_peer_id:
 			print("\n\nNow "+str(peer_id)+" turn\n\n")
@@ -272,6 +291,7 @@ func turns_loop():
 			field.rpc_id(peer_id,"start_turn")
 			await next_turn_pass
 		rpc("turn_update",turns_counter)
+	$"../GUI/host_buttons/finish_button".visible=true
 
 @rpc("any_peer","call_local","reliable")
 func turn_update(turn):
@@ -444,8 +464,8 @@ func _on_custom_choices_tab_container_tab_changed(tab):
 	match costt["Type"]:
 		"NP":
 			use_custom_label.text="Cost: "+str(costt["value"]," ",costt["Type"])
-			if Globals.self_servant_node.phantasm_charge<costt["value"]:
-				use_custom_button.disabled=true
+			if Globals.self_servant_node.phantasm_charge<costt["value"] or peer_id_has_buff(Globals.self_peer_id,"NP Seal"):
+					use_custom_button.disabled=true
 	
 
 func _on_use_custom_button_pressed():
@@ -479,6 +499,11 @@ func _on_use_custom_button_pressed():
 @rpc("any_peer","call_local","reliable")
 func add_item_to_peer_id(peer_id,item):
 	peer_id_to_items_owned[peer_id].append(item)
+
+@rpc("any_peer","call_local","reliable")
+func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int):
+	peer_id_player_game_stat_info[peer_id][stat]+=value_to_add
+	pass
 
 func _on_phantasm_pressed():
 	use_custom_button.disabled=false
@@ -647,7 +672,7 @@ func get_all_enemies_in_range(range):
 	return out
 
 func use_skill(skill_info_dictionary,custom_cast=null):
-	#trait_name is used if "Damange 2х against trait"
+	#trait_name is used if "Damange 2х Against Trait"
 	#String
 	rpc("zoom_out_in_camera_before_buff",true)
 	if typeof(skill_info_dictionary)==TYPE_DICTIONARY:
@@ -696,8 +721,6 @@ func use_skill(skill_info_dictionary,custom_cast=null):
 		for single_skill_info in skill_info_array:
 			print("single_skill_info="+str(single_skill_info))
 			match single_skill_info["Name"]:
-				"Damage x2 against trait":
-					rpc("add_buff_against_trait",cast,single_skill_info)
 				"Potion creation":
 					create_potion(single_skill_info["Potions"])
 				"Field Creation":
@@ -784,7 +807,7 @@ func reduce_custom_param(peer_id,buff_id,param):
 		peer_id_player_info[peer_id]["servant_node"].buffs[buff_id][param]-=1
 
 
-func trigger_buffs_on(peer_id,trigger,triggered_by_peer_id=null):
+func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 	var buffs=peer_id_player_info[peer_id]["servant_node"].buffs
 	var i=0
 	print("trigger_buffs_on="+str(trigger)+" triggered_by_peer_id="+str(triggered_by_peer_id))
@@ -794,7 +817,7 @@ func trigger_buffs_on(peer_id,trigger,triggered_by_peer_id=null):
 				print("trigger="+str(trigger)+" effect"+str(buff["Effect On Trigger"]))
 				if typeof(buff["Effect On Trigger"])==4:
 					match buff["Effect On Trigger"]:
-						"owner takes damage by power":
+						"Take Damage By Power":
 							rpc("take_damage_to_peer_id",peer_id,buff["Power"])
 						"pull enemies on attack":
 							field.pull_enemy(field.attacking_peer_id)
@@ -811,6 +834,7 @@ func trigger_buffs_on(peer_id,trigger,triggered_by_peer_id=null):
 						rpc("reduce_custom_param",peer_id,i,"hit times")
 						break
 		i+=1
+	
 	
 	var calculata="""just in case to variable
 	casted=3
@@ -852,7 +876,7 @@ func trigger_buffs_on(peer_id,trigger,triggered_by_peer_id=null):
 
 
 @rpc("any_peer","reliable","call_local")
-func roll_dice_for_result(skill_info,cast):
+func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 	await field.await_dice_roll()
 	var dice_result=field.dice_roll_result_list
 	var is_casted=null
@@ -881,9 +905,9 @@ func roll_dice_for_result(skill_info,cast):
 func add_buff_against_trait(cast_array,skill_info):
 	#TODO
 	var skill_name=skill_info["Name"]
-	var duration=skill_info["trait"]
+	var duration=skill_info["Duration"]
 	var power=skill_info["Power"]
-	var trait_name=skill_info["trait"]
+	var trait_name=skill_info["Trait"]
 	for who_to_cast_peer_id in cast_array:
 		match skill_name:
 			"Attack up":
@@ -896,16 +920,20 @@ func add_buff(cast_array,skill_info):
 	for who_to_cast_peer_id in cast_array:
 		
 		await effect_on_buff(who_to_cast_peer_id,skill_info["Name"])
-		
+		if skill_info.has("Type"):
+			if skill_info["Type"]=="Status":
+				pass
 		match skill_info["Name"]:
 			"Madness Enhancement":
 				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
 				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
-					{"Name":"Attack x2",
-					"Duration":3,
-					"Power":1},
-					{"Name":"skill seal",
-					"Duration":3}
+					{"Name":"ATK Up X",
+						"Type":"Status",
+						"Duration":3,
+						"Power":2},
+					{"Name":"Skill Seal",
+						"Type":"Status",
+						"Duration":3}
 					]
 			"NP Gauge":
 				charge_np_to_peer_id_by_number(who_to_cast_peer_id,skill_info["Power"])
@@ -980,8 +1008,11 @@ func heal_peer_id(peer_id,amount,type="normal"):
 	else:#command spell is static 70%
 		amount_to_heal=amount
 		for buff in servant_node_to_heal.buffs:
-			if buff["Name"]=="heal x2":
-				amount_to_heal*=2
+			match buff["Name"]:
+				"HP Recovery Up":
+					amount_to_heal+=buff["Power"]
+				"HP Recovery Up X":
+					amount_to_heal*=buff["Power"]
 	
 	if current_hp+amount_to_heal>max_hp:
 		servant_node_to_heal.hp=max_hp
@@ -1042,8 +1073,11 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 	var self_defence=0
 	var buffs_to_ignore=[]
 	var is_field_ignore_magic_defence=false
+	var is_crit=false
+	var crit_removed=false
 	
-
+	var self_traits=peer_id_player_info[Globals.self_peer_id]["servant_node"].traits
+	var attacker_traits=peer_id_player_info[attacker_peer_id]["servant_node"].traits
 	
 	if damage_type=="Magical":
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].magic["Power"]
@@ -1054,7 +1088,6 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 		else:
 			if cur_kletka_conf["Owner"]==attacker_peer_id and cur_kletka_conf["Ignore Magical Defence"]:
 				is_field_ignore_magic_defence=true
-		
 	else:
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].attack_power
 	
@@ -1087,11 +1120,39 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 				damage_to_take*=floor(damage_to_take/skill["Power"])
 			"Madness Enhancement":
 				damage_to_take*=skill["Power"]
+			"Critical Remove":
+				crit_removed=true
+			"Critical Hit Rate Up":
+				if enemies_dice_results["crit_dice"] in skill["Crit Chances"]:
+					is_crit=true
+			"ATK Up Against Trait":
+				if skill["Trait"] in self_traits:
+					damage_to_take+=skill["Power"]
+			"ATK Up X Against Trait":
+				if skill["Trait"] in self_traits:
+					damage_to_take*=skill["Power"]
+			"ATK Down Against Trait":
+				if skill["Trait"] in self_traits:
+					damage_to_take-=skill["Power"]
+			"ATK Down X Against Trait":
+				if skill["Trait"] in self_traits:
+					damage_to_take=floor(damage_to_take/skill["Power"])
 		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
 	
 	if enemies_dice_results["crit_dice"]==enemies_dice_results["main_dice"]:
+		is_crit=true
+		
+	if is_crit and crit_removed:
+		print("It is Critical but removed by debuff")
+	if is_crit and not crit_removed:
 		damage_to_take*=2
 		print("CRITTTT"+ str(" damage_to_take=",damage_to_take))
+		for skill in peer_id_player_info[attacker_peer_id]["servant_node"].buffs:
+			match skill["Name"]:
+				"Critical Strength Up":
+					damage_to_take+=skill["Power"]
+				"Critical Strength Up X":
+					damage_to_take*=skill["Power"]
 	
 	#calculating ignore buffs
 	var buff_ignoring=["Ignore Defence","Ignore DEF Buffs"]
@@ -1107,7 +1168,11 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 	#calculating self defence
 	print("calculating self defence")
 	for skill in peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
-		var skill_type_array=Globals.buffs_types[skill["Name"]]
+		var skill_type_array
+		if skill.has("Type"):
+			skill_type_array=skill["Type"]
+		else:
+			skill_type_array=Globals.buffs_types[skill["Name"]]
 		var ignore=false
 		for skill_type in skill_type_array:
 			for skill_to_ignore in buffs_to_ignore:
@@ -1130,6 +1195,19 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 				zero_damage=true
 				damage_to_take*=0
 				break
+			"Def Up Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take-=skill["Power"]
+			"Def Up X Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take=floor(damage_to_take/skill["Power"])
+			"Def Down Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take+=skill["Power"]
+			"Def Down X Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take*=skill["Power"]
+					
 		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
 	
 	
@@ -1177,6 +1255,11 @@ func take_damage_to_peer_id(peer_id,damage_amount):
 	var start_hp=peer_id_player_info[peer_id]["servant_node"].hp
 	var new_hp=start_hp-damage_amount
 	
+	
+	change_game_stat_for_peer_id(peer_id,"total_damage_taken",damage_amount)
+	
+	
+	
 	rpc("update_hp_on_peer_id",peer_id,new_hp)
 	if peer_id==Globals.self_peer_id:
 		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
@@ -1192,6 +1275,8 @@ func trigger_death_to_peer_id(peer_id):
 		match skill["Name"]:
 			"Guts":
 				update_hp_on_peer_id(peer_id,skill["Power"])
+				trigger_buffs_on(peer_id,"Guts Used")
+				remove_buff([peer_id],"Guts")
 				return
 	
 	if peer_id_to_command_spells_int[peer_id]>=3:
@@ -1200,7 +1285,8 @@ func trigger_death_to_peer_id(peer_id):
 		reduce_command_spell_on_peer_id(peer_id)
 		reduce_command_spell_on_peer_id(peer_id)
 		reduce_command_spell_on_peer_id(peer_id)
-	else:
+		trigger_buffs_on(peer_id,"Command Spell Revive")
+	else:#total death
 		for i in range(9):
 			peer_id_player_info[peer_id]["servant_node"].rotation_degrees+=10
 			await get_tree().create_timer(0.1).timeout
@@ -1284,6 +1370,8 @@ func _on_use_skill_button_pressed():
 				Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Cooldown"])
 	
 	field.reduce_one_action_point()
+	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_this_turn",1)
+	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_total",1)
 	pass # Replace with function body.
 
 func peer_id_has_buff(peer_id,buff_name):
@@ -1395,7 +1483,7 @@ func set_random_command_spell_set():
 func reduce_command_spell_on_peer_id(peer_id):
 	
 	print("peer_id_to_command_spells_int[peer_id]="+str(peer_id_to_command_spells_int[peer_id]))
-	
+	trigger_buffs_on(peer_id,"Command Spell Decreased")
 
 	peer_id_to_command_spells_int[peer_id]-=1
 

@@ -39,14 +39,14 @@ const default_stats={
 	"luck":"B+",
 	"magic":{"Rank":"A+","Power":6,"resistance":12},
 	"traits":[
-		"Hominidae_Servant",
+		"Hominidae Servant",
 		"Humanoid",
-		"Living_Human",
-		"Loved_One",
+		"Living Human",
+		"Loved One",
 		"Pseudo-Servant",
 		"Servant",
-		"Seven_Knights_Servant",
-		"Weak_to_Enuma_Elish"]
+		"Seven Knights Servant",
+		"Weak to Enuma Elish"]
 }
 
 var servant_class="Caster"
@@ -64,7 +64,7 @@ var skill_cooldowns=[]
 var magic=["A+",6,12]
 var additional_moves=0
 var additional_attack=0
-
+var traits
 var phantasm_charge=0
 # Called when the node enters the scene tree for the first time.
 
@@ -79,6 +79,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -179,8 +180,8 @@ var skills={
 							{"Name":"Poison",
 								"Duration":3,
 								"Power":1,
-								"Trigger":"end turn",
-								"Effect On Trigger":"owner takes damage by power"}
+								"Trigger":"End Turn",
+								"Effect On Trigger":"Take Damage By Power"}
 							]
 					}
 				},
