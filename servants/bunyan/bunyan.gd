@@ -2,15 +2,26 @@ extends Node2D
 #Bynyan
 @onready var players_handler = self.get_parent()
 const default_stats={
-"hp":1,
-"servant_class":"Berserker",
-"ideology":["Balanced","Neutral"],
-"attack_range":1,
-"attack_power":3,
-"agility":"C",
-"endurance":"A",
-"luck":"E+",
-"magic":{"Rank":"E","Power":0,"resistance":1}#magic power / magic resistance
+	"hp":1,
+	"servant_class":"Berserker",
+	"ideology":["Balanced","Neutral"],
+	"attack_range":1,
+	"attack_power":3,
+	"agility":"C",
+	"endurance":"A",
+	"luck":"E+",
+	"magic":{"Rank":"E","Power":0,"resistance":1},#magic power / magic resistance,
+	"traits":[
+		"Child Servant",
+		"Costume-Owning", 
+		"Fairy Tale Servant", 
+		"Giant", 
+		"Hominidae Servant", 
+		"Humanoid", 
+		"Servant", 
+		"Seven Knights Servant", 
+		"Weak to Enuma Elish"
+	]
 }
 
 var servant_class
@@ -27,7 +38,7 @@ var buffs=[]
 var skill_cooldowns=[]
 var additional_moves=0
 var additional_attack=0
-
+var traits
 
 var phantasm_charge=0
 # Called when the node enters the scene tree for the first time.
@@ -41,6 +52,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.

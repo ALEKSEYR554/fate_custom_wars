@@ -52,6 +52,8 @@ var my_turn=false
 @onready var info_ok_button = $GUI/info_ok_button
 @onready var info_label = $GUI/info_label_panel/info_label
 
+signal movement_finished
+
 var current_open_window=""
 
 @onready var main_label_dont_touch = $GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox/Main_label_dont_touch
@@ -214,7 +216,6 @@ func get_random_unoccupied_kletka():
 func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps):
 	#current_kletka
 	var output=[]
-	var path=[]
 	for end in occupied_kletki.keys():
 		if current_kletka == end:
 			continue
@@ -418,8 +419,8 @@ func array_unique(array) -> Array:
 	return unique
 
 
-@rpc("call_local")
-func reset_pole(cur_time):
+@rpc("call_local","reliable")
+func reset_pole(cur_time,generate_pole=true):
 	is_pole_generated=true
 	for i in get_all_children(self):
 		pass
@@ -427,7 +428,8 @@ func reset_pole(cur_time):
 		if i.name.contains("клетка") or i.name.contains("Line2D") or i.name.contains("angra"):
 			remove_child(i)
 		#print(i.name)
-	generate_pole(cur_time)
+	if generate_pole:
+		generate_pole(cur_time)
 
 func _on_reset_pressed():
 	time=Time.get_unix_time_from_system()
@@ -529,6 +531,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 			print(self_player_node)
 			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,-1,glowing_kletka_number_selected)
 			rpc("move_player_from_kletka_id1_to_id2",Globals.self_peer_id,-1,glowing_kletka_number_selected)
+			#await movement_finished
 			current_kletka=glowing_kletka_number_selected
 			print("current kletka="+str(current_kletka))
 			print(connected[current_kletka])
@@ -541,7 +544,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 			is_game_started=true
 		"field capture":
 			rpc("sync_owned_kletki",kletka_owned_by_peer_id)
-			rpc("capture_single_kletka_sync", glowing_kletka_number_selected,temp_kletka_capture_config)
+			rpc("capture_single_kletka_sync", glowing_kletka_number_selected,temp_kletka_capture_config,Globals.self_field_color)
 			print("temp_kletka_capture_config  222="+str(temp_kletka_capture_config))
 			klekta_captured.emit()
 		"move":
@@ -582,24 +585,26 @@ func glow_cletka_pressed(glow_kletka_selected):
 	glow_kletka_pressed_signal.emit()
 
 @rpc("any_peer","call_local","reliable")
-func capture_single_kletka_sync(glowing_kletka_number_selected,temp_kletka_capture_config):
+func capture_single_kletka_sync(glowing_kletka_number_selected_temp,temp_kletka_capture_config,kletka_color:Color):
 	if typeof(captured_kletki_node)==TYPE_NIL:
 		captured_kletki_node=Node2D.new()
 		captured_kletki_node.name="Captured_kletki_node"
 		add_child(captured_kletki_node,true)
-	print(str(glowing_kletka_number_selected," is captured"))
-	kletka_preference[glowing_kletka_number_selected]=temp_kletka_capture_config
-	kletka_owned_by_peer_id[temp_kletka_capture_config["Owner"]].append(glowing_kletka_number_selected)
+	print(str(glowing_kletka_number_selected_temp," is captured"))
+	kletka_preference[glowing_kletka_number_selected_temp]=temp_kletka_capture_config
+	kletka_owned_by_peer_id[temp_kletka_capture_config["Owner"]].append(glowing_kletka_number_selected_temp)
 	
 	var captur_klet=Node2D.new()
-	var pos = cell_positions[int(glowing_kletka_number_selected)]
+	var pos = cell_positions[int(glowing_kletka_number_selected_temp)]
 	captur_klet.position = pos
-	captur_klet.name="glow "+str(glowing_kletka_number_selected)
+	captur_klet.name="glow "+str(glowing_kletka_number_selected_temp)
 	
 	captur_klet.set_script(CapturedKletkaScript)
-	captur_klet.color=Color.DARK_BLUE
+	
+	captur_klet.color=kletka_color
+	
 	captured_kletki_node.add_child(captur_klet,true)
-	captured_kletki_nodes_dict[glowing_kletka_number_selected]=captur_klet
+	captured_kletki_nodes_dict[glowing_kletka_number_selected_temp]=captur_klet
 
 func reduce_one_action_point(amount_to_reduce=-1):
 	current_action_points+=amount_to_reduce
@@ -621,8 +626,8 @@ func move_player_from_kletka_id1_to_id2(peer_id,current_kletka_local,glowing_kle
 		addition=-3
 		
 	if current_kletka_local!=-1:
-		print("player_node_to_move.position="+str(player_node_to_move.position)+" cell_positions[glowing_kletka_number_selected]="+str(cell_positions[glowing_kletka_number_selected]))
-		print("player_node_to_move.position="+str(player_node_to_move.position)+" cell_positions[current_kletka_local]="+str(cell_positions[current_kletka_local]))
+		#print("player_node_to_move.position="+str(player_node_to_move.position)+" cell_positions[glowing_kletka_number_selected]="+str(cell_positions[glowing_kletka_number_selected]))
+		#print("player_node_to_move.position="+str(player_node_to_move.position)+" cell_positions[current_kletka_local]="+str(cell_positions[current_kletka_local]))
 		var one=player_node_to_move.position.round()!=cell_positions[glowing_kletka_number_selected].round()
 		var second=player_node_to_move.position.round()!=cell_positions[current_kletka_local].round()
 		if one and second:
@@ -630,21 +635,24 @@ func move_player_from_kletka_id1_to_id2(peer_id,current_kletka_local,glowing_kle
 	
 	
 	
+	#""""""animation"""""
+	
 	#cell_positions[glowing_kletka_number_selected]
 					#from 											to
 	var mnoghitel=(cell_positions[glowing_kletka_number_selected]-player_node_to_move.position)/chastei
 	
+	if current_kletka_local==-1:
+		player_node_to_move.position=cell_positions[glowing_kletka_number_selected]
+	else:
+		for i in range(chastei+addition):
+			player_node_to_move.position+=mnoghitel
+			await get_tree().create_timer(0.01).timeout
 	
-	for i in range(chastei+addition):
-		player_node_to_move.position+=mnoghitel
-		await get_tree().create_timer(0.01).timeout
-	
-	if not is_partial:
+	if not is_partial or current_kletka_local==-1:
 		if current_kletka_local!=-1:
 			occupied_kletki.erase(current_kletka_local)
 		occupied_kletki[glowing_kletka_number_selected]=player_node_to_move
 		peer_id_to_kletka_number[peer_id]=glowing_kletka_number_selected
-	pass
 	
 func _on_start_pressed():
 	#for i in get_all_children(self):
@@ -705,6 +713,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 			are_you_sure_main_container.visible=true
 			await are_you_sure_signal
 			if are_you_sure_result=="no":
+				type_of_damage_choose_buttons_box.visible=true
 				return
 			parry_count_max=players_handler.get_endurance_in_numbers(Globals.self_servant_node.endurance)
 		else: 
@@ -742,15 +751,22 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 		"Halfed Damage":
 			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			current_action="wait"
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
+			
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy halfed damage",peer_id_to_attack)
 		"damaged":
 			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
 			current_action="wait"
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
 		"defending":
 			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			current_action="wait"
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy defended",peer_id_to_attack)
 		"evaded":
@@ -767,6 +783,8 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 	disable_every_button(false)
 	alert_label_text(false)
 	return peer_id_to_attack
+	
+	
 
 func roll_a_diсe():
 	randomize()
@@ -840,6 +858,7 @@ func _on_evade_button_pressed():
 	are_you_sure_main_container.visible=true
 	await are_you_sure_signal
 	if are_you_sure_result=="no":
+		you_were_attacked_container.visible=true
 		return
 	
 	await await_dice_roll()
@@ -857,8 +876,10 @@ func _on_evade_button_pressed():
 				rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
+			
 			rpc("systemlog_message",str(Globals.nickname," halfed damage by throwing ",dice_roll_result_list["main_dice"]))
 			players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+			players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 	else: 
 		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_peer_id,recieved_dice_roll_result,recieved_damage_type)
 		
@@ -869,6 +890,7 @@ func _on_evade_button_pressed():
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 			players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+			players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 			rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
 	roll_dice_control_container.visible=false
@@ -880,6 +902,7 @@ func _on_defence_button_pressed():
 	are_you_sure_main_container.visible=true
 	await are_you_sure_signal
 	if are_you_sure_result=="no":
+		you_were_attacked_container.visible=true
 		return
 	
 	await await_dice_roll()
@@ -893,6 +916,7 @@ func _on_defence_button_pressed():
 	else:
 		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 		players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+		players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 		rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
 	
@@ -910,6 +934,7 @@ func _on_parry_button_pressed():
 		are_you_sure_main_container.visible=true
 		await are_you_sure_signal
 		if are_you_sure_result=="no":
+			you_were_attacked_container.visible=true
 			return
 		
 	await await_dice_roll()
@@ -924,9 +949,21 @@ func _on_parry_button_pressed():
 		return
 	print("dont parried")
 	rpc("systemlog_message",str(Globals.nickname," got hit"))
-	rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+	
 	var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_peer_id,recieved_dice_roll_result,recieved_damage_type)
-	players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+	
+	if typeof(damage_to_take)==TYPE_STRING:
+		if damage_to_take=="evaded":
+			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
+			rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
+	else:
+		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+		players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
+		players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
+		
+		
+		
+		rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	dice_holder_hbox.visible=false
 
 
@@ -1019,6 +1056,9 @@ func _on_regular_damage_button_pressed():
 	var attack_range=players_handler.get_peer_id_attack_range(Globals.self_peer_id)
 	
 	var kk=get_kletki_ids_with_enemies_you_can_reach_in_steps(attack_range)
+	if kk.size()==0:
+		type_of_damage_choose_buttons_box.visible=false
+		return
 	print(kk)
 	damage_type="Physical"
 	choose_glowing_cletka_by_ids_array(kk)
@@ -1026,10 +1066,12 @@ func _on_regular_damage_button_pressed():
 		print(occupied_kletki[i])
 	type_of_damage_choose_buttons_box.visible=false
 
-
 func _on_magical_damage_button_pressed():
 	var kk=get_kletki_ids_with_enemies_you_can_reach_in_steps(3)
 	print(kk)
+	if kk.size()==0:
+		type_of_damage_choose_buttons_box.visible=false
+		return
 	damage_type="Magical"
 	choose_glowing_cletka_by_ids_array(kk)
 	for i in kk:
@@ -1079,17 +1121,24 @@ func _on_move_pressed():
 			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
 		pass
 		choose_glowing_cletka_by_ids_array(move_ck)
+		players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_kletki_moved",1)
+		players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"kletki_moved_this_turn",1)
+
 
 
 func capture_field_kletki(amount,config_of_kletka):
+	
+	print("capture_field_kletki, peer_id="+str(Globals.self_peer_id))
+	print("amount=="+str(amount))
+	
 	var available_to_capture=[]
 	config_of_kletka_to_capture=config_of_kletka
 	current_action="field capture"
 	
-	print("amount=="+str(amount))
+	
 	var owner_peer_id=config_of_kletka["Owner"]
 	
-	print("connected="+str(connected))
+	#print("connected="+str(connected))
 	temp_kletka_capture_config=config_of_kletka
 	
 	temp_kletka_capture_config.merge({"turn_casted":players_handler.turns_counter})
@@ -1102,7 +1151,7 @@ func capture_field_kletki(amount,config_of_kletka):
 	if kletka_owned_by_peer_id[owner_peer_id]==[]:
 		kletka_owned_by_peer_id[owner_peer_id]=[peer_id_to_kletka_number[owner_peer_id]]
 		rpc("sync_owned_kletki",kletka_owned_by_peer_id)
-		rpc("capture_single_kletka_sync", peer_id_to_kletka_number[owner_peer_id],temp_kletka_capture_config)
+		rpc("capture_single_kletka_sync", peer_id_to_kletka_number[owner_peer_id],temp_kletka_capture_config,Globals.self_field_color)
 	else:
 		kletka_owned_by_peer_id[owner_peer_id]+=[peer_id_to_kletka_number[owner_peer_id]]
 		
@@ -1148,8 +1197,10 @@ func line_attack_phantasm(phantasm_config):
 				continue
 			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
 		pass
-		choose_glowing_cletka_by_ids_array(move_ck)
-		await glow_kletka_pressed_signal
+		print("move_ck="+str(move_ck))
+		if !move_ck.size()<=0:
+			choose_glowing_cletka_by_ids_array(move_ck)
+			await glow_kletka_pressed_signal
 		#current_action="wait"
 		move_ck=[]
 		print("cr-klet="+str(temp_current_kletka))
@@ -1382,7 +1433,7 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 	if !my_turn:
 		skills_available=false
 	for buff in Globals.self_servant_node.buffs:
-		if buff["Name"]=="skill seal":
+		if buff["Name"]=="Skill Seal":
 			skills_available=false
 			break
 	var skill_cooldown=0
@@ -1446,3 +1497,41 @@ func _on_command_spell_add_moves_button_pressed():
 	pass # Replace with function body.
 
 
+func get_players_array_sorted_by_points():
+	var points=[]
+	var peer_id_to_points={}
+	var stat_dic=players_handler.peer_id_player_game_stat_info
+	for peer_id in players_handler.peer_id_player_info.keys():
+		peer_id_to_points[peer_id]=0
+		for stat in stat_dic[peer_id].keys():
+			match stat:
+				"total_kletki_moved":
+					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]
+				"total_success_hit":
+					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]*2
+				"total_crit_hit":
+					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]
+				"skill_used_total":
+					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]*2
+		points.append(points)
+	points.sort()
+	pass
+
+@rpc("any_peer","reliable","call_local")
+func generate_ending():
+	$GUI.visible=false
+	var players_ar=[]
+	for peer_id in players_handler.peer_id_player_info.keys():
+		players_ar.append(players_handler.peer_id_player_info[peer_id]["servant_node"])
+	
+	reset_pole(1,false)
+	$finish_screen.do_the_thing(players_ar)
+	
+	
+
+
+
+func _on_finish_button_pressed():
+	rpc("generate_ending")
+	
+	pass # Replace with function body.

@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://dri8cwrklyejb"]
+
+[ext_resource type="Script" path="res://рейтинг.gd" id="1_g7d7o"]
+[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_qd25y"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Node2D" type="Node2D" parent="."]
+position = Vector2(946, 130)
+script = ExtResource("1_g7d7o")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1746, 983)
+zoom = Vector2(0.33, 0.33)
+script = ExtResource("2_qd25y")

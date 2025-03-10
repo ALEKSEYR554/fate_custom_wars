@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://char_select.tscn" id="3_8jq0o"]
 [ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_u7yvv"]
-[ext_resource type="Texture2D" uid="uid://dr1uv4aclstox" path="res://white.png" id="8_iswnp"]
+[ext_resource type="Script" path="res://рейтинг.gd" id="8_2xjn8"]
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
@@ -29,6 +29,11 @@ text = "start"
 [node name="reset" type="Button" parent="GUI/host_buttons"]
 layout_mode = 2
 text = "restart field"
+
+[node name="finish_button" type="Button" parent="GUI/host_buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Finish"
 
 [node name="command_spells_button" type="TextureButton" parent="GUI"]
 anchors_preset = -1
@@ -647,6 +652,7 @@ text = "Skills:"
 editable = false
 
 [node name="Button" type="Button" parent="GUI"]
+visible = false
 offset_left = 128.0
 offset_top = 545.0
 offset_right = 264.0
@@ -732,17 +738,13 @@ script = ExtResource("2_bpvk8")
 [node name="players_handler" type="Node2D" parent="."]
 script = ExtResource("4_f845x")
 
-[node name="TextureRect" type="TextureRect" parent="players_handler"]
-visible = false
-offset_left = 433.0
-offset_top = 209.0
-offset_right = 657.0
-offset_bottom = 379.0
-texture = ExtResource("8_iswnp")
-expand_mode = 2
+[node name="finish_screen" type="Node2D" parent="."]
+position = Vector2(620, 232)
+script = ExtResource("8_2xjn8")
 
 [connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]
+[connection signal="pressed" from="GUI/host_buttons/finish_button" to="." method="_on_finish_button_pressed"]
 [connection signal="pressed" from="GUI/command_spells_button" to="." method="_on_command_spells_button_pressed"]
 [connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_heal_button" to="." method="_on_command_spell_heal_button_pressed"]
 [connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_np_charge_button" to="." method="_on_command_spell_np_charge_button_pressed"]

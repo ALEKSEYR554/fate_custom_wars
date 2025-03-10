@@ -40,14 +40,14 @@ const default_stats={
 	"endurance":"C",
 	"luck":"C",
 	"magic":{"Rank":"C","Power":0,"resistance":3},
-	"traits":["Artoria_Face",
-	 "Hominidae_Servant",
+	"traits":["Artoria Face",
+	 "Hominidae Servant",
 	 "Humanoid",
-	 "Living_Human",
-	 "Round_Table_Knight",
+	 "Living Human",
+	 "Round Table Knight",
 	 "Servant",
-	 "Seven_Knights_Servant",
-	 "Weak_to_Enuma_Elish"]
+	 "Seven Knights Servant",
+	 "Weak to Enuma Elish"]
 }
 
 var servant_class
@@ -107,10 +107,10 @@ var skills={
 			{"Name":"ATK Up",
 				"Duration":3,
 				"Power":3},
-			{"Name":"ATK UP X against trait",
+			{"Name":"ATK UP X Against Trait",
 				"Duration":3,
 				"Power":2,
-				"trait":"Summonable"}
+				"Trait":"Summonable"}
 			],
 			"Cast":"Self"}
 		]
