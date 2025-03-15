@@ -16,6 +16,27 @@ offset_bottom = 293.0
 texture = ExtResource("2_wjxef")
 expand_mode = 1
 
+[node name="ZIndexDownButton" type="Button" parent="TextureRect"]
+offset_left = 34.0
+offset_top = -20.0
+offset_right = 67.0
+offset_bottom = -2.0
+text = "Z-"
+
+[node name="DeleteButton" type="Button" parent="TextureRect"]
+offset_left = 276.0
+offset_top = -15.0
+offset_right = 309.0
+offset_bottom = 3.0
+text = "Del"
+
+[node name="ZIndexUpButton" type="Button" parent="TextureRect"]
+offset_left = 79.0
+offset_top = -21.0
+offset_right = 112.0
+offset_bottom = -3.0
+text = "Z+"
+
 [node name="ResizeHandleArea" type="Area2D" parent="TextureRect"]
 unique_name_in_owner = true
 

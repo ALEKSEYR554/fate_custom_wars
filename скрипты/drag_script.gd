@@ -5,45 +5,77 @@ var drag_offset = Vector2()
 
 var resizing = false
 var resize_start_size = Vector2()
-var resize_start_global_position = Vector2() # Запоминаем глобальную позицию Node2D в начале изменения размера
-@onready var texture_rect = %TextureRect
-@onready var resize_handle_area = %ResizeHandleArea
-
-
+var resize_start_global_position = Vector2()
+var resize_handle_area = null
+var texture_rect = null
 
 @export var min_size = Vector2(10, 10)
 
+# Кнопки UI (больше не null в _ready, они дочерние TextureRect)
+
+@onready var z_index_down_button = $TextureRect/ZIndexDownButton
+@onready var delete_button = $TextureRect/DeleteButton
+@onready var z_index_up_button = $TextureRect/ZIndexUpButton
+
+
+
+var is_selected = false
+
 func _ready():
-	#texture_rect = get_node("TextureRect")
+	texture_rect = get_node("TextureRect")
 	if texture_rect == null:
 		printerr("Error: TextureRect node not found as a child of this Node2D.")
 		return
 
-	#resize_handle_area = texture_rect.get_child(0)
+	resize_handle_area = texture_rect.get_node("ResizeHandleArea")
 	if resize_handle_area == null:
 		printerr("Error: ResizeHandleArea node not found as a child of TextureRect.")
 		return
 
 	_update_resize_handle_position()
 
+	# Получаем ссылки на кнопки UI (теперь они дочерние TextureRect)
+	#delete_button = texture_rect.get_node("DeleteButton") # Получаем от TextureRect
+	#z_index_up_button = texture_rect.get_node("ZIndexUpButton") # Получаем от TextureRect
+	#z_index_down_button = texture_rect.get_node("ZIndexDownButton") # Получаем от TextureRect
+
+	# Подключаем сигналы кнопок
+	if delete_button:
+		delete_button.pressed.connect(_on_delete_button_pressed)
+	if z_index_up_button:
+		z_index_up_button.pressed.connect(_on_z_index_up_button_pressed)
+	if z_index_down_button:
+		z_index_down_button.pressed.connect(_on_z_index_down_button_pressed)
+
+	_set_buttons_visible(false)
+
 
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			resize_start_global_position = global_position
 			if event.pressed:
 				if is_mouse_over_texture_rect():
+					if not dragging and not resizing:
+						_set_buttons_visible(true)
+						is_selected = true
 					dragging = true
 					drag_offset = get_global_mouse_position() - global_position
 
-				if is_mouse_over_area(resize_handle_area):
+				elif is_mouse_over_area(resize_handle_area):
 					resizing = true
 					resize_start_size = texture_rect.size
-					#resize_start_global_position = global_position # **Захватываем позицию только здесь, при нажатии кнопки**
+					resize_start_global_position = global_position
 					drag_offset = get_global_mouse_position()
-			else:
+
+				else: # Клик вне TextureRect
+					if is_selected and not (is_mouse_over_button(delete_button) or is_mouse_over_button(z_index_up_button) or is_mouse_over_button(z_index_down_button)):
+						_set_buttons_visible(false)
+						is_selected = false
+
+			else: # Кнопка мыши отпущена
 				dragging = false
 				resizing = false
+
 
 func _process(delta):
 	if dragging:
@@ -58,16 +90,49 @@ func _process(delta):
 		new_size.y = max(new_size.y, min_size.y)
 
 		# Вычисляем смещение позиции Node2D, чтобы верхний левый угол TextureRect оставался на месте
-		var size_difference = new_size - texture_rect.size # Разница между новым и текущим размерами
-		global_position = resize_start_global_position + size_difference * Vector2(0.5, 0.5) # Смещаем Node2D на половину разницы размеров
+		var size_difference = new_size - texture_rect.size
+		global_position = resize_start_global_position + size_difference * Vector2(0.5, 0.5)
 
 		texture_rect.size = new_size
-		_update_resize_handle_position()
+		_update_resize_handle_position() # Обновляем позицию ручки и кнопок
 
 
 func _update_resize_handle_position():
 	if resize_handle_area != null and texture_rect != null:
 		resize_handle_area.position = texture_rect.size
+
+	# **Обновляем позиции кнопок здесь**
+	_update_button_positions()
+
+
+func _update_button_positions():
+	if texture_rect == null:
+		return
+
+	# Пример: Располагаем кнопки над TextureRect, по центру по горизонтали
+	var button_spacing = 5 # Расстояние между кнопками
+	var total_buttons_width = 0
+	if delete_button:
+		total_buttons_width += delete_button.size.x
+	if z_index_up_button:
+		total_buttons_width += z_index_up_button.size.x
+	if z_index_down_button:
+		total_buttons_width += z_index_down_button.size.x
+	total_buttons_width += button_spacing * 2 # Учитываем промежутки между кнопками
+
+	var start_x = -total_buttons_width / 2.0 + delete_button.size.x / 2.0 # Начальная X позиция для центрирования
+
+	var button_y_offset = -30 # Смещение кнопок вверх от TextureRect
+
+	if delete_button:
+		delete_button.position = Vector2(start_x, button_y_offset)
+		start_x += delete_button.size.x + button_spacing
+	if z_index_up_button:
+		z_index_up_button.position = Vector2(start_x, button_y_offset)
+		start_x += z_index_up_button.size.x + button_spacing
+	if z_index_down_button:
+		z_index_down_button.position = Vector2(start_x, button_y_offset)
+		start_x += z_index_down_button.size.x + button_spacing
 
 
 func is_mouse_over_texture_rect() -> bool:
@@ -90,3 +155,33 @@ func is_mouse_over_area(area: Area2D) -> bool:
 			if res.collider == area:
 				return true
 	return false
+
+func _set_buttons_visible(visible: bool):
+	if delete_button:
+		delete_button.visible = visible
+	if z_index_up_button:
+		z_index_up_button.visible = visible
+	if z_index_down_button:
+		z_index_down_button.visible = visible
+
+func is_mouse_over_button(button: Button) -> bool:
+	if button == null or not button.visible:
+		return false
+	var mouse_pos_local_to_button = button.get_local_mouse_position()
+	var button_size = button.size
+	var button_rect = Rect2(Vector2.ZERO, button_size)
+	return button_rect.has_point(mouse_pos_local_to_button)
+
+
+# Функции-обработчики сигналов кнопок (не изменились)
+func _on_delete_button_pressed():
+	queue_free()
+	printerr("Node2D deleted via button!")
+
+func _on_z_index_up_button_pressed():
+	z_index += 1
+	printerr("Z-index increased via button to: ", z_index)
+
+func _on_z_index_down_button_pressed():
+	z_index -= 1
+	printerr("Z-index decreased via button to: ", z_index)
