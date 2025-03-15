@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=10 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_jragl"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_u7yvv"]
 [ext_resource type="Script" path="res://рейтинг.gd" id="8_2xjn8"]
+[ext_resource type="Script" path="res://uploade_images.gd" id="9_obsvw"]
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
@@ -610,9 +611,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -249.5
+offset_left = -251.5
 offset_top = -209.0
-offset_right = 249.5
+offset_right = 247.5
 offset_bottom = 209.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -650,6 +651,7 @@ layout_mode = 2
 size_flags_vertical = 3
 text = "Skills:"
 editable = false
+wrap_mode = 1
 
 [node name="Button" type="Button" parent="GUI"]
 visible = false
@@ -659,6 +661,16 @@ offset_right = 264.0
 offset_bottom = 644.0
 text = "FREE PHANTASM
 CLICK HERE"
+
+[node name="flip_sprite_button" type="Button" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.000868056
+anchor_top = 0.74537
+anchor_right = 0.124132
+anchor_bottom = 0.817901
+theme_override_font_sizes/font_size = 28
+text = "Flip Sprite"
+metadata/_edit_use_anchors_ = true
 
 [node name="buffs_temp_container" type="VBoxContainer" parent="GUI"]
 anchors_preset = -1
@@ -730,6 +742,17 @@ theme_override_font_sizes/font_size = 40
 text = "OK"
 metadata/_edit_use_anchors_ = true
 
+[node name="add_image_button" type="Button" parent="GUI"]
+anchors_preset = -1
+anchor_left = 0.103299
+anchor_top = 0.898148
+anchor_right = 0.199653
+anchor_bottom = 0.998457
+offset_right = -3.0
+theme_override_font_sizes/font_size = 20
+text = "Add Image"
+metadata/_edit_use_anchors_ = true
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
@@ -737,10 +760,24 @@ script = ExtResource("2_bpvk8")
 
 [node name="players_handler" type="Node2D" parent="."]
 script = ExtResource("4_f845x")
+metadata/_edit_lock_ = true
 
 [node name="finish_screen" type="Node2D" parent="."]
-position = Vector2(620, 232)
+position = Vector2(648, 204)
 script = ExtResource("8_2xjn8")
+metadata/_edit_lock_ = true
+
+[node name="uploaded_images_layer" type="Node2D" parent="."]
+script = ExtResource("9_obsvw")
+metadata/_edit_lock_ = true
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open Image"
+ok_button_text = "Открыть"
+mode_overrides_title = false
+file_mode = 0
+access = 2
+use_native_dialog = true
 
 [connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]
@@ -790,5 +827,8 @@ script = ExtResource("8_2xjn8")
 [connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_entered_gui_element"]
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_exited_gui_element"]
 [connection signal="pressed" from="GUI/Button" to="players_handler" method="_on_free_phantasm_pressed"]
+[connection signal="pressed" from="GUI/flip_sprite_button" to="players_handler" method="_on_flip_sprite_button_pressed"]
 [connection signal="pressed" from="GUI/buffs_temp_container/refresh_buffs_button" to="." method="_on_refresh_buffs_button_pressed"]
 [connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
+[connection signal="pressed" from="GUI/add_image_button" to="uploaded_images_layer" method="_on_add_image_button_pressed"]
+[connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]

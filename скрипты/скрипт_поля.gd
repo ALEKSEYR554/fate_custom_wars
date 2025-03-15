@@ -14,6 +14,9 @@ var is_pole_generated=false
 var glow_cletki_node
 var captured_kletki_node=null
 var captured_kletki_nodes_dict={}
+var kletki_holder
+var lines_holder
+
 
 # kletka: who is there node2d
 #{ 6: el_melloy:<Node2D#62159586689>, 25: bunyan:<Node2D#61807265149>}
@@ -273,10 +276,15 @@ func get_path_in_n_steps(start, end, steps):
 
 
 func pull_enemy(enemy_peer_id):
-	current_action="emeny pulling"
-	enemy_to_pull=enemy_peer_id
+	
 	var path=get_path_in_n_steps(current_kletka,peer_id_to_kletka_number[enemy_peer_id],999)
-	choose_glowing_cletka_by_ids_array(path)
+	path.erase(current_kletka)
+	if path.size()!=1:
+		current_action="emeny pulling"
+		enemy_to_pull=enemy_peer_id
+		
+		
+		choose_glowing_cletka_by_ids_array(path)
 
 
 func generate_characters_on_random_kletkax():
@@ -291,13 +299,17 @@ func generate_characters_on_random_kletkax():
 
 func generate_cells(preset_time):
 	var i=0
+	kletki_holder=Node2D.new()
+	kletki_holder.name="kletki_holder"
+	add_child(kletki_holder)
+	kletki_holder.z_index=10
 	for j in range(cell_count):
 		var new_position = generate_random_position(preset_time)
 		if new_position != Vector2():
 			cell_positions[i] = new_position
 			kletka_preference[i]="none"
 			var cell_instance = cell_scene.instantiate()
-			add_child(cell_instance,true)
+			kletki_holder.add_child(cell_instance,true)
 			cell_instance.position = new_position
 			cell_instance.name="клетка "+str(i)
 			connected[i] = {}
@@ -331,6 +343,10 @@ func generate_random_position(preset_time):
 func connect_cells_minimum(preset_time):
 	seed(preset_time)
 	print("nnnn="+str(cell_count))
+	lines_holder=Node2D.new()
+	lines_holder.name="lines_holder"
+	add_child(lines_holder)
+	lines_holder.z_index=0
 	for i in range(cell_count):
 		if connected[i].size() < 2:
 			var distances = []
@@ -398,7 +414,7 @@ func ccw(a, b, c):
 
 func draw_lineff(start, end):
 	var line = Line2D.new()
-	add_child(line,true)
+	lines_holder.add_child(line,true)
 	line.width = 3
 	line.z_index=-1
 	line.default_color = Color.WHITE
@@ -421,13 +437,16 @@ func array_unique(array) -> Array:
 
 @rpc("call_local","reliable")
 func reset_pole(cur_time,generate_pole=true):
+	if kletki_holder==null or lines_holder==null:
+		generate_pole(cur_time)
+		return
 	is_pole_generated=true
-	for i in get_all_children(self):
-		pass
-	for i in get_all_children(self):
-		if i.name.contains("клетка") or i.name.contains("Line2D") or i.name.contains("angra"):
+	for i in get_all_children(kletki_holder):
+		if i.name.contains("клетка") or i.name.contains("Line2D"):
 			remove_child(i)
-		#print(i.name)
+	for i in get_all_children(lines_holder):
+		if i.name.contains("клетка") or i.name.contains("Line2D"):
+			remove_child(i)
 	if generate_pole:
 		generate_pole(cur_time)
 
@@ -438,6 +457,7 @@ func _on_reset_pressed():
 func glow_cletki_intiate():
 	glow_array=[]
 	glow_cletki_node=Node2D.new()
+	glow_cletki_node.z_index=100
 	glow_cletki_node.name="Glow_cletki_node"
 	add_child(glow_cletki_node,true)
 	for i in get_all_children(self):
@@ -469,6 +489,7 @@ func glow_cletki_intiate():
 func add_all_additional_nodes():
 	print("add_all_additional_nodes")
 	captured_kletki_node=Node2D.new()
+	captured_kletki_node.z_index=30
 	captured_kletki_node.name="Captured_kletki_node"
 	add_child(captured_kletki_node,true)
 	print("-add_all_additional_nodes----")
@@ -588,6 +609,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 func capture_single_kletka_sync(glowing_kletka_number_selected_temp,temp_kletka_capture_config,kletka_color:Color):
 	if typeof(captured_kletki_node)==TYPE_NIL:
 		captured_kletki_node=Node2D.new()
+		captured_kletki_node.z_index=30
 		captured_kletki_node.name="Captured_kletki_node"
 		add_child(captured_kletki_node,true)
 	print(str(glowing_kletka_number_selected_temp," is captured"))
@@ -1361,7 +1383,8 @@ func _on_skill_info_show_button_pressed():
 
 
 func hide_all_gui_windows(except_name="all"):
-	
+	if except_name!="servant_info_main_container":
+		players_handler.player_info_button_current_peed_id=0
 	print("hide_all_gui_windows= "+str(except_name))
 	match except_name:
 		"all":
@@ -1510,9 +1533,9 @@ func get_players_array_sorted_by_points():
 				"total_success_hit":
 					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]*2
 				"total_crit_hit":
-					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]
-				"skill_used_total":
 					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]*2
+				"total_skill_used":
+					peer_id_to_points[peer_id]+=stat_dic[peer_id][stat]
 		points.append(points)
 	points.sort()
 	pass
