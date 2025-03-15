@@ -40,7 +40,7 @@ var peer_id_player_info={}
 
 #peer_id={"total_kletki_moved":INT,"total_success_hit":INT,"kletki_moved_this_turn":INT,"attacked_this_turn":INT,
 #"total_crit_hit":INT,"total_damage_dealt":INT,"total_damage_taken":INT,"skill_used_this_turn":INT,
-#"skill_used_total":INT}
+#"total_skill_used":INT}
 var peer_id_player_game_stat_info={}
 
 var peer_id_to_nickname={}
@@ -83,6 +83,7 @@ func fuck_you():
 	print("fuck you")
 
 func _ready():
+	self.z_index=50
 	Globals.self_peer_id=multiplayer.get_unique_id()
 	rpc("update_ready_users_count",current_users_ready,Globals.connected_players.size())
 	#print(str(dir.get_directories()))
@@ -223,15 +224,20 @@ func initialise_start_variables(peer_id_list):
 
 
 func player_info_button_pressed(peer_id):
-	field.hide_all_gui_windows("servant_info_main_container")
+	
 	print("player_info_button_pressed="+str(peer_id))
 	servant_info_from_peer_id(peer_id)
-	return
-	if peer_id==player_info_button_current_peed_id and servant_info_main_container.visible:
-		servant_info_main_container.visible= false
+	if peer_id!=player_info_button_current_peed_id and servant_info_main_container.visible:
+		#servant_info_main_container.visible= false
+		#servant_info_from_peer_id(peer_id)
+		player_info_button_current_peed_id=peer_id
+		pass
 	else:
 		player_info_button_current_peed_id=peer_id
-		servant_info_from_peer_id(peer_id)
+		field.hide_all_gui_windows("servant_info_main_container")
+		#servant_info_from_peer_id(peer_id)
+	
+	
 
 func servant_button_pressed(servant_name_info_to_get):
 	print("servant_name_info_to_get:",servant_name_info_to_get)
@@ -397,7 +403,20 @@ Endurance:%s
 Luck:%s
 Magic:%s
 	'''%[info.name,info.hp,info.servant_class,info.ideology,info.agility,info.endurance,info.luck,info.magic]
-	
+	var buffs=info.buffs
+	var display_buffs=""
+	for buff in buffs:
+		if buff.has("Power"):
+			display_buffs+=str("\t",buff["Name"]," lvl ",buff["Power"]," for ",buff["Duration"],"turns\n")
+		else:
+			display_buffs+=str("\t",buff["Name"]," for ",buff["Duration"],"turns\n")
+	var peer_skills=info.skills
+	var skill_text_to_display=""
+	for skill in peer_skills.keys():
+		skill_text_to_display+=str("\t",peer_skills[skill]["Description"],"\n")
+	servant_info_skills_textedit.text='''Buffs:\n\t%s
+Skills:\n\t%s
+	'''%[display_buffs,skill_text_to_display]
 
 func get_enemies_teams():
 	var all_enemies_peer_id=[]
@@ -1137,7 +1156,11 @@ func calculate_damage_to_take(attacker_peer_id,enemies_dice_results,damage_type=
 			"ATK Down X Against Trait":
 				if skill["Trait"] in self_traits:
 					damage_to_take=floor(damage_to_take/skill["Power"])
-		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
+		
+		var pow=""
+		if skill.has("Power"):
+			pow=str(" power=",skill["Power"])
+		print(str("Buff= ",skill["Name"],pow," damage_to_take=",damage_to_take))
 	
 	if enemies_dice_results["crit_dice"]==enemies_dice_results["main_dice"]:
 		is_crit=true
@@ -1371,7 +1394,7 @@ func _on_use_skill_button_pressed():
 	
 	field.reduce_one_action_point()
 	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_this_turn",1)
-	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_total",1)
+	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_skill_used",1)
 	pass # Replace with function body.
 
 func peer_id_has_buff(peer_id,buff_name):
@@ -1389,9 +1412,11 @@ func change_peer_id_servant_stat(peer_id,stat,value):
 			peer_id_player_info[peer_id]["servant_node"].attack_power=value
 
 @rpc("any_peer","call_local","reliable")
-func change_peer_id_sprite(peer_id,image):
-	var image2=load(image)
-	peer_id_player_info[peer_id]["servant_node"].get_child(0).texture=image2
+func change_peer_id_sprite(peer_id:int,image_path:String):
+	var img = Image.new()
+	img.load(image_path)
+	#player_textureRect.texture=ImageTexture.create_from_image(img)
+	peer_id_player_info[peer_id]["servant_node"].get_child(0).texture=ImageTexture.create_from_image(img)
 
 func change_weapon(weapon_name_to_change_to,class_skill_number):
 	var weapons_array=Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["weapons"]
@@ -1475,8 +1500,12 @@ func set_random_command_spell_set():
 			print(file.find(" 3.png"))
 			types.append(file.substr(0,file.find(" 3.png")))
 	self_command_spell_type=types.pick_random()
+	print("commnand_spell_load_path="+str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	var img = Image.new()
+	img.load(str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	#player_textureRect.texture=ImageTexture.create_from_image(img)
 	
-	field.command_spells_button.texture_normal=load(str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	field.command_spells_button.texture_normal=ImageTexture.create_from_image(img)
 	pass
 
 @rpc("any_peer","call_local","reliable")
@@ -1501,4 +1530,12 @@ func reduce_command_spell_on_peer_id(peer_id):
 		else:
 			field.command_spells_button.texture_normal=load(str("res://empty.png"))
 
+@rpc("any_peer","reliable","call_local")
+func flip_peer_id_sprite(peer_id:int):
+	var ff =peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h
+	peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h = !ff
+	pass
 
+func _on_flip_sprite_button_pressed():
+	rpc("flip_peer_id_sprite",Globals.self_peer_id)
+	pass # Replace with function body.
