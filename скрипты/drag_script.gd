@@ -77,24 +77,34 @@ func _input(event):
 				resizing = false
 
 
+@rpc("any_peer","call_local")
+func rpc_drag(mouse_pos_local,ofset_local):
+	global_position = mouse_pos_local - ofset_local
+
+@rpc("any_peer","call_local")
+func rpc_resizing(new_size):
+	new_size.x = max(new_size.x, min_size.x)
+	new_size.y = max(new_size.y, min_size.y)
+
+	# Вычисляем смещение позиции Node2D, чтобы верхний левый угол TextureRect оставался на месте
+	var size_difference = new_size - texture_rect.size
+	global_position = resize_start_global_position + size_difference * Vector2(0.5, 0.5)
+
+	texture_rect.size = new_size
+	_update_resize_handle_position() # Обновляем позицию ручки и кнопок
+
+
 func _process(delta):
 	if dragging:
-		global_position = get_global_mouse_position() - drag_offset
+		rpc("rpc_drag",get_global_mouse_position() , drag_offset)
+		#global_position = get_global_mouse_position() - drag_offset
 
 	if resizing:
 		var mouse_pos = get_global_mouse_position()
 		var delta_mouse = mouse_pos - drag_offset
 		var new_size = resize_start_size + delta_mouse
-
-		new_size.x = max(new_size.x, min_size.x)
-		new_size.y = max(new_size.y, min_size.y)
-
-		# Вычисляем смещение позиции Node2D, чтобы верхний левый угол TextureRect оставался на месте
-		var size_difference = new_size - texture_rect.size
-		global_position = resize_start_global_position + size_difference * Vector2(0.5, 0.5)
-
-		texture_rect.size = new_size
-		_update_resize_handle_position() # Обновляем позицию ручки и кнопок
+		rpc("rpc_resizing",new_size)
+		
 
 
 func _update_resize_handle_position():
@@ -175,13 +185,22 @@ func is_mouse_over_button(button: Button) -> bool:
 
 # Функции-обработчики сигналов кнопок (не изменились)
 func _on_delete_button_pressed():
+	rpc("rpc_delete_but")
+
+@rpc("any_peer","call_local","reliable")
+func rpc_delete_but():
 	queue_free()
-	printerr("Node2D deleted via button!")
+	#printerr("Node2D deleted via button!")
 
 func _on_z_index_up_button_pressed():
-	z_index += 1
-	printerr("Z-index increased via button to: ", z_index)
+	#z_index += 1
+	rpc("rpc_z_change",1)
+	
+@rpc("any_peer","call_local","reliable")
+func rpc_z_change(amount:int):
+	z_index += amount
 
 func _on_z_index_down_button_pressed():
-	z_index -= 1
-	printerr("Z-index decreased via button to: ", z_index)
+	#z_index -= 1
+	rpc("rpc_z_change",-1)
+	#printerr("Z-index decreased via button to: ", z_index)
