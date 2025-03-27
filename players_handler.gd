@@ -206,8 +206,7 @@ func set_teams_and_turns_order(shiffled_players_array,turn_order):
 func initialise_start_variables(peer_id_list):
 	field.add_all_additional_nodes()
 	for peer_id in peer_id_list:
-		peer_id_to_items_owned[peer_id]=[]
-		peer_id_to_items_owned[peer_id]=[]
+		peer_id_to_items_owned[peer_id]={}
 		peer_id_to_inventory_array[peer_id]=[]
 		peer_id_to_np_points[peer_id]=0
 		peer_id_to_command_spells_int[peer_id]=3
@@ -432,6 +431,7 @@ var custom_id_to_skill={}
 
 func fill_custom_thing(custom_items_dict,type=""):
 	print("fill_custom_thing")
+	print("custom_items="+str(custom_items_dict))
 	custom_id_to_skill={}
 	for children in custom_choices_tab_container.get_children():
 		custom_choices_tab_container.remove_child(children)
@@ -462,14 +462,18 @@ func fill_custom_thing(custom_items_dict,type=""):
 				current_buff_effect=custom_item["Overcharges"]
 				cost={"Type":"NP","value":custom_item["Overcharges"]["Default"]["Cost"]}
 			"potion creating":
+				current_buff_effect=custom_item["Buff"]
 				cost={"Type":"Free","value":0}
 			"potion using":
+				current_buff_effect=custom_item["Effect"]
 				cost={"Type":"Free","value":0}
 				
-		print("ff")
+		print("ff\n\n")
+		print("custom_item="+str(custom_item))
 		custom_id_to_skill[custom_item_name]={"min_cost":cost,
 		"Type":type,"Effect":current_buff_effect,"Description":custom_item["Description"]}
-		print(str("custom_id_to_skill=",custom_id_to_skill))
+		print_debug(str("custom_id_to_skill=",custom_id_to_skill))
+		
 	pass
 
 
@@ -490,17 +494,18 @@ func _on_custom_choices_tab_container_tab_changed(tab):
 func _on_use_custom_button_pressed():
 	#print(custom_id_to_skill[custom_choices_tab_container.current_tab])
 	var custom_id=custom_choices_tab_container.get_current_tab_control().name
+	custom_choices_tab_container.visible=false
+	use_custom_but_label_container.visible=false
 	
-	
-	print("custom_id_to_skill[custom_id]="+str(custom_id_to_skill))
+	print_debug("custom_id_to_skill[custom_id]="+str(custom_id_to_skill))
 	match custom_id_to_skill[custom_id]["Type"]:
 		"phantasm":
-			use_phantasm(custom_id_to_skill[custom_id]["Effect"])
+			await use_phantasm(custom_id_to_skill[custom_id]["Effect"])
 			field.reduce_one_action_point()
 		"potion creating":
 			var dict={custom_id:custom_id_to_skill[custom_id]}
 			#dict.merge(custom_id_to_skill[custom_id])
-			rpc("add_item_to_peer_id",Globals.self_peer_id,dict) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
+			rpc("add_item_to_peer_id",Globals.self_peer_id,dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
 			field.reduce_one_action_point(0)
 			#rpc("use_skill",custom_id_to_skill[custom_id]["Effect"])
 		"potion using":
@@ -508,16 +513,28 @@ func _on_use_custom_button_pressed():
 			#var kletki_ids=field.get_kletki_ids_with_enemies_you_can_reach_in_steps(custom_id_to_skill[custom_id]["range"])
 			#{ "min_cost": { "Type": "Free", "value": 0 }, "Type": "potion creating", "Effect": [{ "Name": "Heal", "Power": 5 }], "range": 2 }
 			var tmp=custom_id_to_skill[custom_id]["Effect"]
-			var buf={"Buffs":tmp["Effect"],"Cast":["Single In Range",tmp["range"]]}
-			await use_skill(buf)
-			print("custom_id_to_skill[custom_id][\"Effect\"]="+str(custom_id_to_skill[custom_id]["Effect"]))
-	custom_choices_tab_container.visible=false
-	use_custom_but_label_container.visible=false
+			for effect in tmp:
+				var buf={"Buffs":effect,"Cast":["Single In Range",effect["Range"]]}
+				await use_skill(buf)
+				print_debug("custom_id_to_skill[custom_id][\"Effect\"]="+str(custom_id_to_skill[custom_id]["Effect"]))
+				
+	
 	
 
 @rpc("any_peer","call_local","reliable")
-func add_item_to_peer_id(peer_id,item):
-	peer_id_to_items_owned[peer_id].append(item)
+func add_item_to_peer_id(peer_id,item,item_name):
+	print("item for peer_id="+str(peer_id)+" = "+str(item))
+	var valid:bool=false
+	var count:int=1
+	var new_item_name=item_name+""
+	while !valid:
+		if peer_id_to_items_owned[peer_id].has(new_item_name):
+			new_item_name=new_item_name+str(count)
+			count+=1
+		else:
+			valid=true
+	#var new_dict_to_append={new_item_name:item[item_name]}
+	peer_id_to_items_owned[peer_id][new_item_name]=item[item_name]
 
 @rpc("any_peer","call_local","reliable")
 func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int):
@@ -604,6 +621,8 @@ func use_phantasm(phantasm_info):
 	if overcharge_use.has("effect_after_attack"):
 		await use_skill(overcharge_use["effect_after_attack"],attacked_by_phantasm)
 	
+	
+	rpc("change_phantasm_charge_on_peer_id",Globals.self_peer_id,-overcharge_use["Cost"])
 	#for effect in 
 	
 	pass
@@ -693,6 +712,7 @@ func get_all_enemies_in_range(range):
 func use_skill(skill_info_dictionary,custom_cast=null):
 	#trait_name is used if "Damange 2х Against Trait"
 	#String
+	print("\n\nuse_skill="+str(skill_info_dictionary)+"\n")
 	rpc("zoom_out_in_camera_before_buff",true)
 	if typeof(skill_info_dictionary)==TYPE_DICTIONARY:
 		skill_info_dictionary=[skill_info_dictionary]
@@ -752,6 +772,8 @@ func use_skill(skill_info_dictionary,custom_cast=null):
 	rpc("zoom_out_in_camera_before_buff",false)
 
 func create_potion(potions_dict):
+	print("\ncreate_potion")
+	print("potions_dict="+str(potions_dict))
 	"""[{"Name":"Heal Potion",
 			 "Range":2,
 			 "Buff":[
@@ -1465,19 +1487,19 @@ func _on_items_pressed():
 	var items_array=peer_id_to_items_owned[Globals.self_peer_id].duplicate(true)
 	
 	print("\n\nitems_array="+str(items_array))
-	var items_descriptions={}
-	var items_effects={}
-	print(items_array)
-	for item in items_array:
-		print(item)
-		var item_name=item.keys()[0]
-		items_descriptions[item_name]={"Text":item[item_name]["Description"]}
-		items_effects[item_name]=item[item_name]
-		items_effects[item_name].erase("Description")
+	#var items_descriptions={}
+	#var items_effects={}
+	#print(items_array)
+	#for item in items_array:
+		#print(item)
+		#var item_name=item.keys()[0]
+		#items_descriptions[item_name]={"Text":item[item_name]["Description"]}
+		#items_effects[item_name]=item[item_name]
+		#items_effects[item_name].erase("Description")
 		#items_descriptions[item]=items_array[item][]
-	print("items_descriptions="+str(items_descriptions)+" items_effects="+str(items_effects))
-	print('\n\n')
-	fill_custom_thing(items_effects,"potion using")
+	#print("items_descriptions="+str(items_descriptions)+" items_effects="+str(items_effects))
+	#print('\n\n')
+	fill_custom_thing(items_array,"potion using")
 	field.hide_all_gui_windows("use_custom")
 		
 	pass # Replace with function body.
