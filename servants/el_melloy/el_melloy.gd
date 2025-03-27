@@ -167,18 +167,18 @@ var skills={
 				{
 					"Heal Potion":{
 						"Description":"Зелье лечения: Восполняет 5 очков здоровья, а также снимает все дебаффы себе или другому слуге в радиусе двух клеток",
-						"Range":2,
 						"Buff":[
 							{"Name":"Heal",
+								"Range":2,
 								"Power":5}
 							]
 					},
 					"Poison Potion":{
 						"Description":"Яд: Накладывает на одного слугу в радиусе двух клеток состояние отравления и понижает здоровье на 1 очко каждый ход на протяжении трёх ходов.",
-						"Range":2,
 						"Buff":[
 							{"Name":"Poison",
 								"Duration":3,
+								"Range":2,
 								"Power":1,
 								"Trigger":"End Turn",
 								"Effect On Trigger":"Take Damage By Power"}

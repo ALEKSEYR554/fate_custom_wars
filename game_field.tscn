@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://76njdkfx4roi"]
 
-[ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_jragl"]
+[ext_resource type="Script" path="res://скрипты/поле_гемини.gd" id="1_0v5lw"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_ilhtt"]
 [ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://dice_control.tscn" id="3_0ils4"]
@@ -12,7 +12,7 @@
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
-script = ExtResource("1_jragl")
+script = ExtResource("1_0v5lw")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 
@@ -293,7 +293,6 @@ theme_override_font_sizes/font_size = 30
 text = "3"
 
 [node name="right_ange_buttons_container" type="VBoxContainer" parent="GUI"]
-visible = false
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0

@@ -52,7 +52,7 @@ func _ready():
 
 func _input(event):
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed:
 				if is_mouse_over_texture_rect():
 					if not dragging and not resizing:
