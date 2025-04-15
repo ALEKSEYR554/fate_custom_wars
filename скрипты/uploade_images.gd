@@ -1,6 +1,6 @@
 extends Node2D
 @onready var file_dialog = $"../FileDialog"
-const DRAG_OBJECT = preload("res://drag_object.tscn")
+const DRAG_OBJECT = preload("res://сцены/drag_object.tscn")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

@@ -1,18 +1,18 @@
 [gd_scene load_steps=10 format=3 uid="uid://76njdkfx4roi"]
 
-[ext_resource type="Script" path="res://скрипты/поле_гемини.gd" id="1_0v5lw"]
-[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_bpvk8"]
-[ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_ilhtt"]
-[ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://dice_control.tscn" id="3_0ils4"]
-[ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://char_select.tscn" id="3_8jq0o"]
-[ext_resource type="Script" path="res://players_handler.gd" id="4_f845x"]
-[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_u7yvv"]
-[ext_resource type="Script" path="res://рейтинг.gd" id="8_2xjn8"]
-[ext_resource type="Script" path="res://uploade_images.gd" id="9_obsvw"]
+[ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_c6n5g"]
+[ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_chyh4"]
+[ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://сцены/char_select.tscn" id="3_2errx"]
+[ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://сцены/dice_control.tscn" id="4_bol8j"]
+[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_0nlqk"]
+[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="6_r85gn"]
+[ext_resource type="Script" path="res://скрипты/players_handler.gd" id="7_naqg5"]
+[ext_resource type="Script" path="res://скрипты/рейтинг.gd" id="8_8trl2"]
+[ext_resource type="Script" path="res://скрипты/uploade_images.gd" id="9_j25dr"]
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
-script = ExtResource("1_0v5lw")
+script = ExtResource("1_c6n5g")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 
@@ -42,7 +42,7 @@ anchor_left = 0.710938
 anchor_top = 0.00617284
 anchor_right = 0.815972
 anchor_bottom = 0.186728
-texture_normal = ExtResource("2_ilhtt")
+texture_normal = ExtResource("2_chyh4")
 ignore_texture_size = true
 stretch_mode = 5
 metadata/_edit_use_anchors_ = true
@@ -348,7 +348,7 @@ layout_mode = 2
 text = "Current users ready 0/?"
 horizontal_alignment = 1
 
-[node name="Char_select" parent="GUI/character_selection_container" instance=ExtResource("3_8jq0o")]
+[node name="Char_select" parent="GUI/character_selection_container" instance=ExtResource("3_2errx")]
 layout_mode = 2
 
 [node name="get_selected_character" type="Button" parent="GUI/character_selection_container"]
@@ -591,16 +591,16 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="main_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+[node name="main_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("4_bol8j")]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="crit_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+[node name="crit_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("4_bol8j")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="defence_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("3_0ils4")]
+[node name="defence_dice" parent="GUI/dice_holder_hbox" instance=ExtResource("4_bol8j")]
 layout_mode = 2
 
 [node name="Servant_info_main_container" type="VBoxContainer" parent="GUI"]
@@ -625,7 +625,7 @@ layout_mode = 2
 [node name="servant_info_picture" type="TextureRect" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
-texture = ExtResource("5_u7yvv")
+texture = ExtResource("5_0nlqk")
 expand_mode = 2
 
 [node name="servant_info_stats_textedit" type="TextEdit" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
@@ -755,19 +755,19 @@ metadata/_edit_use_anchors_ = true
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
-script = ExtResource("2_bpvk8")
+script = ExtResource("6_r85gn")
 
 [node name="players_handler" type="Node2D" parent="."]
-script = ExtResource("4_f845x")
+script = ExtResource("7_naqg5")
 metadata/_edit_lock_ = true
 
 [node name="finish_screen" type="Node2D" parent="."]
 position = Vector2(648, 204)
-script = ExtResource("8_2xjn8")
+script = ExtResource("8_8trl2")
 metadata/_edit_lock_ = true
 
 [node name="uploaded_images_layer" type="Node2D" parent="."]
-script = ExtResource("9_obsvw")
+script = ExtResource("9_j25dr")
 metadata/_edit_lock_ = true
 
 [node name="FileDialog" type="FileDialog" parent="."]
