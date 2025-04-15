@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dri8cwrklyejb"]
 
-[ext_resource type="Script" path="res://рейтинг.gd" id="1_g7d7o"]
+[ext_resource type="Script" path="res://скрипты/рейтинг.gd" id="1_g7d7o"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_qd25y"]
 
 [node name="Node2D" type="Node2D"]

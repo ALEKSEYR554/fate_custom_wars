@@ -1,18 +1,18 @@
 extends Node
 
-var host_or_user="host"
-var connected_players=[]
-var self_servant_node
+var host_or_user:String="host"
+var connected_players:Array=[]
+var self_servant_node:Node2D
 var self_peer_id:int
 var self_field_color:Color
 var nickname:String
 # Called when the node enters the scene tree for the first time.
 
 
-const buffs_types={
+const buffs_types:Dictionary={
 	#exclusive buffs
-	"Attack Range Set":["Buff Positive Effect","Buff Range Change"],
-	"Attack Range Add":["Buff Positive Effect","Buff Range Change"],
+	"Attack Range Set":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
+	"Attack Range Add":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
 	"Discharge Enemies NP":[],#instant
 	"Discharge NP":[],
 	"Discharge Allies NP":[],
@@ -24,6 +24,27 @@ const buffs_types={
 	"Magical Damage Get + Attack":["Buff Positive Effect","Buff Increase Damage"],
 	"pull enemies on attack":["Buff Positive Effect","Buff Increase Damage"],
 	"Critical Remove":["Buff Negative Effect","Buff Decrease Damage"],
+	
+	"Agility Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Agility Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Magical Attack Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Magical Attack Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Magical Defence Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Magical Defence Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Luck Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Luck Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Endurance Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Endurance Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Maximum HP Add":["Buff Positive Effect","Buff Increase Stat"],
+	"Maximum HP Set":["Buff Positive Effect","Buff Increase Stat"],
+
+	"Magic ATK Up":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	"Magic ATK Up X":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	#FGO type buffs	
 	
 	

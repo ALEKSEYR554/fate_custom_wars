@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bpwt6601esmp2"]
 
-[ext_resource type="Script" path="res://host_script.gd" id="1_1yc4k"]
+[ext_resource type="Script" path="res://скрипты/host_script.gd" id="1_1yc4k"]
 
 [node name="Host_scene" type="Control"]
 layout_mode = 3

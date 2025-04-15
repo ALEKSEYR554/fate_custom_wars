@@ -12,7 +12,7 @@ extends Node
 @onready var host_scene = $Host_scene
 @onready var start_screen = $start_screen
 @onready var back_button = $Back_button
-const GAME_FIELD = preload("res://game_field.tscn")
+const GAME_FIELD = preload("res://сцены/game_field.tscn")
 
 func _ready():
 	#DisplayServer.window_set_title("gogod_debug="+str(OS.get_process_id()))

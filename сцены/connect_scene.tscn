@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cwp4u07m523wm"]
 
-[ext_resource type="Script" path="res://connect_scene.gd" id="1_df7gr"]
+[ext_resource type="Script" path="res://скрипты/connect_scene.gd" id="1_df7gr"]
 
 [node name="Connect_scene" type="Control"]
 layout_mode = 3

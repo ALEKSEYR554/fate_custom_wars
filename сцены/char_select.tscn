@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ct6q5ory650sj"]
 
-[ext_resource type="Script" path="res://servant_selection.gd" id="1_clfld"]
+[ext_resource type="Script" path="res://скрипты/servant_selection.gd" id="1_clfld"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="2_buxd3"]
 
 [node name="Char_select" type="Control"]
