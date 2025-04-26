@@ -64,7 +64,7 @@ var skill_cooldowns=[]
 var magic=["A+",6,12]
 var additional_moves=0
 var additional_attack=0
-var traits
+var traits=[]
 var phantasm_charge=0
 # Called when the node enters the scene tree for the first time.
 

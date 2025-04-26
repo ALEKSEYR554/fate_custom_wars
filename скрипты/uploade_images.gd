@@ -23,6 +23,7 @@ func add_image(image_data):
 	texture.set_image(img)
 	
 	var drag_img=DRAG_OBJECT.instantiate()
+	drag_img.get_child(0).size=Vector2(data["width"],data["height"])
 	drag_img.get_child(0).texture=texture
 	
 	#var node2=Node2D.new()

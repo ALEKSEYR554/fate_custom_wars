@@ -1,0 +1,1817 @@
+extends Node2D
+
+#region Onready
+@onready var field = self.get_parent()
+
+@onready var host_buttons:VBoxContainer = $"../GUI/host_buttons"
+
+@onready var servant_info_main_container:VBoxContainer = $"../GUI/Servant_info_main_container"
+@onready var servant_info_picture_and_stats_container:HBoxContainer = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container"
+@onready var servant_info_picture:TextureRect = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_picture"
+@onready var servant_info_stats_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit"
+@onready var servant_info_skills_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_skills_textedit"
+
+
+@onready var current_hp_container:HBoxContainer = $"../GUI/current_hp_container"
+@onready var current_hp_value_label:Label = $"../GUI/current_hp_container/current_hp_value_label"
+
+
+@onready var players_info_buttons_container:VBoxContainer = $"../GUI/players_info_buttons_container"
+
+@onready var get_selected_character_button:Button = $"../GUI/character_selection_container/get_selected_character"
+@onready var char_select:Control = $"../GUI/character_selection_container/Char_select"
+
+@onready var skill_info_tab_container:TabContainer = $"../GUI/Skill_info_tab_container"
+@onready var first_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/First Skill"
+@onready var second_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/Second Skill"
+@onready var third_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/Third Skill"
+@onready var class_skills_text_edit:TabContainer = $"../GUI/Skill_info_tab_container/Class Skills"
+
+
+@onready var custom_choices_tab_container:TabContainer = $"../GUI/custom_choices_tab_container"
+@onready var use_custom_but_label_container:VBoxContainer = $"../GUI/use_custom_but_label_container"
+@onready var use_custom_label:Label = $"../GUI/use_custom_but_label_container/use_custom_label"
+@onready var use_custom_button:Button = $"../GUI/use_custom_but_label_container/use_custom_button"
+@onready var current_players_ready_label:Label = $"../GUI/character_selection_container/Current_players_ready"
+#endregion
+
+#region Usable Variables
+var custom_id_to_skill:Dictionary={}
+var turns_order_by_peer_id:Array=[]
+
+var teams_by_peer_id:Array=[]
+
+var turns_counter:int=1
+var current_player_peer_id_turn:int
+
+
+
+var start_camera_position:Vector2
+var start_camera_zoom:Vector2
+var last_camera_positon:Vector2
+var last_camera_zoom:Vector2
+
+# peer_id={"servant_name":"bunyan","servant_node":NODE,
+#"Buffs":[["buff_name",duration_int]],"debuffs:[["debuff_name",duration_int]]"}
+var peer_id_player_info:Dictionary={}
+
+#peer_id={"total_kletki_moved":INT,"total_success_hit":INT,"kletki_moved_this_turn":INT,"attacked_this_turn":INT,
+#"total_crit_hit":INT,"total_damage_dealt":INT,"total_damage_taken":INT,"skill_used_this_turn":INT,
+#"total_skill_used":INT}
+var peer_id_player_game_stat_info={}
+
+var peer_id_to_nickname:Dictionary={}
+
+var peer_id_to_command_spells_int:Dictionary={}
+
+var peer_id_to_items_owned:Dictionary={}
+
+var peer_id_to_np_points:Dictionary={}
+
+var peer_id_to_inventory_array:Dictionary={}
+var player_info_button_current_peed_id:int=-1
+
+var self_command_spell_type:String=""
+var servant_name_to_peer_id:Dictionary={}
+#Current users ready 0/?
+var current_users_ready:int=0
+var choosen_allie_return_value:Node2D
+#endregion
+
+
+signal next_turn_pass
+signal chosen_allie()
+signal buff_removed
+signal buffs_cooldown_reduced
+signal skills_cooldown_reduced
+#region CONSTANTS
+const CUSTOM_TYPES = {PHANTASM = "phantasm", POTION_CREATING = "potion creating", POTION_USING = "potion using", BUFF_CHOOSING="buff choosing"}
+const TEXTURE_SIZE:int=200
+const DEFAULT_GAME_STAT={"total_kletki_moved":0,"total_success_hit":0,
+		"kletki_moved_this_turn":0,"attacked_this_turn":0,
+		"total_crit_hit":0,"total_damage_dealt":0,"total_damage_taken":0,
+		"skill_used_this_turn":0,"total_skill_used":0}
+
+const DAMANGE_TYPE= {PHYSICAL="Physical", MAGICAL="Magical", PHANTASM="Phantasm"}
+const buff_ignoring=["Ignore Defence","Ignore DEF Buffs"]
+#endregion
+
+func fuck_you():
+	print("fuck you")
+
+
+#region Starting and Loading
+func _ready():
+	self.z_index=50
+	Globals.self_peer_id=multiplayer.get_unique_id()
+	rpc("update_ready_users_count")
+	#print(str(dir.get_directories()))
+	return
+
+
+@rpc("call_local","authority","reliable")
+func load_servant(peer_id:int):
+	var folderr
+	if OS.has_feature("editor"):
+		folderr="res"
+	else:
+		folderr="user"
+	
+	var servant_name:String=peer_id_player_info[peer_id].get("servant_name","NULL")
+	if servant_name=="NULL":
+		push_error("servant is not found while loading")
+		return
+	servant_name_to_peer_id[servant_name]=peer_id
+	#var dir = DirAccess.open(folderr+"://servants/")
+	#for i in dir.get_directories():#getting custom characters
+	var player:Node2D=Node2D.new()
+	var player_textureRect:TextureRect = TextureRect.new()
+	var effect_layer:TextureRect = TextureRect.new()
+	var buff_name_label:Label= Label.new()
+	var servant_folder_name:String=folderr+"://servants/"+str(servant_name)
+	player.set_script(load(servant_folder_name+"/"+str(servant_name)+".gd"))
+
+	if ResourceLoader.exists(servant_folder_name+"/sprite.png"):
+		var img = Image.new()
+		img.load(servant_folder_name+"/sprite.png")
+		player_textureRect.texture=ImageTexture.create_from_image(img)
+	elif ResourceLoader.exists(servant_folder_name+"/sprite.webp"):
+		var img= Image.new()
+		img.load(servant_folder_name+"/sprite.webp")
+		player_textureRect.texture=ImageTexture.create_from_image(img)
+	else:
+		push_error("No sprite Found while loading servant")
+		return
+	
+	effect_layer.texture=load("res://white.png")
+	
+	var sizes:Vector2=player_textureRect.texture.get_size()
+	#texture.flat=true
+	#texture.anchors_preset=
+	#texture.button_down.connect(player_info_button_pressed.bind(peer_id))
+	player_textureRect.position=Vector2(-(TEXTURE_SIZE*1.0)/2,-TEXTURE_SIZE)
+	player_textureRect.scale=Vector2(TEXTURE_SIZE/sizes.x,TEXTURE_SIZE/sizes.y)
+	
+	
+	effect_layer.size=Vector2(TEXTURE_SIZE*1.1,TEXTURE_SIZE*1.1)
+	effect_layer.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.1)
+	
+	buff_name_label.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.2)
+	buff_name_label.text="FUCK"
+	
+	
+	buff_name_label.add_theme_font_size_override("font_size",40)
+	buff_name_label.add_theme_color_override("font_outline_color",Color.WHITE)
+	buff_name_label.add_theme_constant_override("outline_size",5)
+	buff_name_label.add_theme_color_override("font_color",Color.BLACK)
+	buff_name_label.z_index=1
+	print("sizes="+str(sizes))
+	print("scale="+str(player.scale))
+	#player.add_child(player,true)
+	player.name=servant_name
+	effect_layer.z_index=-1
+	effect_layer.modulate=Color(1, 1, 1, 0)
+	buff_name_label.modulate=Color(1, 1, 1, 0)
+	player.add_child(player_textureRect)
+	player.add_child(effect_layer)
+	player.add_child(buff_name_label)
+	
+	if peer_id==Globals.self_peer_id:
+		Globals.self_servant_node=player
+	peer_id_player_info[peer_id]["servant_node"]=player
+	
+	self.add_child(player,true)
+	#print(rand_kletka)
+	#print(cell_positions[rand_kletka])
+	#jopa.position = cord
+	#set_random_teams()
+	#return player
+	
+func get_selected_servant()->void:
+	var servant_name:String=char_select.get_current_servant()
+	get_selected_character_button.disabled=true
+	print(servant_name)
+	#Globals.self_servant_node=load_servant_by_name()
+	rpc("set_nickname_for_peer_id",Globals.self_peer_id,Globals.nickname)
+	rpc_id(1,"check_if_players_ready",multiplayer.get_unique_id(),servant_name)
+
+@rpc("call_local","any_peer","reliable")
+func set_nickname_for_peer_id(peer_id:int,nickk:String):
+	peer_id_to_nickname[peer_id]=nickk
+
+@rpc("any_peer","call_local","reliable")
+func check_if_players_ready(peer_id:int,servant_name:String):
+	peer_id_player_info[peer_id]={"servant_name":servant_name,"servant_node":null}
+	print("peer_id="+str(peer_id_player_info)+" is ready")
+	current_users_ready+=1
+	update_ready_users_count()
+	#print("Globals.connected_players="+str(Globals.connected_players)+"Globals.connected_players.size()="+str(Globals.connected_players.size()))
+	#print("=current_users_ready="+str(current_users_ready))
+	if Globals.connected_players.size()==current_users_ready:
+		if Globals.host_or_user=="host":
+			host_buttons.visible=true
+	
+
+@rpc("authority","call_local","reliable")
+func inital_spawn_of_player_forwarder():
+	print()
+	field.inital_spawn_of_player()
+
+@rpc("any_peer","call_local","reliable")
+func update_ready_users_count():
+	current_players_ready_label.text="Current users ready"+str(current_users_ready)+"/"+str(Globals.connected_players.size())
+
+
+@rpc("authority","call_local","reliable")
+func sync_peer_id_player_info(peer_id_player_info_temp:Dictionary):
+	peer_id_player_info=peer_id_player_info_temp
+
+@rpc("authority","call_local","reliable")
+func set_teams_and_turns_order(shiffled_players_array,turn_order):
+	var len_=shiffled_players_array.size()/2
+	teams_by_peer_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
+	print("teams="+str(teams_by_peer_id))
+	
+	turns_order_by_peer_id=turn_order
+	for peer_id in turns_order_by_peer_id:
+		var servant_button=Button.new()
+		servant_button.text=peer_id_player_info[peer_id]["servant_name"]
+		servant_button.button_down.connect(player_info_button_pressed.bind(peer_id))
+		players_info_buttons_container.add_child(servant_button,true)
+	
+
+@rpc("authority","call_local","reliable")
+func initialise_start_variables(peer_id_list:Array):
+	field.add_all_additional_nodes()
+	for peer_id in peer_id_list:
+		peer_id_to_items_owned[peer_id]={}
+		peer_id_to_inventory_array[peer_id]=[]
+		peer_id_to_np_points[peer_id]=0
+		peer_id_to_command_spells_int[peer_id]=3
+		peer_id_player_game_stat_info[peer_id]=DEFAULT_GAME_STAT.duplicate(true)
+		Globals.self_field_color = Color(randf(), randf(), randf())
+		
+	start_camera_position=$"../Camera2D".position
+	start_camera_zoom=$"../Camera2D".zoom
+
+	pass
+
+func start():
+	#выдаем каждому игроку свой NODE слуги
+	rpc("sync_peer_id_player_info",peer_id_player_info)
+	var temp_pl=peer_id_player_info.keys()
+	temp_pl.shuffle()
+	var sh1=temp_pl
+	temp_pl.shuffle()
+	var sh2=temp_pl
+	print("temp_pl+"+str(temp_pl))
+	
+	print_debug("set_teams_and_turns_order=",sh1,sh2)
+	rpc("set_teams_and_turns_order",sh1,sh2)
+	for peer_id in peer_id_player_info.keys():
+		#var node_to_add=load_servant_by_name(peer_id_player_info[peer_id]["servant_name"])
+		rpc("load_servant",peer_id)
+		#peer_id_player_info[peer_id]["servant_node"]=node_to_add
+		#add_child(node_to_add,true)
+		#print(node_to_add)
+		#rpc_id(peer_id,"set_player_node",inst_to_dict(node_to_add))
+		print("peer_id_player_info="+str(peer_id_player_info))
+	#первоначальное выставление слуг на поле
+	rpc("initialise_start_variables",turns_order_by_peer_id)
+	for peer_id in turns_order_by_peer_id: 
+		current_player_peer_id_turn=peer_id
+		rpc_id(peer_id,"inital_spawn_of_player_forwarder")
+		await next_turn_pass
+		print(peer_id)
+	turns_loop()
+
+#endregion
+
+#region Turns Handler
+@rpc("any_peer","call_local","reliable")
+func pass_next_turn(peer_id:int)->void:
+	if peer_id==current_player_peer_id_turn:
+		field.my_turn=false
+		next_turn_pass.emit()
+		
+
+
+func is_only_one_team_stand()->bool:
+	var peer_id_alive=[]+turns_order_by_peer_id
+	if get_all_peer_ids().size()==1:#for debug only
+		return false
+	var teams_alive=[]
+	for team in teams_by_peer_id:
+		for member in team:
+			if team in teams_alive:
+				break
+			if member in peer_id_alive:
+				teams_alive.append(team)
+	print("teams_alive="+str(teams_alive))
+	print(teams_alive.size()==1)
+	return teams_alive.size()==1
+
+func turns_loop() -> void:
+	print("turns_loop started")
+	while !is_only_one_team_stand():
+		turns_counter+=1
+		for peer_id in turns_order_by_peer_id:
+			print("\n\nNow "+str(peer_id)+" turn\n\n")
+			current_player_peer_id_turn=peer_id
+			field.rpc_id(peer_id,"start_turn")
+			await next_turn_pass
+		rpc("turn_update",turns_counter)
+	$"../GUI/host_buttons/finish_button".visible=true
+
+@rpc("any_peer","call_local","reliable")
+func turn_update(turn) -> void:
+	$"../GUI/turns_label".text=str("Turn: ",turn)
+
+#endregion
+
+
+func player_info_button_pressed(peer_id:int):
+	print("player_info_button_pressed="+str(peer_id))
+	servant_info_from_peer_id(peer_id)
+	if peer_id!=player_info_button_current_peed_id and servant_info_main_container.visible:
+		#servant_info_main_container.visible= false
+		#servant_info_from_peer_id(peer_id)
+		player_info_button_current_peed_id=peer_id
+		pass
+	else:
+		player_info_button_current_peed_id=peer_id
+		field.hide_all_gui_windows("servant_info_main_container")
+		#servant_info_from_peer_id(peer_id)
+
+
+func choose_allie()->Array:
+	var ketki_with_allies=[]
+	for peer_id in get_allies():
+		ketki_with_allies.append(field.peer_id_to_kletka_number[peer_id])
+	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
+	field.current_action="choose_allie"
+	await chosen_allie
+	return [servant_name_to_peer_id[choosen_allie_return_value.name]]
+
+func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
+	print("=====================")
+	var servant_skills:Dictionary=peer_id_player_info[peer_id]["servant_node"].skills
+	var _can_use_skill=true
+	
+	
+	#print(servant_nod)
+	first_skill_text_edit.text=servant_skills.get("First Skill").get("Description")
+	second_skill_text_edit.text=servant_skills.get("Second Skill").get("Description")
+	third_skill_text_edit.text=servant_skills.get("Third Skill").get("Description")
+	#print("third_skill_text_edit.text="+str(third_skill_text_edit.text))
+	var cct=1
+	for children in class_skills_text_edit.get_children():
+		class_skills_text_edit.remove_child(children)
+		children.queue_free() 
+	#var class_skill_count=1
+	for class_skill_count in range(1,10):
+		var class_skill_name="Class Skill "+str(class_skill_count)
+		if !servant_skills.has(class_skill_name):
+			break
+		var skill_info=servant_skills[class_skill_name]
+		#for skill_info in servant_nod.slice(3):
+		
+		if skill_info["Type"]=="Weapon Change":
+			#TODO create custom TabBar class for this shit
+			#for description of weapon change
+			var tab_cont=TabContainer.new()
+			tab_cont.name="Weapon change"
+			tab_cont.tab_alignment=TabBar.ALIGNMENT_CENTER
+			
+			for weapon in peer_id_player_info[peer_id]["servant_node"].skills[class_skill_name]["weapons"]:
+				var t_edit_new=TextEdit.new()
+				t_edit_new.editable=false
+				t_edit_new.name=weapon
+				t_edit_new.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
+				t_edit_new.text=skill_info["weapons"][weapon]["Description"]
+				tab_cont.add_child(t_edit_new)
+			class_skills_text_edit.add_child(tab_cont)
+		else:
+			var t_edit=TextEdit.new()
+			t_edit.editable=false
+			t_edit.name="Class skill "+str(cct)
+			t_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
+			t_edit.text=skill_info["Description"]
+			class_skills_text_edit.add_child(t_edit)
+		cct+=1
+	pass
+
+func servant_info_from_peer_id(peer_id:int)->void:
+	var info=peer_id_player_info[peer_id]["servant_node"]
+	#servant_info_main_container.visible= true#!servant_info_main_container.visible
+	servant_info_stats_textedit.text="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s
+	\nEndurance:%s\nLuck:%s\nMagic:%s\n"%[info.name,info.hp,info.servant_class,info.ideology,info.agility,info.endurance,info.luck,info.magic]
+	var buffs:Array=info.buffs
+	var display_buffs=""
+	for buff in buffs:
+		display_buffs+=str("\t",buff["Name"])
+		if buff.has("Power"):
+			display_buffs+=str(" lvl ",buff["Power"])
+		if buff.has("Duration"):
+			display_buffs+=str(" for ",buff["Duration"],"turns")
+			
+		display_buffs+="\n"
+	var peer_skills:Dictionary=info.skills
+	var skill_text_to_display=""
+	for skill in peer_skills.keys():
+		skill_text_to_display+=str("\t",peer_skills[skill]["Description"],"\n")
+	servant_info_skills_textedit.text="Buffs:\n\t%sSkills:\n\t%s"%[display_buffs,skill_text_to_display]
+
+func get_enemies_teams()->Array:
+	var all_enemies_peer_id=[]
+	for team in teams_by_peer_id:
+		for member in team:
+			if Globals.self_peer_id!=member:
+				all_enemies_peer_id+=team
+	return all_enemies_peer_id
+
+
+
+
+func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
+	print("fill_custom_thing")
+	print("custom_items="+str(custom_items_dict))
+	custom_id_to_skill={}
+	for children in custom_choices_tab_container.get_children():
+		custom_choices_tab_container.remove_child(children)
+		children.queue_free() 
+	
+	#for custom_description in custom_desctription_array:
+	
+	#print(str("custom_desctription_array=",custom_desctription_array))
+	#print(str("custom_buffs_array=",custom_buffs_array))
+	
+	for custom_item_name in custom_items_dict:
+		var custom_item=custom_items_dict[custom_item_name]
+		var current_buff_effect
+		var tt_edit:TextEdit=TextEdit.new()
+
+		tt_edit.editable=false
+		tt_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
+		tt_edit.name=custom_item_name
+		tt_edit.text=custom_item["Description"]
+		custom_choices_tab_container.add_child(tt_edit,true)
+		var cost={"Type":"NP","value":6}
+		
+		
+		print_debug("custom_items_dict="+str(custom_items_dict))
+		print_debug("type="+str(type))
+		match type:
+			CUSTOM_TYPES.PHANTASM:
+				current_buff_effect=custom_item["Overcharges"]
+				cost={"Type":"NP","value":custom_item["Overcharges"]["Default"]["Cost"]}
+			CUSTOM_TYPES.POTION_CREATING:
+				current_buff_effect=custom_item["Buff"]
+				cost={"Type":"Free","value":0}
+			CUSTOM_TYPES.POTION_USING:
+				current_buff_effect=custom_item["Effect"]
+				cost={"Type":"Free","value":0}
+			CUSTOM_TYPES.BUFF_CHOOSING:
+				current_buff_effect=custom_item
+				cost={"Type":"Free","value":0}
+			_:
+				push_error("Unhandled Custom type:"+str(type))
+				
+		#print("ff\n\n")
+		print_debug("custom_item="+str(custom_item))
+		custom_id_to_skill[custom_item_name]={"min_cost":cost,
+		"Type":type,"Effect":current_buff_effect,"Description":custom_item["Description"]}
+		print_debug(str("custom_id_to_skill=",custom_id_to_skill))
+
+
+func _on_custom_choices_tab_container_tab_changed(tab)->void:
+	#return
+	
+	#JUST IN CASE
+	if custom_id_to_skill=={}: return
+	use_custom_button.disabled=false
+	
+	var costt=custom_id_to_skill[custom_choices_tab_container.get_tab_control(tab).name]["min_cost"]
+	match costt["Type"]:
+		"NP":
+			use_custom_label.text="Cost: "+str(costt["value"]," ",costt["Type"])
+			if Globals.self_servant_node.phantasm_charge<costt["value"] or peer_id_has_buff(Globals.self_peer_id,"NP Seal"):
+					use_custom_button.disabled=true
+	
+
+func _on_use_custom_button_pressed()->void:
+	#print(custom_id_to_skill[custom_choices_tab_container.current_tab])
+	var custom_id=custom_choices_tab_container.get_current_tab_control().name
+	custom_choices_tab_container.visible=false
+	use_custom_but_label_container.visible=false
+	
+	print_debug("custom_id_to_skill[custom_id]="+str(custom_id_to_skill))
+	match custom_id_to_skill[custom_id]["Type"]:
+		CUSTOM_TYPES.PHANTASM:
+			await use_phantasm(custom_id_to_skill[custom_id]["Effect"])
+			field.reduce_one_action_point()
+		CUSTOM_TYPES.POTION_CREATING:
+			var dict={custom_id:custom_id_to_skill[custom_id]}
+			#dict.merge(custom_id_to_skill[custom_id])
+			rpc("add_item_to_peer_id",Globals.self_peer_id,dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
+			field.reduce_one_action_point(0)
+			#rpc("use_skill",custom_id_to_skill[custom_id]["Effect"])
+		CUSTOM_TYPES.BUFF_CHOOSING:
+			await use_skill(custom_id_to_skill[custom_id]["Effect"])
+		CUSTOM_TYPES.POTION_USING:
+			print("\n\npotion using")
+			#var kletki_ids=field.get_kletki_ids_with_enemies_you_can_reach_in_steps(custom_id_to_skill[custom_id]["range"])
+			#{ "min_cost": { "Type": "Free", "value": 0 }, "Type": "potion creating", "Effect": [{ "Name": "Heal", "Power": 5 }], "range": 2 }
+			var tmp=custom_id_to_skill[custom_id]["Effect"]
+			for effect in tmp:
+				var buf={"Buffs":effect,"Cast":"Single In Range","Cast Range":effect["Range"]}
+				await use_skill(buf)
+				print_debug("custom_id_to_skill[custom_id][\"Effect\"]="+str(custom_id_to_skill[custom_id]["Effect"]))
+				
+	
+	
+
+@rpc("any_peer","call_local","reliable")
+func add_item_to_peer_id(peer_id:int,item:Dictionary,item_name:String)->void:
+	print("item for peer_id="+str(peer_id)+" = "+str(item))
+	var valid:bool=false
+	var count:int=1
+	var new_item_name=item_name+""
+	while !valid:
+		if peer_id_to_items_owned[peer_id].has(new_item_name):
+			new_item_name=item_name+str(count)
+			count+=1
+		else:
+			valid=true
+	#var new_dict_to_append={new_item_name:item[item_name]}
+	peer_id_to_items_owned[peer_id][new_item_name]=item[item_name]
+
+@rpc("any_peer","call_local","reliable")
+func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int)->void:
+	if not(stat in ["hp","attack_range","attack_power"]):
+		return
+	peer_id_player_game_stat_info[peer_id][stat]+=value_to_add
+	pass
+
+#region Stat get
+
+func check_if_peer_id_got_crit(peer_id:int,dice_results:Dictionary)->bool:
+	var crit_removed=false
+	var is_crit=false
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Critical Remove":
+				crit_removed=true
+			"Critical Hit Rate Up":
+				if dice_results["crit_dice"] in skill["Crit Chances"]:
+					is_crit=true
+	if crit_removed:
+		is_crit=false
+	return is_crit
+
+func calculate_crit_damage(peer_id:int,damage:int)->int:
+	var new_damage:int=damage+0
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Critical Strength Up":
+				new_damage+=skill.get("Power",0)
+			"Critical Strength Up X":
+				new_damage*=skill.get("Power",1)
+	return new_damage
+
+func get_peer_id_attack_power(peer_id:int,damage_type:String,enemy_traits:String="")->int:
+	var base_attack:int=peer_id_player_info[peer_id]["servant_node"].attack_power
+	var attack_total:int=base_attack+0
+
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"ATK Up":
+				attack_total+=skill["Power"]
+			"ATK UP X":
+				attack_total*=skill["Power"]
+			"ATK Down":
+				attack_total-=skill["Power"]
+			"ATK Down X":
+				attack_total=floor(attack_total/skill["Power"])
+			"NP Strength Up" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total+=skill["Power"]
+			"NP Strength Up X" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total*=skill["Power"]
+			"NP Strength Down" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total-=skill["Power"]
+			"NP Strength Down X" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total*=floor(attack_total/skill["Power"])
+			"Magic ATK Up" when damage_type==DAMANGE_TYPE.MAGICAL:
+				attack_total+=skill["Power"]
+			"Magic ATK Up X" when damage_type==DAMANGE_TYPE.MAGICAL:
+				attack_total*=skill["Power"]
+			"Madness Enhancement":
+				attack_total*=skill["Power"]
+			"ATK Up Against Trait":
+				if skill["Trait"] in enemy_traits:
+					attack_total+=skill["Power"]
+			"ATK Up X Against Trait":
+				if skill["Trait"] in enemy_traits:
+					attack_total*=skill["Power"]
+			"ATK Down Against Trait":
+				if skill["Trait"] in enemy_traits:
+					attack_total-=skill["Power"]
+			"ATK Down X Against Trait":
+				if skill["Trait"] in enemy_traits:
+					attack_total=floor(attack_total/skill["Power"])
+		
+		var poww=""
+		if skill.has("Power"):
+			poww=str(" power=",skill["Power"])
+		print(str("Buff= ",skill["Name"],poww," damage_to_take=",attack_total))
+	return attack_total
+
+func get_peer_id_agility(peer_id:int)->int:
+	var base_agility:int
+	base_agility=get_agility_in_numbers(peer_id_player_info[peer_id]["servant_node"].agility)
+	#TODO fix this later AKA after Andersen
+	var _new_agility:int=0
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Agility Add":
+				_new_agility+=skill.get("Power",0)*1.0/base_agility
+			"Agility Set":
+				_new_agility=skill.get("Power","B")
+				break
+	return base_agility#int(base_agility+new_agility)
+
+func get_agility_in_numbers(Endurance):
+	match Endurance.replace("+",""):
+		"EX":
+			return 6
+		"A":
+			return 5
+		"B":
+			return 4
+		"C":
+			return 3
+		"D":
+			return 2
+		"E":
+			return 1
+		"F":
+			return 1
+
+
+func get_peer_id_attack_range(peer_id:int)->int:
+	var base_range:int=peer_id_player_info[peer_id]["servant_node"].attack_range
+	var new_range:int=base_range+0
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Attack Range Add":
+				new_range+=skill.get("Power",0)
+			"Attack Range Set":
+				new_range=skill.get("Power",1)
+				break
+	return new_range
+
+func get_peer_id_magical_attack(peer_id:int)->int:
+	var base_stat:int=peer_id_player_info[peer_id]["servant_node"].magic.get("Power",0)
+	var new_stat:int=base_stat+0
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Magical Attack Add":
+				new_stat+=skill.get("Power",0)
+			"Magical Attack Set":
+				new_stat=skill.get("Power",1)
+				break
+	return new_stat
+
+func get_peer_id_magical_defence(peer_id:int)->int:
+	var base_stat:int=peer_id_player_info[peer_id]["servant_node"].magic.get("Defence",0)
+	var new_stat:int=base_stat+0
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Magical Defence Add":
+				new_stat+=skill.get("Power",0)
+			"Magical AttDefenceack Set":
+				new_stat=skill.get("Power",1)
+				break
+	return new_stat
+
+func get_peer_id_luck(peer_id:int)->int:
+	var base_stat:int=peer_id_player_info[peer_id]["servant_node"].luck
+	var _new_stat:int=base_stat+0
+	#TODO fix this later AKA after Andersen
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Magical Defence Add":
+				_new_stat+=skill.get("Power",0)
+			"Magical AttDefenceack Set":
+				_new_stat=skill.get("Power",1)
+				break
+	return base_stat	
+
+#endregion
+
+
+
+
+
+func _on_phantasm_pressed()->void:
+	use_custom_button.disabled=false
+	use_custom_label.visible=false
+	if Globals.self_servant_node.phantasm_charge<6:
+		use_custom_label.text="COST:6"
+		
+		use_custom_button.disabled=true
+		pass
+	
+	fill_custom_thing(Globals.self_servant_node.phantasms,CUSTOM_TYPES.PHANTASM)
+	#for phantasm_name in Globals.self_servant_node.phantasms_info_array:
+		#var tt_edit=TextEdit.new()
+		#tt_edit.editable=false
+		#tt_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
+		#tt_edit.name=phantasm_name["Name"]
+		#tt_edit.text=phantasm_name["Text"]
+		#custom_choices_tab_container.add_child(tt_edit,true)
+	field.hide_all_gui_windows("use_custom")
+	#field.are_you_sure_main_container.visible=true
+	#await field.are_you_sure_signal
+	#if field.are_you_sure_result=="no":
+	#	return
+	#Globals.self_servant_node.phantasm()
+	pass # Replace with function body.
+
+func use_phantasm(phantasm_info):
+	var overcharge_can_be_used=""
+	for overcharge in phantasm_info:#just bad info formation
+		if overcharge=="Name":
+			continue
+		#checking maximum available overcharge that can be used right now
+		if Globals.self_servant_node.phantasm_charge>=phantasm_info[overcharge]["Cost"]:
+			overcharge_can_be_used=overcharge
+			
+			
+	print(str("using overchage=",overcharge_can_be_used))
+	var overcharge_use=phantasm_info[overcharge_can_be_used]
+	
+	"""
+	for skill_info_hash in overcharge_use["effect_after_attack"]:
+		var cast=skill_info_hash["Cast"]
+		var range=0
+		if typeof(cast)==TYPE_ARRAY:
+			range=cast[1]
+			cast=cast[0]
+		var skill_info_array=skill_info_hash["Buffs"]
+		
+		if typeof(skill_info_array)==TYPE_DICTIONARY:
+			skill_info_array=[skill_info_array]
+		match cast.to_lower():
+			"Phantasm Attacked"
+	"""
+	
+	var attacked_by_phantasm
+	
+	if overcharge_use.has("Effect Before Attack"):
+		await use_skill(overcharge_use["Effect Before Attack"])
+	
+	match overcharge_use["Attack Type"]:
+		"Buff Granting":
+			await use_skill(overcharge_use["Effect"])
+		"Line":
+			attacked_by_phantasm=await field.line_attack_phantasm(overcharge_use)
+		"Single In Range":
+			attacked_by_phantasm=await phantasm_in_range(overcharge_use,"Single")
+		"All Enemies In Range":
+			attacked_by_phantasm=await phantasm_in_range(overcharge_use,"All enemies")
+		"All Field Enemies":
+			pass
+	
+	if overcharge_use.has("effect_after_attack"):
+		await use_skill(overcharge_use["effect_after_attack"],attacked_by_phantasm)
+	
+	
+	rpc("change_phantasm_charge_on_peer_id",Globals.self_peer_id,-overcharge_use["Cost"])
+	#for effect in 
+	
+	pass
+
+func phantasm_in_range(phantasm_config,type="Single"):
+	var range=phantasm_config["range"]
+	
+	var kletki_to_attack_array=[]
+	var enemies_array=get_enemies_teams()
+	var tmp
+	var attacked_enemies=[]
+	match type:
+		"Single":
+			tmp=await choose_single_in_range(range)
+		"All enemies":
+			tmp=await get_all_enemies_in_range(range)
+	for peer_id in tmp:
+		kletki_to_attack_array+=field.peer_id_to_kletka_number[peer_id]
+	await field.await_dice_roll()
+	await field.hide_dice_rolls_with_timeout(1)
+	for kletka in kletki_to_attack_array:
+		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
+		attacked_enemies.append(etmp)
+		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
+			await use_skill(phantasm_config["effect_on_success_attack"])
+	
+	return attacked_enemies
+
+
+func _on_free_phantasm_pressed():
+	#peer_id_player_info[Globals.self_peer_id]["servant_node"].phantasm_charge+=6
+	#field.disable_every_button()
+	rpc("change_phantasm_charge_on_peer_id",Globals.self_peer_id,6)
+	pass
+
+@rpc("any_peer","call_local","reliable")
+func change_phantasm_charge_on_peer_id(peer_id,amount):
+	print("change_phantasm_charge_on_peer_id("+str(peer_id)+","+str(amount))
+	var cur_charge=peer_id_player_info[peer_id]["servant_node"].phantasm_charge
+	if cur_charge+amount>=12:
+		peer_id_player_info[peer_id]["servant_node"].phantasm_charge=12
+	else:
+		peer_id_player_info[peer_id]["servant_node"].phantasm_charge+=amount
+	if peer_id==Globals.self_peer_id:
+		$"../GUI/action/np_points_number_label".text=str(peer_id_player_info[peer_id]["servant_node"].phantasm_charge)
+
+func get_allies():
+	for team in teams_by_peer_id:
+		for member in team:
+			if Globals.self_peer_id==member:
+				return team
+	pass
+	#cast self,allies, 
+	
+
+func get_all_peer_ids():
+	var output=[]
+	for team in teams_by_peer_id:
+		for member in team:
+			output.append(member)
+	return output
+
+func choose_single_in_range(range):
+	var ketki_array=[]
+	for peer_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range):
+		ketki_array.append(field.peer_id_to_kletka_number[peer_id])
+	ketki_array.append(field.current_kletka)
+	field.choose_glowing_cletka_by_ids_array(ketki_array)
+	field.current_action="choose_allie"
+	await chosen_allie
+	return [servant_name_to_peer_id[choosen_allie_return_value.name]]
+
+func get_everyone_in_range(range):
+	var out=[]
+	var kletka_id=0
+	for peer_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range):
+		kletka_id=field.peer_id_to_kletka_number[peer_id]
+		if field.occupied_kletki.get(kletka_id,0):
+			out.append(field.occupied_kletki.get(kletka_id))
+	return out
+
+func get_all_enemies_in_range(range):
+	var enemies=get_enemies_teams()
+	var out=[]
+	for peer_id in get_everyone_in_range(range):
+		if peer_id in enemies:
+			out+=peer_id
+	return out
+
+func check_if_peer_id_has_skill_currency(peer_id:int,currency:String,amount:int):
+	match currency:
+		"NP":
+			if peer_id_player_info[peer_id]["servant_node"].phantasm_charge>=amount:
+				return true
+		"HP":
+			if peer_id_player_info[peer_id]["servant_node"].hp>=amount:
+				return true
+		_:
+			push_warning("UNKNOWN CURRENCY:"+str(currency))
+	return false
+
+func reduce_peer_id_currency(peer_id:int,currency:String,amount:int):
+	match currency:
+		"NP":
+			rpc("change_phantasm_charge_on_peer_id",peer_id,-amount)
+		"HP":
+			rpc("take_damage_to_peer_id",peer_id,amount,false)
+		_:
+			push_warning("UNKNOWN CURRENCY:"+str(currency))
+
+func get_all_allies_in_range(range:int)->Array:
+	var allies=get_allies()
+	var out=[]
+	for peer_id in get_everyone_in_range(range):
+		if peer_id in allies:
+			out+=peer_id
+	return out
+
+
+func use_skill(skill_info_dictionary,custom_cast=null):
+	#trait_name is used if "Damange 2х Against Trait"
+	#String
+	print("\n\nuse_skill="+str(skill_info_dictionary)+"\n")
+	rpc("zoom_out_in_camera_before_buff",true)
+
+	if typeof(skill_info_dictionary)==TYPE_DICTIONARY:
+		skill_info_dictionary=[skill_info_dictionary]
+	
+	print(str("using skills=",skill_info_dictionary))
+	for skill_info_hash:Dictionary in skill_info_dictionary:
+		if skill_info_hash.has("Cost"):
+			print("checking cost")
+			var curr=skill_info_hash["Cost"].get("Currency","")
+			var amount=skill_info_hash["Cost"].get("Amount",0)
+			if check_if_peer_id_has_skill_currency(Globals.self_peer_id,curr,amount):
+				print_debug("you have currency"+str(curr)+" value:"+str(amount))
+				reduce_peer_id_currency(Globals.self_peer_id,curr,amount)
+			else:
+				field.info_table_show("Not enought "+str(curr)+" value:"+str(amount))
+				await field.info_ok_button.pressed()
+				continue
+		if skill_info_hash.has("Choose Buff"):
+			fill_custom_thing(skill_info_hash["Choose Buff"],CUSTOM_TYPES.BUFF_CHOOSING)
+			field.hide_all_gui_windows("use_custom")
+			continue
+		
+		var cast=skill_info_hash.get("Cast","self")
+		var cast_range=skill_info_hash.get("Cast Range",0)
+		#if typeof(cast)==TYPE_ARRAY:
+		#	range=cast[1]
+		#	cast=cast[0]
+		var skill_info_array=skill_info_hash["Buffs"]
+		
+		if typeof(skill_info_array)==TYPE_DICTIONARY:
+			skill_info_array=[skill_info_array]
+		match cast.to_lower():
+			"all allies":
+				cast=get_allies()
+			"all allies except self":
+				cast=get_allies()
+				cast.erase(Globals.self_peer_id)
+			"all allies in range":
+				cast=get_all_allies_in_range(cast_range)
+			"all allies in range except self":
+				cast=get_all_allies_in_range(cast_range)
+				cast.erase(Globals.self_peer_id)
+			"self":
+				cast=[Globals.self_peer_id]
+			"all enemies":
+				cast=get_enemies_teams()
+			"single allie":
+				cast=await choose_allie()
+			"everyone":
+				cast=get_all_peer_ids()
+			"single in range":
+				cast=await choose_single_in_range(cast_range)
+			"all enemies in range":
+				cast=get_all_enemies_in_range(cast_range)
+			"phantasm attacked":
+				if custom_cast!=null:
+					cast=custom_cast
+				else:
+					cast=[Globals.self_peer_id]
+			"trigger initiator":
+				if custom_cast!=null:
+					cast=custom_cast
+				else:
+					cast=[Globals.self_peer_id]
+		#casts always array even if one
+		if cast==[]:
+			continue
+		for single_skill_info in skill_info_array:
+			print("single_skill_info="+str(single_skill_info))
+			match single_skill_info["Name"]:
+				"Potion creation":
+					create_potion(single_skill_info["Potions"])
+				"Field Creation":
+					field.capture_field_kletki(single_skill_info["Amount"],single_skill_info["Config"])
+				"Roll dice for effect":
+					roll_dice_for_result(single_skill_info,cast)
+				_:#default/else
+					rpc("add_buff",cast,single_skill_info)
+	await get_tree().create_timer(2).timeout
+	rpc("zoom_out_in_camera_before_buff",false)
+
+func create_potion(potions_dict):
+	print("\ncreate_potion")
+	print("potions_dict="+str(potions_dict))
+	"""[{"Name":"Heal Potion",
+			 "Range":2,
+			 "Buff":[
+				{"Name":"Heal",
+					"Duration":3,
+					"Power":5}
+				]
+			},
+			{"Name":"Posion potion",
+			"Range":2,
+			"Buff":[
+				{"Name":"Posion",
+					"Duration":3,
+					"Power":1}
+				]
+			}]"""
+			
+	"""{
+	"Posion":"(Яд: Накладывает на одного слугу в радиусе двух клеток состояние отравления и понижает здоровье на 1 очко каждый ход на протяжении трёх ходов.)",
+	"Heal Potion":"(Зелье лечения: Восполняет 5 очков здоровья, а также снимает все дебаффы себе или другому слуге в радиусе двух клеток)"}
+	}"""
+	
+	
+	fill_custom_thing(potions_dict,CUSTOM_TYPES.POTION_CREATING)
+	
+	field.hide_all_gui_windows("use_custom")
+	
+	pass
+
+#@rpc("any_peer","reliable","call_local")
+func reduce_all_cooldowns(peer_id,type="start turn"):
+	match type:
+		"start turn":
+			await reduce_buffs_cooldowns(peer_id,type)
+			rpc("reduce_buffs_cooldowns",peer_id,type)
+			#await buffs_cooldown_reduced
+			
+			await reduce_skills_cooldowns(peer_id,type)
+			rpc("reduce_skills_cooldowns",peer_id,type)
+			#await skills_cooldown_reduced
+			print("skills_cooldown_reduced")
+		"end turn":
+			await reduce_buffs_cooldowns(peer_id,type)
+			rpc("reduce_buffs_cooldowns",peer_id,type)
+			#await buffs_cooldown_reduced
+
+@rpc("any_peer","reliable","call_remote")
+func reduce_buffs_cooldowns(peer_id,type="start turn"):
+	
+	print("reduce_buffs_cooldowns\n\n")
+	var buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+	print("\nbuffs="+str(buffs))
+	var buffs_list_to_remove=[]
+	
+	for i in range(buffs.size()):
+		print("i="+str(i)+" "+str(buffs[i]))
+		if buffs[i].has("Duration"):
+			var buff_duration=buffs[i]["Duration"]
+			print("buff_name=",buffs[i]["Name"])
+			if str(buff_duration).is_valid_float():
+				match type:
+					"end turn":
+						if buff_duration - int(buff_duration)!=0:#if duration 0.5 then it is reduced and the end of the turn
+							if buff_duration-1<=0:
+								buffs_list_to_remove.append(buffs[i])
+							else:
+								peer_id_player_info[peer_id]["servant_node"].buffs[i]["Duration"]-=1
+							continue
+					"start turn":
+						if buff_duration-1<=0:
+							print_debug("removing buff")
+							buffs_list_to_remove.append(buffs[i])
+						else:
+							peer_id_player_info[peer_id]["servant_node"].buffs[i]["Duration"]-=1
+					_:
+						push_error("attemt reducing buffs cooldown with unhandled type=",type)
+			
+	print("\nbuffs_list_to_remove="+str(buffs_list_to_remove))
+	for i in buffs_list_to_remove:
+		peer_id_player_info[peer_id]["servant_node"].buffs.erase(i)
+	
+	buffs_cooldown_reduced.emit()
+	
+@rpc("any_peer","reliable","call_remote")
+func reduce_skills_cooldowns(peer_id,_type="start turn"):
+	for i in range(peer_id_player_info[peer_id]["servant_node"].skill_cooldowns.size()):
+		peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]-=1
+		if peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]<=0:
+			peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]=0
+	
+	skills_cooldown_reduced.emit()
+
+
+@rpc("any_peer","reliable","call_local")
+func reduce_custom_param(peer_id:int,buff_id_array:Array,param:String):
+	buff_id_array.sort()
+	for i in range(0,buff_id_array.size(),-1):
+		var buff_id=buff_id_array[i]
+		if peer_id_player_info[peer_id]["servant_node"].buffs[buff_id][param]-1<=0:
+			peer_id_player_info[peer_id]["servant_node"].buffs.pop_at(buff_id)
+		else:
+			peer_id_player_info[peer_id]["servant_node"].buffs[buff_id][param]-=1
+
+
+func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
+	var buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+	var i=0
+	var buffs_ids_to_reduce_trigger_uses:Array=[]
+	var count=0
+	print("trigger_buffs_on="+str(trigger)+" triggered_by_peer_id="+str(triggered_by_peer_id))
+	for buff in buffs:
+		var buff_trigger=buff.get("Trigger","")
+		if buff_trigger:
+			if buff_trigger==trigger or (buff_trigger=="Turns Dividable By Power" and trigger=="turn started"):
+				if buff_trigger=="Turns Dividable By Power":
+					if buff.get("Power"):
+						if buff["Power"]==0:
+							continue
+						#print_debug("turns_counter=",turns_counter-1," buff[Power]=",buff["Power"])
+						if not ((turns_counter-1) % buff["Power"]==0):
+							continue
+				print("trigger="+str(trigger)+" effect"+str(buff["Effect On Trigger"]))
+				if typeof(buff["Effect On Trigger"])==4:#if set action string
+					match buff["Effect On Trigger"]:
+						"Take Damage By Power":
+							rpc("take_damage_to_peer_id",peer_id,buff["Power"])
+						"pull enemies on attack":
+							field.pull_enemy(field.attacking_peer_id)
+				else:
+					print("using trigger buff")
+					var buff_to_add=buff["Effect On Trigger"].duplicate(true)
+					await use_skill(buff_to_add,triggered_by_peer_id)
+					buffs_ids_to_reduce_trigger_uses.append(buff)
+					if buff.has("Total Trigger Uses"):
+						buffs_ids_to_reduce_trigger_uses.append(count)
+						
+						#rpc("reduce_custom_param",peer_id,i,"Total Trigger Uses")
+
+		count+=1
+		
+	for buff in buffs:#defencive buffs
+		if trigger=="Damage Taken":
+			match buff["Name"]:
+				"Invincibility":
+					if buff.has("hit times"):
+						rpc("reduce_custom_param",peer_id,[i],"hit times")
+						break
+		i+=1
+	if !buffs_ids_to_reduce_trigger_uses.is_empty():
+		rpc("reduce_custom_param",peer_id,buffs_ids_to_reduce_trigger_uses,"Total Trigger Uses")
+	
+	var calculata="""just in case to variable
+	casted=3
+	
+	cur_turn=4
+	
+	every 2 turns
+	
+	4-3=1 %2!=0
+	5-3=2%2==0
+	
+	casted=1
+	
+	cur_turn=4
+	
+	every 4 turns
+	
+	4-1=3 %3!=0
+	5-1=4%3==0
+	
+	"""
+	if trigger=="turn_ended":
+		if field.current_kletka==-1:
+			return
+		var cu_klet_config=field.kletka_preference[field.current_kletka]
+		#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
+		#print("type="+str(typeof(cu_klet_config)))
+		if typeof(cu_klet_config)==4:#if string
+			return
+		
+		
+		print("\n\ncu_klet_config="+str(cu_klet_config))
+		if cu_klet_config["Owner"]==peer_id:
+			print(str("cu_klet_config[owner]=",cu_klet_config["Owner"]))
+			if cu_klet_config.has("Np Up Every N Turn"):
+				print(str("cal=",turns_counter,"-",cu_klet_config["turn_casted"],"%",cu_klet_config["Np Up Every N Turn"],"=",(turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]))
+				if (turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]==0:
+					
+					print("TRRRR")
+					rpc("change_phantasm_charge_on_peer_id",peer_id,1)
+
+
+@rpc("any_peer","reliable","call_local")
+func roll_dice_for_result(skill_info:Dictionary,cast:Array):
+	await field.await_dice_roll()
+	var dice_result=field.dice_roll_result_list
+	var is_casted=null
+	field.systemlog_message(str(Globals.nickname," thowing to decide bad status"))
+	for peer_id in cast:
+		is_casted=null
+		while true:
+			field.rpc_id(peer_id,"receice_dice_roll_results",dice_result)
+			field.rpc_id(peer_id,"set_action_status",Globals.self_peer_id,"roll_dice_for_result")
+			await field.attack_response
+			match field.attack_responce_string:
+				"Evaded bad status":
+					is_casted=false
+				"Even dice rolls, reroll for status":
+					pass
+				"Getting bad status":
+					for single_skill in skill_info["Buff To Add"]:#shit
+						rpc("add_buff",peer_id,single_skill)
+					is_casted=true
+			if is_casted!=null:
+				break
+		#field._on_dices_toggle_button_pressed()
+	pass
+
+@rpc("any_peer","reliable","call_local")
+func add_buff_against_trait(cast_array,skill_info):
+	#TODO
+	var skill_name=skill_info["Name"]
+	var duration=skill_info["Duration"]
+	var power=skill_info["Power"]
+	var trait_name=skill_info["Trait"]
+	for who_to_cast_peer_id in cast_array:
+		match skill_name:
+			"Attack up":
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs+=["atk+",duration,power]
+
+@rpc("any_peer","reliable","call_local")
+func add_buff(cast_array,skill_info:Dictionary):
+	if typeof(cast_array)!=TYPE_ARRAY:
+		cast_array=[cast_array]
+	for who_to_cast_peer_id in cast_array:
+		
+		await effect_on_buff(who_to_cast_peer_id,skill_info["Name"])
+		if skill_info.has("Type"):
+			if skill_info["Type"]=="Status":
+				pass
+		match skill_info["Name"]:
+			"Madness Enhancement":
+				#TODO REMAKE THIS BRO THIS IS SHIT
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
+					{"Name":"ATK Up X",
+						"Type":"Status",
+						"Duration":3,
+						"Power":2},
+					{"Name":"Skill Seal",
+						"Type":"Status",
+						"Duration":3}
+					]
+			"NP Gauge":
+				charge_np_to_peer_id_by_number(who_to_cast_peer_id,skill_info["Power"])
+			"Heal":
+				heal_peer_id(who_to_cast_peer_id,skill_info["Power"])
+			"Additional Move":
+				reduce_additional_moves_for_peer_id(who_to_cast_peer_id,-1)
+			"Presence Concealment":
+				start_presence_concealment_for_peer_id(who_to_cast_peer_id)
+				var copy_info=skill_info.duplicate(true)
+				copy_info["Turn Casted"]=turns_counter
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(copy_info)
+			"Invincibility":#if power==0 then all turns else for N hits
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+			_:#else
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+	pass
+
+@rpc("any_peer","reliable","call_local")
+func start_presence_concealment_for_peer_id(peer_id:int):
+	peer_id_player_info[peer_id]["servant_node"].visible=false
+	var cur_kletka_before=field.current_kletka
+	if peer_id==Globals.self_peer_id:
+		field.current_kletka=-1
+	field.occupied_kletki.erase(cur_kletka_before)
+	field.peer_id_to_kletka_number[peer_id]=-1
+	pass
+
+@rpc("any_peer","reliable","call_local")
+func zoom_out_in_camera_before_buff(zoom_out=true):
+
+	return#TODO implement later
+	print("\nzoom_out_in_camera_before_buff")
+	if zoom_out:
+		print("zoom out")
+		last_camera_positon=$"../Camera2D".position
+		last_camera_zoom=$"../Camera2D".zoom
+		await get_tree().create_timer(0.1).timeout
+		$"../Camera2D".position=start_camera_position
+		$"../Camera2D".zoom=start_camera_zoom
+	else:
+		print("zoom in")
+		await get_tree().create_timer(0.1).timeout
+		$"../Camera2D".position=last_camera_positon
+		$"../Camera2D".zoom=last_camera_zoom
+
+@rpc("any_peer","reliable","call_local")
+func effect_on_buff(peer_id_buff_given_to,buff_name):
+	for i in range (10):
+		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
+		await get_tree().create_timer(0.05).timeout
+	peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).text=buff_name
+	
+	for i in range (5):
+		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.2)
+		await get_tree().create_timer(0.006).timeout
+	
+	
+	await get_tree().create_timer(0.1).timeout
+	for i in range (10,-1,-1):
+		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
+		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.1)
+		await get_tree().create_timer(0.05).timeout
+	
+	pass
+
+@rpc("any_peer","reliable","call_local")
+func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
+	#remove SINGLE BUFF
+	#if need to remove bath then await buff_removed to sync
+	for who_to_remove_buff_peer_id in cast_array:
+		var i=0
+		for buff in peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs:
+			if buff["Name"]==skill_name:
+				var buf_type=buff.get("Type","")
+				if buf_type=="Status":
+					continue
+				if buff["Duration"]=="Passive":
+					if remove_passive:
+						peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
+						buff_removed.emit()
+						return
+				elif not remove_only_passive_one:
+					peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
+					buff_removed.emit()
+					return
+			i+=1
+	buff_removed.emit()
+	
+
+func heal_peer_id(peer_id,amount,type="normal"):
+	print(str("\nheal_peer_id=",peer_id," by ",amount))
+	
+	
+	var servant_node_to_heal=peer_id_player_info[peer_id]["servant_node"]
+	var current_hp=servant_node_to_heal.hp
+	var amount_to_heal
+	var max_hp=servant_node_to_heal.default_stats["hp"]
+	if type=="command_spell":
+		amount_to_heal=max_hp*0.7
+	else:#command spell is static 70%
+		amount_to_heal=amount
+		for buff in servant_node_to_heal.buffs:
+			match buff["Name"]:
+				"HP Recovery Up":
+					amount_to_heal+=buff["Power"]
+				"HP Recovery Up X":
+					amount_to_heal*=buff["Power"]
+	
+	if current_hp+amount_to_heal>max_hp:
+		servant_node_to_heal.hp=max_hp
+	else:
+		servant_node_to_heal.hp+=amount_to_heal
+	rpc("update_hp_on_peer_id",peer_id,servant_node_to_heal.hp)
+	print(str("hp now is ",servant_node_to_heal.hp,"\n"))
+	
+func _process(delta):
+	pass
+
+@rpc("any_peer","call_local","reliable")
+func charge_np_to_peer_id_by_number(peer_id,number,_source="damage"):
+	print("\n===charge_np_to_peer_id_by_number===")
+	print("peer_id_to_np_points[peer_id]="+str(peer_id_to_np_points[peer_id])+"+"+str(number))
+	var number_to_add=number
+	if peer_id_to_np_points[peer_id]>=12:
+		pass
+	else:
+		for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+			match skill["Name"]:
+				"NP Gain Up":
+					number_to_add+=skill["Power"]
+				"NP Gain Up X":
+					number_to_add*=skill["Power"]
+		peer_id_to_np_points[peer_id]+=number_to_add
+	
+	if peer_id==Globals.self_peer_id:
+		$"../GUI/action/np_points_number_label".text=str(peer_id_to_np_points[peer_id])
+
+
+func get_peer_id_class(peer_id)->String:
+	var default_class=peer_id_player_info[peer_id]["servant_node"].servant_class
+	return default_class
+
+func get_peer_id_traits(peer_id)->Array:
+	var default_traits=peer_id_player_info[peer_id]["servant_node"].traits
+
+	return default_traits
+
+
+func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictionary,damage_type:String="normal",special:String="regular"):
+	#damage_type="normal"/"Magical"
+	#special is to half the damage bc evade or defence
+	print("calculating damage to take\n\n")
+	
+	var zero_damage=false
+	
+	#Магический урон у сейберов сначала делится на 2 потом вычитается магическая защита
+	var damage_to_take
+	var attacker_damage
+	var self_defence=0
+	var buffs_to_ignore=[]
+	var is_field_ignore_magic_defence=false
+	var is_crit=false
+	var crit_removed=false
+	var damage_before_crit:int=0
+	var self_traits=get_peer_id_traits(Globals.self_peer_id)
+	var attacker_traits=get_peer_id_traits(attacker_peer_id)
+	
+	if damage_type=="Magical":
+		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].magic["Power"]
+		
+		var cur_kletka_conf=field.kletka_preference[field.current_kletka]
+		if typeof(cur_kletka_conf)==4:
+			is_field_ignore_magic_defence=false
+		else:
+			if cur_kletka_conf["Owner"]==attacker_peer_id and cur_kletka_conf["Ignore Magical Defence"]:
+				is_field_ignore_magic_defence=true
+	else:
+		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].attack_power
+	
+	if !field.recieved_phantasm_config.is_empty():#for phantasm damage
+		damage_to_take=field.recieved_phantasm_config["Damage"]
+		if field.recieved_phantasm_config.has("Ignore"):
+			buffs_to_ignore=field.recieved_phantasm_config["Ignore"]
+		
+	print("damage_type="+str(damage_type)+" damage_to_take="+str(damage_to_take))
+	
+	#calculating attacker damage
+	print("calculating attacker damage")
+
+	damage_to_take=get_peer_id_attack_power(attacker_peer_id,damage_type)
+
+	is_crit=check_if_peer_id_got_crit(attacker_peer_id,enemies_dice_results)
+	
+	if is_crit:
+		damage_before_crit=damage_to_take
+		damage_to_take=calculate_crit_damage(attacker_peer_id,damage_to_take)
+	
+	print("calculating ignore buffs")
+	
+	for buff in buff_ignoring:
+		if peer_id_has_buff(Globals.self_peer_id, buff):
+			match buff:
+				"Ignore Defence":
+					buffs_to_ignore.append("Defence")
+				"Ignore DEF Buffs":
+					buffs_to_ignore.append("Buff Increase Defence")
+	
+	
+	#calculating self defence
+	print("calculating self defence")
+	for skill in peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
+		var skill_type_array
+		if skill.has("Types"):
+			skill_type_array=skill["Types"]
+		else:
+			skill_type_array=Globals.buffs_types[skill["Name"]]
+		var ignore=false
+		for skill_type in skill_type_array:
+			for skill_to_ignore in buffs_to_ignore:
+				if skill_type==skill_to_ignore:
+					ignore=true
+		if ignore:
+			continue
+		match skill["Name"]:
+			"Def Down X":
+				damage_to_take*=skill["Power"]
+			"Def Down":
+				damage_to_take+=skill["Power"]
+			"Def Up":
+				damage_to_take-=skill["Power"]
+			"Def Up X":
+				damage_to_take=floor(damage_to_take/skill["Power"])
+			"Evade":
+				return "evaded"
+			"Invincibility":#if power==0 then all turns else for N hits
+				zero_damage=true
+				damage_to_take*=0
+				break
+			"Def Up Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take-=skill["Power"]
+			"Def Up X Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take=floor(damage_to_take/skill["Power"])
+			"Def Down Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take+=skill["Power"]
+			"Def Down X Against Trait":
+				if skill["Trait"] in attacker_traits:
+					damage_to_take*=skill["Power"]
+					
+		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
+	
+	
+	if special=="Halfed Damage":
+		damage_to_take=floor(damage_to_take/2)
+		print("Halfed Damage   damage_to_take="+str(damage_to_take))
+	
+	if damage_type=="Magical":
+		if not is_field_ignore_magic_defence:
+			damage_to_take-=Globals.self_servant_node.magic["resistance"]
+			print(str("magical resistange=",Globals.self_servant_node.magic["resistance"]," damage_to_take=",damage_to_take))
+		else:
+			print("field is ignoring magical defence")
+		if peer_id_player_info[attacker_peer_id]["servant_node"].servant_class=="Saber":
+			damage_to_take=floor(damage_to_take/2)
+			print(str("Saber resistance", "damage_to_take=",damage_to_take))
+		
+	elif special=="Defence":
+		var ignore=false
+		for skill_to_ignore in buffs_to_ignore:
+			if skill_to_ignore=="Defence":
+				ignore=true
+		if ignore:
+			pass
+		else:
+			damage_to_take-=field.dice_roll_result_list["defence_dice"]
+			print(str("defending=",field.dice_roll_result_list["defence_dice"]," damage_to_take=",damage_to_take))
+	if damage_to_take<=1:
+		damage_to_take=1
+		
+	if zero_damage:
+		damage_to_take=0
+	#Globals.self_servant_node.hp-=damage_to_take
+		
+	
+	trigger_buffs_on(Globals.self_peer_id,damage_type+" Damage Taken",attacker_peer_id)
+	
+	
+	print(str("damage_to_take=",damage_to_take," type=",damage_type,"\n\n"))
+	
+	return damage_to_take
+
+@rpc("any_peer","reliable","call_local")
+func take_damage_to_peer_id(peer_id,damage_amount,can_kill=true):
+	var start_hp=peer_id_player_info[peer_id]["servant_node"].hp
+	var new_hp=start_hp-damage_amount
+	
+	if not can_kill and new_hp<=0:
+		new_hp=1
+	
+	change_game_stat_for_peer_id(peer_id,"total_damage_taken",damage_amount)
+	
+	
+	
+	rpc("update_hp_on_peer_id",peer_id,new_hp)
+	if peer_id==Globals.self_peer_id:
+		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
+	print(str(peer_id_to_nickname[peer_id]," HP is ",new_hp," now"))
+	
+	if new_hp<=0:
+		print("death")
+		trigger_death_to_peer_id(peer_id)
+
+
+func trigger_death_to_peer_id(peer_id):
+	#TODO replace loop with this func
+	#if peer_id_has_buff(Globals.self_peer_id, buff):
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"Guts":
+				update_hp_on_peer_id(peer_id,skill["Power"])
+				trigger_buffs_on(peer_id,"Guts Used")
+				remove_buff([peer_id],"Guts")
+				return
+	
+	if peer_id_to_command_spells_int[peer_id]>=3:
+		var max_hp=peer_id_player_info[peer_id]["servant_node"].default_stats["hp"]
+		rpc("update_hp_on_peer_id",peer_id,max_hp)
+		reduce_command_spell_on_peer_id(peer_id)
+		reduce_command_spell_on_peer_id(peer_id)
+		reduce_command_spell_on_peer_id(peer_id)
+		trigger_buffs_on(peer_id,"Command Spell Revive")
+	else:#total death
+		for i in range(9):
+			peer_id_player_info[peer_id]["servant_node"].rotation_degrees+=10
+			await get_tree().create_timer(0.1).timeout
+			turns_order_by_peer_id.erase(peer_id)
+	
+
+
+@rpc("any_peer","reliable","call_local")
+func update_hp_on_peer_id(peer_id,hp_to_set):
+	if peer_id==Globals.self_peer_id:
+		current_hp_value_label.text=str(hp_to_set)
+	peer_id_player_info[peer_id]["servant_node"].hp=hp_to_set
+
+func _on_texture_rect_gui_input(event):
+	if event.is_action_pressed:
+		print(event)
+	pass # Replace with function body.
+
+@rpc("any_peer","reliable","call_local")
+func reduce_additional_moves_for_peer_id(peer_id,amount=1):
+	peer_id_player_info[peer_id]["servant_node"].additional_moves-=amount
+
+@rpc("any_peer","reliable","call_local")
+func set_peer_id_cooldown_for_skill_id(peer_id,skill_number,cooldown):
+	peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[skill_number]=cooldown
+	
+
+func _on_use_skill_button_pressed():
+	print("[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]")
+	print(skill_info_tab_container.current_tab)
+	field.hide_all_gui_windows("skill_info_tab_container")
+
+	$"../GUI/actions_buttons/Skill".disabled=true
+	field.skill_info_show_button.disabled=true
+	var skill_consume_action=true
+
+	match skill_info_tab_container.current_tab+1:
+		1:
+			#Globals.self_servant_node.first_skill()
+			skill_consume_action= Globals.self_servant_node.skills["First Skill"].get("Consume Action",true)
+
+			await use_skill(Globals.self_servant_node.skills["First Skill"]["Effect"])
+			
+			rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,0,
+			Globals.self_servant_node.skills["First Skill"]["Cooldown"])
+		2:
+			#Globals.self_servant_node.second_skill()
+			skill_consume_action= Globals.self_servant_node.skills["Second Skill"].get("Consume Action",true)
+			await use_skill(Globals.self_servant_node.skills["Second Skill"]["Effect"])
+			
+			rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,1,
+			Globals.self_servant_node.skills["Second Skill"]["Cooldown"])
+		3:
+			#Globals.self_servant_node.third_skill()
+			skill_consume_action= Globals.self_servant_node.skills["Third Skill"].get("Consume Action",true)
+			await use_skill(Globals.self_servant_node.skills["Third Skill"]["Effect"])
+			
+			rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2,
+			Globals.self_servant_node.skills["Third Skill"]["Cooldown"])
+		4:
+			var class_skill_number= skill_info_tab_container.get_current_tab_control().current_tab+1
+
+			skill_consume_action= Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)].get("Consume Action",true)
+			if Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Type"]=="Weapon Change":
+				#print(skill_info_tab_container.get_current_tab_control().get_current_tab_control())
+				var weapon_name_to_change_to=skill_info_tab_container.get_current_tab_control().get_current_tab_control().get_current_tab_control().name
+				var tt=skill_info_tab_container.get_current_tab_control()
+				var tt2=tt.get_current_tab_control()
+				print(tt2.name)
+				#var tt3=tt2.get_current_tab_control()
+				print("eee")
+				
+				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2+class_skill_number,
+				Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Cooldown"])
+				
+				change_weapon(weapon_name_to_change_to,class_skill_number)
+			else:
+				#Globals.self_servant_node.call("Class Skill "+str(class_skill_number))
+				await use_skill(Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Effect"])
+					
+				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2+class_skill_number,
+				Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Cooldown"])
+	if skill_consume_action:
+		field.reduce_one_action_point()
+	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_this_turn",1)
+	rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_skill_used",1)
+	$"../GUI/actions_buttons/Skill".disabled=false
+	field.skill_info_show_button.disabled=false
+	pass # Replace with function body.
+
+func peer_id_has_buff(peer_id,buff_name):
+	for buff in peer_id_player_info[peer_id]["servant_node"].buffs:
+		if buff["Name"].to_lower()==buff_name.to_lower():
+			return buff
+	return false
+
+@rpc("any_peer","call_local","reliable")
+func change_peer_id_servant_stat(peer_id,stat,value)->void:
+	match stat:
+		"attack_range":
+			peer_id_player_info[peer_id]["servant_node"].attack_range=value
+		"attack_power":
+			peer_id_player_info[peer_id]["servant_node"].attack_power=value
+
+@rpc("any_peer","call_local","reliable")
+func change_peer_id_sprite(peer_id:int,image_path:String)->void:
+	var img = Image.new()
+	img.load(image_path)
+	#player_textureRect.texture=ImageTexture.create_from_image(img)
+	peer_id_player_info[peer_id]["servant_node"].get_child(0).texture=ImageTexture.create_from_image(img)
+
+func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
+	var weapons_array=Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["weapons"]
+	if weapons_array[Globals.self_servant_node.current_weapon].has("Buff"):
+		var buff_array_to_remove=weapons_array[Globals.self_servant_node.current_weapon]["Buff"]
+		if typeof(buff_array_to_remove)!=TYPE_ARRAY:
+			buff_array_to_remove=[buff_array_to_remove]
+		for buff in buff_array_to_remove:
+			rpc("remove_buff",[Globals.self_peer_id],buff["Name"],true)
+	print("weapon_name_to_change_to="+str(weapon_name_to_change_to))
+	
+	Globals.self_servant_node.current_weapon=weapon_name_to_change_to
+	var folderr=""
+	if OS.has_feature("editor"):
+		folderr="res"
+	else:
+		folderr="user"
+	
+	rpc("change_peer_id_sprite",Globals.self_peer_id,
+	str(folderr)+"://servants/"+peer_id_player_info[Globals.self_peer_id]["servant_name"]+
+	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
+	
+	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
+	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
+	
+	if weapons_array[weapon_name_to_change_to]["Is One Hit Per Turn"]:
+		rpc("remove_buff",[Globals.self_peer_id],"Maximum Hits Per Turn",true,true)
+		rpc("add_buff",[Globals.self_peer_id],{"Name":"Maximum Hits Per Turn","Duration":"Passive", "Power":1})
+	else:
+		rpc("remove_buff",[Globals.self_peer_id],"Maximum Hits Per Turn",true,true)
+	
+	
+	if weapons_array[weapon_name_to_change_to].has("Buff"):
+		var buff_array_to_add=weapons_array[weapon_name_to_change_to]["Buff"]
+		if typeof(buff_array_to_add)!=TYPE_ARRAY:
+			buff_array_to_add=[buff_array_to_add]
+		for buff in buff_array_to_add:
+			rpc("add_buff",[Globals.self_peer_id],buff)
+
+
+
+func _on_items_pressed()->void:
+	#{ "Heal Potion": { "min_cost": { "Type": "Free", "value": 0 }, "Type": "potion creating", "Effect": [{ "Name": "Heal", "Power": 5 }], "range": 2, "description": "(Зелье лечения: Восполняет 5 очков здоровья, а также снимает все дебаффы себе или другому слуге в радиусе двух клеток)" } }
+	
+	
+	var items_array=peer_id_to_items_owned[Globals.self_peer_id].duplicate(true)
+	
+	print("\n\nitems_array="+str(items_array))
+	#var items_descriptions={}
+	#var items_effects={}
+	#print(items_array)
+	#for item in items_array:
+		#print(item)
+		#var item_name=item.keys()[0]
+		#items_descriptions[item_name]={"Text":item[item_name]["Description"]}
+		#items_effects[item_name]=item[item_name]
+		#items_effects[item_name].erase("Description")
+		#items_descriptions[item]=items_array[item][]
+	#print("items_descriptions="+str(items_descriptions)+" items_effects="+str(items_effects))
+	#print('\n\n')
+	fill_custom_thing(items_array,CUSTOM_TYPES.POTION_USING)
+	field.hide_all_gui_windows("use_custom")
+		
+	pass # Replace with function body.
+
+
+func set_random_command_spell_set()->void:
+	var add=""
+	
+	if OS.has_feature("editor"):
+		add="res"
+	else:
+		add="user"
+		
+	var dir = DirAccess.open(add+"://command_spells/")
+	var files=dir.get_files()
+	var types=[]
+	for file in files:
+		if file.ends_with(" 3.png"):
+			print(file)
+			print(file.find(" 3.png"))
+			types.append(file.substr(0,file.find(" 3.png")))
+	self_command_spell_type=types.pick_random()
+	print("commnand_spell_load_path="+str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	var img = Image.new()
+	img.load(str(add,"://command_spells/",self_command_spell_type," 3.png"))
+	#player_textureRect.texture=ImageTexture.create_from_image(img)
+	
+	field.command_spells_button.texture_normal=ImageTexture.create_from_image(img)
+	pass
+
+@rpc("any_peer","call_local","reliable")
+func reduce_command_spell_on_peer_id(peer_id:int)->void:
+	
+	print("peer_id_to_command_spells_int[peer_id]="+str(peer_id_to_command_spells_int[peer_id]))
+	trigger_buffs_on(peer_id,"Command Spell Decreased")
+
+	peer_id_to_command_spells_int[peer_id]-=1
+
+	if peer_id==Globals.self_peer_id:
+		var add
+		if OS.has_feature("editor"):
+			add="res"
+		else:
+			add="user"
+		var iin=peer_id_to_command_spells_int[peer_id]
+		if iin>3:
+			iin=3
+		if iin!=0:
+			field.command_spells_button.texture_normal=load(str(add,"://command_spells/",self_command_spell_type," ",iin,".png"))
+		else:
+			field.command_spells_button.texture_normal=load(str("res://empty.png"))
+
+@rpc("any_peer","reliable","call_local")
+func flip_peer_id_sprite(peer_id:int)->void:
+	var ff =peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h
+	peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h = !ff
+	pass
+
+func _on_flip_sprite_button_pressed():
+	rpc("flip_peer_id_sprite",Globals.self_peer_id)
+	pass # Replace with function body.

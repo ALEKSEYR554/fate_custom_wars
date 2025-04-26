@@ -2,3 +2,7 @@
 .godot/
 android/
 *.mp4
+.vscode/
+*.avi
+*.tmp
+*.*.import

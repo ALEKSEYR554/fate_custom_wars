@@ -8,16 +8,18 @@ var self_field_color:Color
 var nickname:String
 # Called when the node enters the scene tree for the first time.
 
+const SKILL_COST_TYPES={NP="NP"}
 
 const buffs_types:Dictionary={
 	#exclusive buffs
 	"Attack Range Set":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
 	"Attack Range Add":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
 	"Discharge Enemies NP":[],#instant
-	"Discharge NP":[],
-	"Discharge Allies NP":[],
-	"Discharge Everyone NP":[],
+	"Discharge NP":[],#instant
+	"Discharge Allies NP":[],#instant
+	"Discharge Everyone NP":[],#instant
 	"Heal":[],#instant
+	"NP Gauge":[],#instant
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],
 	"Maximum Hits Per Turn":["Buff Negative Effect","Buff Decrease Damage"],
@@ -45,9 +47,10 @@ const buffs_types:Dictionary={
 
 	"Magic ATK Up":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	"Magic ATK Up X":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	
+	
 	#FGO type buffs	
-	
-	
+		
 	"Def Up":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
 	"Def Up X":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
 	"Def Down":["Buff Negative Effect", "Buff Decrease Defence", "Buff Defence Down"],

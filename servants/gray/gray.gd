@@ -60,7 +60,7 @@ var hp
 var luck
 #magic power / magic resistance
 var magic #["C",0,3]
-var traits
+var traits=[]
 
 var buffs=[{"Name":"Magical Damage Get + Attack",
 				"Trigger": "Magical Damage Taken",
@@ -91,6 +91,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -142,16 +143,35 @@ var skills={
 	"Description":"Защита конца света: В - Заряжает свою шкалу фантазма на одно очко, а также даёт себе иммунитет к дебаффам на три хода. (Куллдаун - 6)",
 	
 	"Effect":[
-	{"Buffs":[
-		{"Name":"Charge NP",
-			"Duration":1,
-			"Power":1},
-		{"Name":"Debuff Immune",
-			"Duration":1,
-			"Power":3}
-		],
-		"Cast":"Self"}
-]},
+		{"Buffs":[
+			{"Name":"Charge NP",
+				"Duration":1,
+				"Power":1},
+			{"Name":"Debuff Immune",
+				"Duration":1,
+				"Power":3}
+			],
+			"Cast":"Self"}
+		]
+},
+
+"Class Skill 2":{
+	"Type":"Buff Granting",
+	"Rank":"B",
+	"Cooldown":7,
+	"Description":"Содзюро может стать невидимым на пять ходов. (Содзюро исчезает с поля) Когда проходит как минимум 2 хода, Содзюро может выйти из состояния невидимости раньше времени и встать на любую клетку поля, однако, после этого он пропускает свой следующий ход. (Куллдаун - 7)",
+	"Effect":[
+		{"Buffs":[
+			{"Name":"Presence Concealment",
+				"Duration":"Passive",
+				"Minimum Turns":2,
+				"Maximum Turns":5,
+				"Power":1
+				}
+			],
+			"Cast":"Self"}
+	]
+},
 
 "Class Skill 1":{
 	"Type":"Weapon Change",
@@ -191,7 +211,7 @@ var skills={
 			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
 				{"Name":"pull enemies on attack",
 				"Duration":"Passive",
-				"Trigger":"success attack",
+				"Trigger":"Success Attack",
 				"Effect On Trigger":"pull enemies on attack"}
 		},
 		"Bow":{
@@ -210,8 +230,8 @@ var phantasms={
 		"Type":"Line",
 		"Rank":"A",
 		"Description":"""Ронгоминиад: - Наносит 6 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, заряжает шкалу фантазма на одно очко\n
-Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко
-""",
+	Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко
+	""",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Line","Range":5,"Damage":6,
