@@ -670,6 +670,7 @@ anchor_bottom = 0.817901
 theme_override_font_sizes/font_size = 28
 text = "Flip Sprite"
 metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
 
 [node name="buffs_temp_container" type="VBoxContainer" parent="GUI"]
 anchors_preset = -1
@@ -751,6 +752,7 @@ offset_right = -3.0
 theme_override_font_sizes/font_size = 20
 text = "Add Image"
 metadata/_edit_use_anchors_ = true
+metadata/_edit_lock_ = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)

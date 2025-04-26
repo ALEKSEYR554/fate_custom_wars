@@ -2,7 +2,7 @@ extends Node2D
 #1717486472.816
 #1717743283.689
 var glow_array=[]
-const Glow = preload("res://glow.tscn")
+const Glow = preload("res://сцены/glow.tscn")
 var time
 var glowing_kletka_number_selected
 var is_game_started=false
@@ -17,6 +17,7 @@ var captured_kletki_nodes_dict={}
 var kletki_holder
 var lines_holder
 
+#signal info_ok_button_clicked
 
 # kletka: who is there node2d
 #{ 6: el_melloy:<Node2D#62159586689>, 25: bunyan:<Node2D#61807265149>}
@@ -92,8 +93,8 @@ var blink_timer_node
 var done_blinking=false
 signal done_blinking_signal
 
-const ANGRA = preload("res://player.tscn")
-const cell_scene = preload("res://клетка.tscn")
+const ANGRA = preload("res://сцены/player.tscn")
+const cell_scene = preload("res://сцены/клетка.tscn")
 
 @onready var actions_buttons = $GUI/actions_buttons
 
@@ -105,12 +106,13 @@ const cell_scene = preload("res://клетка.tscn")
 @onready var are_you_sure_main_container = $GUI/are_you_sure_main_container
 @onready var are_you_sure_label = $GUI/are_you_sure_main_container/are_you_sure_label
 @onready var im_sure_button = $GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_sure_button
-signal are_you_sure_signal
+
+signal are_you_sure_signal(result:String)
 
 
 @onready var im_not_sure_button = $GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_not_sure_button
 
-var are_you_sure_result#"yes","no"
+#var are_you_sure_result#"yes","no"
 
 #@onready var dice_holder_hbox = $GUI/dice_holder_node2d
 #@onready var main_dice_node = $GUI/dice_holder_node2d/main_dice
@@ -561,6 +563,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 			$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
 			
 			players_handler.current_hp_value_label.text=str(Globals.self_servant_node.hp)
+			await add_passive_skills_for_peer_id(Globals.self_peer_id)
 			players_handler.rpc("pass_next_turn",Globals.self_peer_id)
 			is_game_started=true
 		"field capture":
@@ -570,16 +573,18 @@ func glow_cletka_pressed(glow_kletka_selected):
 			klekta_captured.emit()
 		"move":
 			current_action="wait"
-			print("cr-klet="+str(current_kletka))
+			if current_kletka!=-1:
+				print("cr-klet="+str(current_kletka))
+				
+				var cn=connected[current_kletka]
+				print("cn= "+str(cn))
+				for i in cn:
+					if occupied_kletki.has(i):
+						continue
+					glow_array[i].visible=true
+				pass
 			
-			var cn=connected[current_kletka]
-			print("cn= "+str(cn))
-			for i in cn:
-				if occupied_kletki.has(i):
-					continue
-				glow_array[i].visible=true
-			pass
-			if Globals.self_servant_node.additional_moves>=1:
+			if Globals.self_servant_node.additional_moves>=1 or current_kletka==-1:
 				players_handler.rpc("reduce_additional_moves_for_peer_id",Globals.self_peer_id)
 			else:
 				reduce_one_action_point()
@@ -703,12 +708,13 @@ func disable_every_button(block=true):
 		if "Button" in str(child.get_class()):
 			if child.is_visible_in_tree():
 				child.disabled=block
-	$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=true
+	$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
+	end_turn_button.disabled=false
 	pass
 
 func info_table_show(text="someone forgot to set this, contact anyone, SCREAM"):
 	hide_all_gui_windows()
-	disable_every_button(true)
+	#disable_every_button(true)
 	info_label.text=text
 	info_label_panel.visible=true
 	info_ok_button.visible=true
@@ -716,6 +722,9 @@ func info_table_show(text="someone forgot to set this, contact anyone, SCREAM"):
 func _on_info_ok_button_pressed():
 	info_label_panel.visible=false
 	info_ok_button.visible=false
+	#info_ok_button_clicked.emit()
+	
+	#disable_every_button(false)
 
 func alert_label_text(show=false,text=""):
 	
@@ -732,12 +741,13 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 	if attack_type=="Physical" or attack_type=="Magical":
 		if attack_responce_string!="parried":
 			type_of_damage_choose_buttons_box.visible=false
-			are_you_sure_main_container.visible=true
-			await are_you_sure_signal
+			#are_you_sure_main_container.visible=true
+			fill_are_you_sure_screen("Attack")
+			var are_you_sure_result=await are_you_sure_signal
 			if are_you_sure_result=="no":
 				type_of_damage_choose_buttons_box.visible=true
 				return
-			parry_count_max=players_handler.get_endurance_in_numbers(Globals.self_servant_node.endurance)
+			parry_count_max=players_handler.get_peer_id_agility(Globals.self_peer_id)
 		else: 
 			roll_dice_optional_label.text="Enemy parried, reroll"
 			roll_dice_optional_label.visible=true
@@ -776,20 +786,20 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
 			
-			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"Success Attack",peer_id_to_attack)
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy halfed damage",peer_id_to_attack)
 		"damaged":
 			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
 			current_action="wait"
-			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"Success Attack",peer_id_to_attack)
 		"defending":
 			players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			current_action="wait"
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_success_hit",1)
 			players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",1)
-			await players_handler.trigger_buffs_on(Globals.self_peer_id,"success attack",peer_id_to_attack)
+			await players_handler.trigger_buffs_on(Globals.self_peer_id,"Success Attack",peer_id_to_attack)
 			await players_handler.trigger_buffs_on(Globals.self_peer_id,"enemy defended",peer_id_to_attack)
 		"evaded":
 			current_action="wait"
@@ -877,8 +887,8 @@ func set_action_status(by_whom_peer_id,status,attack_type="Physical",phantasm_co
 
 func _on_evade_button_pressed():
 	you_were_attacked_container.visible=false
-	are_you_sure_main_container.visible=true
-	await are_you_sure_signal
+	fill_are_you_sure_screen("Evade")
+	var are_you_sure_result=await are_you_sure_signal
 	if are_you_sure_result=="no":
 		you_were_attacked_container.visible=true
 		return
@@ -921,8 +931,8 @@ func _on_evade_button_pressed():
 
 func _on_defence_button_pressed():
 	you_were_attacked_container.visible=false
-	are_you_sure_main_container.visible=true
-	await are_you_sure_signal
+	fill_are_you_sure_screen("Defence")
+	var are_you_sure_result=await are_you_sure_signal
 	if are_you_sure_result=="no":
 		you_were_attacked_container.visible=true
 		return
@@ -953,8 +963,8 @@ func _on_parry_button_pressed():
 	#TODO fix multyparry error when only parry with no choose
 	if self_action_status!="parrying":
 		you_were_attacked_container.visible=false
-		are_you_sure_main_container.visible=true
-		await are_you_sure_signal
+		fill_are_you_sure_screen("Parry")
+		var are_you_sure_result=await are_you_sure_signal
 		if are_you_sure_result=="no":
 			you_were_attacked_container.visible=true
 			return
@@ -1103,8 +1113,25 @@ func _on_magical_damage_button_pressed():
 func deal_damage():
 	pass
 
+
+func add_passive_skills_for_peer_id(peer_id:int):
+
+	if not "passive_skills" in Globals.self_servant_node:
+		print("no passive skills found for peer_id="+str(peer_id))
+		return
+	var passive_buffs=players_handler.peer_id_player_info[peer_id]["servant_node"].passive_skills
+	for buff in passive_buffs:
+		#func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
+		#players_handler.rpc("remove_buff",[peer_id],buff["Name"],true,true)
+		#await players_handler.buff_removed
+		players_handler.rpc("add_buff",[peer_id],buff)
+
+
+
+
 @rpc("authority","call_local","reliable")
 func start_turn():
+	print("It is my turn:",Globals.self_peer_id)
 	my_turn=true
 	
 	current_action_points=3
@@ -1112,18 +1139,78 @@ func start_turn():
 	make_action_button.disabled=false
 	end_turn_button.disabled=false
 	paralyzed=false
+	
+	print(players_handler.peer_id_player_game_stat_info)
 	players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
-		for buff in players_handler.peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
-			if buff["Name"]=="Paralysis":
-				paralyzed=true
+		if players_handler.peer_id_has_buff(Globals.self_peer_id,"Paralysis"):
+			paralyzed=true
+			disable_every_button()
+			info_table_show("You're paralyzed\n")
+			end_turn_button.disabled=false
+			command_spells_button.disabled=false
+		if players_handler.peer_id_has_buff(Globals.self_peer_id,"Presence Concealment"):
+			var buff_info=players_handler.peer_id_has_buff(Globals.self_peer_id,"Presence Concealment")
+			var turns_passed=players_handler.turns_counter-buff_info["Turn Casted"]
+			var minimum_turns=buff_info["Minimum Turns"]
+			var maximum_turns=buff_info["Maximum Turns"]
+
+			if turns_passed>=maximum_turns:
+				release_from_Presence_Concealment(false)
+			elif turns_passed>minimum_turns:
+				release_from_Presence_Concealment(true)
+			else:#waiting for minumum turns
 				disable_every_button()
-				info_table_show("You're paralyzed\n")
-				end_turn_button.disabled=false
-				command_spells_button.disabled=false
+				info_table_show("Вы в сокрытии присутствия и не можете ходить еще\n"+str(abs(turns_passed-minimum_turns))+" ходов")
+	
+	
+	
+	players_handler.reduce_skills_cooldowns(Globals.self_peer_id)
 	players_handler.rpc("reduce_skills_cooldowns",Globals.self_peer_id)
+	
+	players_handler.reduce_buffs_cooldowns(Globals.self_peer_id)
 	players_handler.rpc("reduce_buffs_cooldowns",Globals.self_peer_id)
+	players_handler.trigger_buffs_on(Globals.self_peer_id,"turn started")
+	#removing and adding skill in case it got remove by something
+	
+
+func release_from_Presence_Concealment(stun:bool):
+	if stun:
+		info_table_show("Вы можете выйти из сокрытия присутствия сейчас, но будете застанены следующий ход")
+		await info_ok_button.pressed
+		fill_are_you_sure_screen("Выйти из сокрытия присутствия")
+		var choose=await are_you_sure_signal
+		print("choose="+str(choose))
+		if choose=="no":
+			return
+		
+		
+		current_action="move"
+		var kletka_to_initial_spawn=get_unoccupied_kletki()
+		choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
+		await glow_kletka_pressed_signal
+		rpc("show_peer_id_servant_node",Globals.self_peer_id,true)
+		players_handler.rpc("add_buff",[Globals.self_peer_id],{"Name":"Paralysis",
+				"Duration":1,
+				"Power":1
+				})
+	else:
+		info_table_show("Вы обязаный выйти из сокрытия присутствия сейчас")
+		await info_ok_button.pressed
+		
+		current_action="move"
+		var kletka_to_initial_spawn=get_unoccupied_kletki()
+		choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
+		await glow_kletka_pressed_signal
+		rpc("show_peer_id_servant_node",Globals.self_peer_id,true)
+	players_handler.rpc("remove_buff",[Globals.self_peer_id],"Presence Concealment",true)
+
+
+
+@rpc("any_peer","reliable","call_local")
+func show_peer_id_servant_node(peer_id:int,visible_loc:bool):
+	players_handler.peer_id_player_info[peer_id]["servant_node"].visible=visible_loc
 
 func _on_cancel_pressed():
 	if current_action_points>=1:
@@ -1306,7 +1393,9 @@ func _on_end_turn_pressed():
 	disable_every_button(false)#if paralysis
 	make_action_button.disabled=true
 	end_turn_button.disabled=true
+	print(players_handler.trigger_buffs_on)
 	await players_handler.trigger_buffs_on(Globals.self_peer_id,"turn_ended")
+	await players_handler.reduce_all_cooldowns(Globals.self_peer_id, "end turn")
 	players_handler.rpc("pass_next_turn",Globals.self_peer_id)
 	
 	pass # Replace with function body.
@@ -1341,20 +1430,24 @@ func _on_chat_hide_show_button_pressed():
 		chat_log_container.visible=true
 	pass # Replace with function body.
 
-
+func fill_are_you_sure_screen(text:String=""):
+	are_you_sure_label.text="Are you sure you want to:\n"+text
+	are_you_sure_main_container.visible=true
 
 func _on_im_sure_button_pressed():
 	are_you_sure_main_container.visible=false
-	are_you_sure_result="yes"
-	are_you_sure_signal.emit()
+	#are_you_sure_result="yes"
+	#are_you_sure_signal.emit()
+	emit_signal("are_you_sure_signal", "yes")
 	
 	pass # Replace with function body.
 
 
 func _on_im_not_sure_button_pressed():
 	are_you_sure_main_container.visible=false
-	are_you_sure_result="no"
-	are_you_sure_signal.emit()
+	#are_you_sure_result="no"
+	emit_signal("are_you_sure_signal", "no")
+	#are_you_sure_signal.emit()
 	
 	pass # Replace with function body.
 
@@ -1452,7 +1545,11 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 		tab=skill_info_tab_container.current_tab
 	use_skill_button.disabled=true
 	var skills_available=true
-	
+	var servant_skills:Dictionary=players_handler.peer_id_player_info[Globals.self_peer_id]["servant_node"].skills
+	var skill_info
+
+
+	var is_skill_free_from_actions=false
 	if !my_turn:
 		skills_available=false
 	for buff in Globals.self_servant_node.buffs:
@@ -1463,16 +1560,30 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 	match tab:
 		0:
 			skill_cooldown=Globals.self_servant_node.skill_cooldowns[0]
+			skill_info=servant_skills.get("First Skill")
 		1:
 			skill_cooldown=Globals.self_servant_node.skill_cooldowns[1]
+			skill_info=servant_skills.get("Second Skill")
 		2:
 			skill_cooldown=Globals.self_servant_node.skill_cooldowns[2]
+			skill_info=servant_skills.get("Third Skill")
 		3:
 			var class_skill_number=skill_info_tab_container.get_current_tab_control().current_tab+1
+			skill_info=servant_skills.get("Class Skill "+str(class_skill_number))
 			skill_cooldown=Globals.self_servant_node.skill_cooldowns[2+class_skill_number]
-			
-	if skill_cooldown==0 and current_action_points>0 and skills_available and current_action_points>0:
+	
+	if not skill_info.get("Consume Action",true):
+		is_skill_free_from_actions=true
+
+
+	if (skill_cooldown==0 or is_skill_free_from_actions) and current_action_points>0 and skills_available:
 		use_skill_button.disabled=false
+	else:
+		print("Skills blocked")
+		print("skill_cooldown==0: "+str(skill_cooldown==0))
+		print("current_action_points>0   = "+str(current_action_points>0))
+		print("skills_available="+str(skills_available))
+		
 	current_skill_cooldown_label.text=str("Cooldown: ",skill_cooldown)
 	pass # Replace with function body.
 
@@ -1480,8 +1591,11 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 func _on_refresh_buffs_button_pressed():
 	var buffs=Globals.self_servant_node.buffs
 	var display_buffs=""
+	
+	var buff_duration
 	for buff in buffs:
-		display_buffs+=str(buff["Name"],"(",buff["Duration"],")\n")
+		buff_duration=buff.get("Duration","-")
+		display_buffs+=str(buff["Name"],"(",buff_duration,")\n")
 	$GUI/buffs_temp_container/buffs_label.text="Buffs:"+display_buffs
 	pass # Replace with function body.
 
