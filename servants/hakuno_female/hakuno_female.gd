@@ -80,6 +80,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -195,10 +196,10 @@ var skills={
 			{"Name":"NP Gauge",
 				"Duration":3,
 				"Power":2},
-			#{"Name":"ATK UP X Against Trait",
-			#	"Duration":3,
-			#	"Power":2,
-			#	"Trait":"Divinity"}
+			{"Name":"ATK UP X Against Trait",
+				"Duration":3,
+				"Power":2,
+				"Trait":"Divinity"}
 			],
 			"Cast":"Self"}
 		]
@@ -258,41 +259,34 @@ var skills={
 }
 var phantasms={
 	"Rongominiad":{
-		"Type":"Line",
+		#"Type":"Line",
 		"Rank":"A",
-		"Description":"""Ронгоминиад: - Наносит 6 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, заряжает шкалу фантазма на одно очко\n
-Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко
+		"Description":"""Недействительная Запись - Лунный Якорь: Наносит 4 урона одному противнику в любом радиусе и всем остальным противникам находящимся рядом с ним в радиусе трёх клеток. Если атака прошла успешно, то противник парализуется на один ход. Этот фантазм игнорирует абсолютно любую защиту (Даже непробиваемую и если написано, что её невозможно пробить ни при каких условиях), но не способен пробить уклонения.
+Оверчардж: Наносит 8 урона одному противнику в любом радиусе и всем остальным противникам находящимся рядом с ним в радиусе трёх клеток. Если атака прошла успешно, то противник парализуется на один ход. Этот фантазм игнорирует абсолютно любую защиту (Даже непробиваемую и если написано, что её невозможно пробить ни при каких условиях), но не способен пробить уклонения.
 """,
 		"Overcharges":
 			{"Default":
-				{"Cost":6,"Attack Type":"Line","Range":5,"Damage":6,
+				{"Cost":6,"Attack Type":"Bomb","Range":999,"AOE_Range":3,"Damage":4,
 				"Ignore":["Buff Increase Defence","Defence"],
-				"effect_after_attack":[
+				"effect_on_success_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
-								"Duration":3,
+							{"Name":"Paralysis",
+								"Duration":1,
 								"Power":1}
 						],
-						"Cast":"Self"}
+						"Cast":"Phantasm Attacked"}
 						]
 					},
 			"Overcharge":
-				{"Cost":12,"Attack Type":"Line","Range":5,"Damage":12,
-				"ignore":["Defence","defensive_buffs"],
-				"effect_after_attack":[
+				{"Cost":12,"Attack Type":"Bomb","Range":999,"AOE_Range":3,"Damage":8,
+				"Ignore":["Buff Increase Defence","Defence"],
+				"effect_on_success_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
-								"Duration":3,
-								"Power":2}
+							{"Name":"Paralysis",
+								"Duration":1,
+								"Power":1}
 						],
-						"Cast":"Self"},
-						
-						{"Buffs":[
-							{"Name":"Def Down",
-								"Duration":3,
-								"Power":2}
-						],
-						"Cast":"Phantasm Attacked"},
+						"Cast":"Phantasm Attacked"}
 						]
 					},
 		}

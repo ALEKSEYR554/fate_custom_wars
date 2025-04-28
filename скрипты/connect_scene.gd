@@ -2,7 +2,7 @@ extends Node
 
 # Assign this variable to MPAuth node
 @onready var IP_entry = $IP
-@onready var connect = $connect
+@onready var connect_but = $connect
 @onready var port = $Port
 var peer = ENetMultiplayerPeer.new()
 @onready var nickname = $nickname
@@ -23,7 +23,7 @@ func hide_main_menu():
 
 func _on_connected_to_server():
 	print("Connection stablished!")
-	connect.disabled=true
+	connect_but.disabled=true
 
 
 func _on_connect_button_up():
