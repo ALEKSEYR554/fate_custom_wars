@@ -94,7 +94,7 @@ func rpc_resizing(new_size):
 	_update_resize_handle_position() # Обновляем позицию ручки и кнопок
 
 
-func _process(delta):
+func _process(_delta):
 	if dragging:
 		rpc("rpc_drag",get_global_mouse_position() , drag_offset)
 		#global_position = get_global_mouse_position() - drag_offset
@@ -166,13 +166,13 @@ func is_mouse_over_area(area: Area2D) -> bool:
 				return true
 	return false
 
-func _set_buttons_visible(visible: bool):
+func _set_buttons_visible(visible_local: bool):
 	if delete_button:
-		delete_button.visible = visible
+		delete_button.visible = visible_local
 	if z_index_up_button:
-		z_index_up_button.visible = visible
+		z_index_up_button.visible = visible_local
 	if z_index_down_button:
-		z_index_down_button.visible = visible
+		z_index_down_button.visible = visible_local
 
 func is_mouse_over_button(button: Button) -> bool:
 	if button == null or not button.visible:

@@ -93,7 +93,6 @@ var blink_timer_node
 var done_blinking=false
 signal done_blinking_signal
 
-const ANGRA = preload("res://сцены/player.tscn")
 const cell_scene = preload("res://сцены/клетка.tscn")
 
 @onready var actions_buttons = $GUI/actions_buttons
@@ -218,16 +217,16 @@ func get_random_unoccupied_kletka():
 			break
 	return rand_kletka
 
-func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps):
+func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps,current_kletka_local=current_kletka):
 	#current_kletka
 	var output=[]
 	for end in occupied_kletki.keys():
-		if current_kletka == end:
+		if current_kletka_local == end:
 			continue
 		var queue = []
 		var visited = {}
-		queue.append([current_kletka, 0])
-		visited[current_kletka] = true
+		queue.append([current_kletka_local, 0])
+		visited[current_kletka_local] = true
 		while not queue.is_empty():
 			var current = queue.front()
 			queue.pop_front()
@@ -242,7 +241,7 @@ func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps):
 				if not visited.has(neighbor):
 					visited[neighbor] = true
 					queue.append([neighbor, current_steps + 1])
-	output.erase(current_kletka)
+	output.erase(current_kletka_local)
 	return output
 
 # Функция для определения пути между клетками через N шагов (BFS способ)

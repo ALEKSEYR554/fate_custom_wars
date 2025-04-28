@@ -104,6 +104,7 @@ func fuck_you():
 func _ready():
 	self.z_index=50
 	Globals.self_peer_id=multiplayer.get_unique_id()
+	$"../GUI/peer_id_label".text=str(Globals.self_peer_id)
 	rpc("update_ready_users_count")
 	#print(str(dir.get_directories()))
 	return
@@ -121,7 +122,7 @@ func load_servant(peer_id:int):
 	if servant_name=="NULL":
 		push_error("servant is not found while loading")
 		return
-	servant_name_to_peer_id[servant_name]=peer_id
+	
 	#var dir = DirAccess.open(folderr+"://servants/")
 	#for i in dir.get_directories():#getting custom characters
 	var player:Node2D=Node2D.new()
@@ -181,6 +182,11 @@ func load_servant(peer_id:int):
 	peer_id_player_info[peer_id]["servant_node"]=player
 	
 	self.add_child(player,true)
+	
+	servant_name_to_peer_id[player.name]=peer_id
+	peer_id_player_info[peer_id]["servant_name"]=player.name
+	
+	print("servant_name_to_peer_id=",servant_name_to_peer_id)
 	#print(rand_kletka)
 	#print(cell_positions[rand_kletka])
 	#jopa.position = cord
@@ -191,7 +197,6 @@ func get_selected_servant()->void:
 	var servant_name:String=char_select.get_current_servant()
 	get_selected_character_button.disabled=true
 	print(servant_name)
-	#Globals.self_servant_node=load_servant_by_name()
 	rpc("set_nickname_for_peer_id",Globals.self_peer_id,Globals.nickname)
 	rpc_id(1,"check_if_players_ready",multiplayer.get_unique_id(),servant_name)
 
@@ -780,6 +785,8 @@ func use_phantasm(phantasm_info):
 			attacked_by_phantasm=await phantasm_in_range(overcharge_use,"Single")
 		"All Enemies In Range":
 			attacked_by_phantasm=await phantasm_in_range(overcharge_use,"All enemies")
+		"Bomb":
+			attacked_by_phantasm=await bomb_phantasm(overcharge_use)
 		"All Field Enemies":
 			pass
 	
@@ -792,13 +799,48 @@ func use_phantasm(phantasm_info):
 	
 	pass
 
-func phantasm_in_range(phantasm_config,type="Single"):
-	var range=phantasm_config["range"]
+func get_peer_id_kletka_number(peer_id:int)->int:
+	var servant_name=peer_id_player_info[peer_id]["servant_name"]
+	print("servant_name=",servant_name," peer_id=",peer_id)
+	for kletka_id in field.occupied_kletki:
+		if field.occupied_kletki[kletka_id].name==servant_name:
+			return kletka_id
+	push_error("couldn't get peer_id's kletka number=",peer_id, " name=",servant_name)
+	return 0
+
+
+
+func bomb_phantasm(phantasm_config):
+	var range_to_choose_enemie=phantasm_config["Range"]
+	var aoe_range=phantasm_config["AOE_Range"]
+	var kletki_to_attack_array=[]
+	var attacked_enemies=[]
+	var first_peer_id=await choose_single_in_range(range_to_choose_enemie)
+	kletki_to_attack_array.append(get_peer_id_kletka_number(first_peer_id[0]))
+
+	var peer_ids_around=get_all_enemies_in_range(aoe_range,first_peer_id[0])
+
+	kletki_to_attack_array.append_array(peer_ids_around)
 	
+	await field.await_dice_roll()
+	await field.hide_dice_rolls_with_timeout(1)
+	for kletka in kletki_to_attack_array:
+		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
+		attacked_enemies.append(etmp)
+		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
+			if phantasm_config.has("effect_on_success_attack"):
+				await use_skill(phantasm_config["effect_on_success_attack"])
+	
+	return attacked_enemies
+
+
+func phantasm_in_range(phantasm_config,type="Single"):
+	var range=phantasm_config["Range"]
+	var attacked_enemies=[]
 	var kletki_to_attack_array=[]
 	var enemies_array=get_enemies_teams()
 	var tmp
-	var attacked_enemies=[]
+	
 	match type:
 		"Single":
 			tmp=await choose_single_in_range(range)
@@ -812,7 +854,8 @@ func phantasm_in_range(phantasm_config,type="Single"):
 		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
-			await use_skill(phantasm_config["effect_on_success_attack"])
+			if phantasm_config.has("effect_on_success_attack"):
+				await use_skill(phantasm_config["effect_on_success_attack"])
 	
 	return attacked_enemies
 
@@ -834,10 +877,10 @@ func change_phantasm_charge_on_peer_id(peer_id,amount):
 	if peer_id==Globals.self_peer_id:
 		$"../GUI/action/np_points_number_label".text=str(peer_id_player_info[peer_id]["servant_node"].phantasm_charge)
 
-func get_allies():
+func get_allies(peer_id_to_search:int=Globals.self_peer_id):
 	for team in teams_by_peer_id:
 		for member in team:
-			if Globals.self_peer_id==member:
+			if peer_id_to_search==member:
 				return team
 	pass
 	#cast self,allies, 
@@ -850,32 +893,46 @@ func get_all_peer_ids():
 			output.append(member)
 	return output
 
-func choose_single_in_range(range):
+func choose_single_in_range(_range,peer_id_to_search:int=Globals.self_peer_id):
 	var ketki_array=[]
-	for peer_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range):
-		ketki_array.append(field.peer_id_to_kletka_number[peer_id])
+	var per_id_kletka=get_peer_id_kletka_number(peer_id_to_search)
+	print("choose_single_in_range per_id_kletka=",per_id_kletka)
+	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(_range,per_id_kletka):
+		ketki_array.append(kletka_id)
 	ketki_array.append(field.current_kletka)
 	field.choose_glowing_cletka_by_ids_array(ketki_array)
+	print("choose_single_in_range=",ketki_array)
 	field.current_action="choose_allie"
 	await chosen_allie
 	return [servant_name_to_peer_id[choosen_allie_return_value.name]]
 
-func get_everyone_in_range(range):
-	var out=[]
-	var kletka_id=0
-	for peer_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range):
-		kletka_id=field.peer_id_to_kletka_number[peer_id]
-		if field.occupied_kletki.get(kletka_id,0):
-			out.append(field.occupied_kletki.get(kletka_id))
-	return out
+#func get_everyone_in_range(range):
+#	var out=[]
+#	var kletka_id=0
+#	for peer_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range):
+#		kletka_id=field.peer_id_to_kletka_number[peer_id]
+#		if field.occupied_kletki.get(kletka_id,0):
+#			out.append(field.occupied_kletki.get(kletka_id))
+#	return out
 
-func get_all_enemies_in_range(range):
+func get_all_enemies_in_range(_range,peer_id_to_search:int=Globals.self_peer_id):
 	var enemies=get_enemies_teams()
 	var out=[]
-	for peer_id in get_everyone_in_range(range):
+	for peer_id in get_everyone_in_range(_range,peer_id_to_search):
 		if peer_id in enemies:
 			out+=peer_id
 	return out
+
+func get_everyone_in_range(range_local:int,peer_id_to_search:int=Globals.self_peer_id)->Array:
+	var out=[]
+	#var kletka_id=0
+	var peer_id_kletk_id=field.peer_id_to_kletka_number[peer_id_to_search]
+	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range_local,peer_id_kletk_id):
+		if field.occupied_kletki.get(kletka_id,0):
+			var servant_node=field.occupied_kletki.get(kletka_id)
+			out.append(servant_name_to_peer_id[servant_node.name])
+	return out
+
 
 func check_if_peer_id_has_skill_currency(peer_id:int,currency:String,amount:int):
 	match currency:
@@ -898,10 +955,10 @@ func reduce_peer_id_currency(peer_id:int,currency:String,amount:int):
 		_:
 			push_warning("UNKNOWN CURRENCY:"+str(currency))
 
-func get_all_allies_in_range(range:int)->Array:
-	var allies=get_allies()
+func get_all_allies_in_range(_range:int,peer_id_to_search:int=Globals.self_peer_id)->Array:
+	var allies=get_allies(peer_id_to_search)
 	var out=[]
-	for peer_id in get_everyone_in_range(range):
+	for peer_id in get_everyone_in_range(_range,peer_id_to_search):
 		if peer_id in allies:
 			out+=peer_id
 	return out
