@@ -13,7 +13,12 @@ func _ready():
 
 func _draw():
 	# Your draw commands here
-	draw_circle(Vector2(0,0),30, color)
+	if color==Color.FUCHSIA:
+		draw_line(Vector2(-20,-20),Vector2(20,20),Color.RED,5.0)
+		draw_line(Vector2(-20,20),Vector2(20,-20),Color.RED,5.0)
+		#draw_cross
+	else:
+		draw_circle(Vector2(0,0),30, color)
 	pass
 
 

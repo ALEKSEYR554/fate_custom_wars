@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0xxpkoeg68gb"]
+
+[ext_resource type="Script" path="res://скрипты/скрипт glow.gd" id="1_0una6"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_0una6")
+
+[node name="Camera2D" type="Camera2D" parent="."]

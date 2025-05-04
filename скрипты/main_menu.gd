@@ -7,6 +7,7 @@ extends Node
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 @onready var main_menu = $"."
+@onready var settings_screen = $Settings_screen
 
 @onready var connect_scene = $Connect_scene
 @onready var host_scene = $Host_scene
@@ -65,6 +66,7 @@ func _on_back_button_button_up():
 	host_scene.visible=false
 	back_button.visible=false
 	start_screen.visible=true
+	settings_screen.visible=false
 	pass # Replace with function body.
 
 
@@ -77,3 +79,16 @@ func game_initiate():
 	var game_field_instanse=GAME_FIELD.instantiate()
 	get_tree().root.add_child(game_field_instanse)
 	pass
+
+
+func _on_user_folder_button_pressed():
+	OS.shell_open(ProjectSettings.globalize_path("user://"))
+	pass # Replace with function body.
+
+
+func _on_settings_pressed():
+	start_screen.visible=false
+	settings_screen.visible=true
+	
+	back_button.visible=true
+	pass # Replace with function body.

@@ -323,10 +323,15 @@ func turns_loop() -> void:
 		for peer_id in turns_order_by_peer_id:
 			print("\n\nNow "+str(peer_id)+" turn\n\n")
 			current_player_peer_id_turn=peer_id
+			rpc("update_current_player_turn",current_player_peer_id_turn)
 			field.rpc_id(peer_id,"start_turn")
 			await next_turn_pass
 		rpc("turn_update",turns_counter)
 	$"../GUI/host_buttons/finish_button".visible=true
+
+@rpc("any_peer","call_local","reliable")
+func update_current_player_turn(cur_player_turn:int):
+	current_player_peer_id_turn=cur_player_turn
 
 @rpc("any_peer","call_local","reliable")
 func turn_update(turn) -> void:
@@ -587,40 +592,47 @@ func calculate_crit_damage(peer_id:int,damage:int)->int:
 func get_peer_id_attack_power(peer_id:int,damage_type:String,enemy_traits:String="")->int:
 	var base_attack:int=peer_id_player_info[peer_id]["servant_node"].attack_power
 	var attack_total:int=base_attack+0
-
+	
 	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
 		match skill["Name"]:
 			"ATK Up":
 				attack_total+=skill["Power"]
-			"ATK UP X":
-				attack_total*=skill["Power"]
 			"ATK Down":
 				attack_total-=skill["Power"]
-			"ATK Down X":
-				attack_total=floor(attack_total/skill["Power"])
 			"NP Strength Up" when damage_type==DAMANGE_TYPE.PHANTASM:
 				attack_total+=skill["Power"]
-			"NP Strength Up X" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total*=skill["Power"]
 			"NP Strength Down" when damage_type==DAMANGE_TYPE.PHANTASM:
 				attack_total-=skill["Power"]
-			"NP Strength Down X" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total*=floor(attack_total/skill["Power"])
 			"Magic ATK Up" when damage_type==DAMANGE_TYPE.MAGICAL:
 				attack_total+=skill["Power"]
-			"Magic ATK Up X" when damage_type==DAMANGE_TYPE.MAGICAL:
-				attack_total*=skill["Power"]
 			"Madness Enhancement":
 				attack_total*=skill["Power"]
 			"ATK Up Against Trait":
 				if skill["Trait"] in enemy_traits:
 					attack_total+=skill["Power"]
+			"ATK Down Against Trait":
+				if skill["Trait"] in enemy_traits:
+					attack_total-=skill["Power"]		
+		var poww=""
+		if skill.has("Power"):
+			poww=str(" power=",skill["Power"])
+		print(str("Buff= ",skill["Name"],poww," damage_to_take=",attack_total))
+	
+	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+		match skill["Name"]:
+			"ATK UP X":
+				attack_total*=skill["Power"]
+			"ATK Down X":
+				attack_total=floor(attack_total/skill["Power"])
+			"NP Strength Up X" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total*=skill["Power"]
+			"NP Strength Down X" when damage_type==DAMANGE_TYPE.PHANTASM:
+				attack_total*=floor(attack_total/skill["Power"])
+			"Magic ATK Up X" when damage_type==DAMANGE_TYPE.MAGICAL:
+				attack_total*=skill["Power"]
 			"ATK Up X Against Trait":
 				if skill["Trait"] in enemy_traits:
 					attack_total*=skill["Power"]
-			"ATK Down Against Trait":
-				if skill["Trait"] in enemy_traits:
-					attack_total-=skill["Power"]
 			"ATK Down X Against Trait":
 				if skill["Trait"] in enemy_traits:
 					attack_total=floor(attack_total/skill["Power"])
@@ -629,6 +641,8 @@ func get_peer_id_attack_power(peer_id:int,damage_type:String,enemy_traits:String
 		if skill.has("Power"):
 			poww=str(" power=",skill["Power"])
 		print(str("Buff= ",skill["Name"],poww," damage_to_take=",attack_total))
+		
+	
 	return attack_total
 
 func get_peer_id_agility(peer_id:int)->int:
@@ -641,11 +655,10 @@ func get_peer_id_agility(peer_id:int)->int:
 			"Agility Add":
 				_new_agility+=skill.get("Power",0)*1.0/base_agility
 			"Agility Set":
-				_new_agility=skill.get("Power","B")
-				break
+				_new_agility=get_agility_in_numbers(skill.get("Power","C"))
 	return base_agility#int(base_agility+new_agility)
 
-func get_agility_in_numbers(Endurance):
+func get_agility_in_numbers(Endurance)->int:
 	match Endurance.replace("+",""):
 		"EX":
 			return 6
@@ -661,7 +674,8 @@ func get_agility_in_numbers(Endurance):
 			return 1
 		"F":
 			return 1
-
+		_:
+			return 1
 
 func get_peer_id_attack_range(peer_id:int)->int:
 	var base_range:int=peer_id_player_info[peer_id]["servant_node"].attack_range
@@ -672,7 +686,6 @@ func get_peer_id_attack_range(peer_id:int)->int:
 				new_range+=skill.get("Power",0)
 			"Attack Range Set":
 				new_range=skill.get("Power",1)
-				break
 	return new_range
 
 func get_peer_id_magical_attack(peer_id:int)->int:
@@ -684,7 +697,6 @@ func get_peer_id_magical_attack(peer_id:int)->int:
 				new_stat+=skill.get("Power",0)
 			"Magical Attack Set":
 				new_stat=skill.get("Power",1)
-				break
 	return new_stat
 
 func get_peer_id_magical_defence(peer_id:int)->int:
@@ -694,9 +706,8 @@ func get_peer_id_magical_defence(peer_id:int)->int:
 		match skill["Name"]:
 			"Magical Defence Add":
 				new_stat+=skill.get("Power",0)
-			"Magical AttDefenceack Set":
+			"Magical Defence Set":
 				new_stat=skill.get("Power",1)
-				break
 	return new_stat
 
 func get_peer_id_luck(peer_id:int)->int:
@@ -705,11 +716,10 @@ func get_peer_id_luck(peer_id:int)->int:
 	#TODO fix this later AKA after Andersen
 	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
 		match skill["Name"]:
-			"Magical Defence Add":
+			"Luck Add":
 				_new_stat+=skill.get("Power",0)
-			"Magical AttDefenceack Set":
+			"Luck Set":
 				_new_stat=skill.get("Power",1)
-				break
 	return base_stat	
 
 #endregion
@@ -1043,6 +1053,8 @@ func use_skill(skill_info_dictionary,custom_cast=null):
 					create_potion(single_skill_info["Potions"])
 				"Field Creation":
 					field.capture_field_kletki(single_skill_info["Amount"],single_skill_info["Config"])
+				"Field Manipulation":
+					field.field_manipulation(single_skill_info)
 				"Roll dice for effect":
 					roll_dice_for_result(single_skill_info,cast)
 				_:#default/else
@@ -1225,25 +1237,52 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 	
 	"""
 	if trigger=="turn_ended":
-		if field.current_kletka==-1:
-			return
-		var cu_klet_config=field.kletka_preference[field.current_kletka]
-		#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
-		#print("type="+str(typeof(cu_klet_config)))
-		if typeof(cu_klet_config)==4:#if string
-			return
+		if field.current_kletka!=-1:
+			var cu_klet_config=field.kletka_preference[field.current_kletka]
+			#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
+			#print("type="+str(typeof(cu_klet_config)))
+			if not cu_klet_config.is_empty():
+				print("\n\ncu_klet_config="+str(cu_klet_config))
+				if cu_klet_config["Owner"]==peer_id:
+					print(str("cu_klet_config[owner]=",cu_klet_config["Owner"]))
+					if cu_klet_config.has("Np Up Every N Turn"):
+						print(str("cal=",turns_counter,"-",cu_klet_config["turn_casted"],"%",cu_klet_config["Np Up Every N Turn"],"=",(turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]))
+						if (turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]==0:
+							
+							print("TRRRR")
+							rpc("change_phantasm_charge_on_peer_id",peer_id,1)
 		
-		
-		print("\n\ncu_klet_config="+str(cu_klet_config))
-		if cu_klet_config["Owner"]==peer_id:
-			print(str("cu_klet_config[owner]=",cu_klet_config["Owner"]))
-			if cu_klet_config.has("Np Up Every N Turn"):
-				print(str("cal=",turns_counter,"-",cu_klet_config["turn_casted"],"%",cu_klet_config["Np Up Every N Turn"],"=",(turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]))
-				if (turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]==0:
-					
-					print("TRRRR")
-					rpc("change_phantasm_charge_on_peer_id",peer_id,1)
+	
+	if trigger=="turn started":
+		remove_all_expired_captured_kletki()
+			
 
+func remove_all_expired_captured_kletki():
+	print("remove_all_expired_captured_kletki")
+	var kletki_id_array=field.kletka_preference.keys()
+	#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
+	#print("type="+str(typeof(cu_klet_config)))
+	for kletka_id in kletki_id_array:
+		if field.kletka_preference[kletka_id].is_empty():
+			continue
+		var cu_klet_config=field.kletka_preference[kletka_id]
+		print("Found kletka captured")
+		print(cu_klet_config)
+		if cu_klet_config.has("Duration"):
+			if cu_klet_config["Owner"]==current_player_peer_id_turn:
+				print("Is owner turn=true")
+				var kletka_duration=cu_klet_config["Duration"]
+				var turn_casted=cu_klet_config.get("Turn Casted",1)
+				#cur turn 6
+				#casted 3
+				#6-3=3
+				print("\n duration= ",turns_counter,"-",turn_casted,">",kletka_duration)
+				if turns_counter-turn_casted>kletka_duration:
+					print("duration expired")
+					field.kletka_preference[field.current_kletka]={}
+					for captured in field.get_all_children(field.captured_kletki_node):
+						if captured.name=="field "+str(kletka_id):
+							captured.queue_free()
 
 @rpc("any_peer","reliable","call_local")
 func roll_dice_for_result(skill_info:Dictionary,cast:Array):
@@ -1271,17 +1310,25 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 		#field._on_dices_toggle_button_pressed()
 	pass
 
-@rpc("any_peer","reliable","call_local")
-func add_buff_against_trait(cast_array,skill_info):
-	#TODO
-	var skill_name=skill_info["Name"]
-	var duration=skill_info["Duration"]
-	var power=skill_info["Power"]
-	var trait_name=skill_info["Trait"]
-	for who_to_cast_peer_id in cast_array:
-		match skill_name:
-			"Attack up":
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs+=["atk+",duration,power]
+func apply_madness_enhancement(peer_id:int)->void:
+	var user_buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+	print_debug("apply_madness_enhancement, peer_id=",peer_id)
+
+	for buff in user_buffs:
+		print("buff=",buff)
+		var buff_type= buff.get("Type",0)
+		var buff_duration=buff.get("Duration",0)
+		if buff_type:
+			print("buff not removed")
+			continue
+		if buff_duration:
+			print_debug("removing buff")
+			await remove_buff([peer_id],buff.get("Name"))
+	
+	add_buff(peer_id,{"Name":"ATK Up X","Display Name":"Madness Enhancement","Type":"Status","Duration":3,"Power":2})
+	add_buff(peer_id,{"Name":"Skill Seal","Type":"Status","Duration":3})
+	return
+
 
 @rpc("any_peer","reliable","call_local")
 func add_buff(cast_array,skill_info:Dictionary):
@@ -1296,22 +1343,26 @@ func add_buff(cast_array,skill_info:Dictionary):
 		match skill_info["Name"]:
 			"Madness Enhancement":
 				#TODO REMAKE THIS BRO THIS IS SHIT
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
-					{"Name":"ATK Up X",
-						"Type":"Status",
-						"Duration":3,
-						"Power":2},
-					{"Name":"Skill Seal",
-						"Type":"Status",
-						"Duration":3}
-					]
+				await apply_madness_enhancement(who_to_cast_peer_id)
+				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
+				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
+				#	{"Name":"ATK Up X",
+				#		"Type":"Status",
+				#		"Duration":3,
+				#		"Power":2},
+				#	{"Name":"Skill Seal",
+				#		"Type":"Status",
+				#		"Duration":3}
+				#	]
 			"NP Gauge":
 				charge_np_to_peer_id_by_number(who_to_cast_peer_id,skill_info["Power"])
 			"Heal":
 				heal_peer_id(who_to_cast_peer_id,skill_info["Power"])
 			"Additional Move":
 				reduce_additional_moves_for_peer_id(who_to_cast_peer_id,-1)
+			"Faceless Moon":
+				skill_info["Dices"]=field.dice_roll_result_list.duplicate(true)
+				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
 			"Presence Concealment":
 				start_presence_concealment_for_peer_id(who_to_cast_peer_id)
 				var copy_info=skill_info.duplicate(true)
@@ -1372,7 +1423,7 @@ func effect_on_buff(peer_id_buff_given_to,buff_name):
 	pass
 
 @rpc("any_peer","reliable","call_local")
-func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
+func remove_buff(cast_array:Array,skill_name:String,remove_passive=false,remove_only_passive_one=false):
 	#remove SINGLE BUFF
 	#if need to remove bath then await buff_removed to sync
 	for who_to_remove_buff_peer_id in cast_array:
@@ -1382,12 +1433,13 @@ func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_
 				var buf_type=buff.get("Type","")
 				if buf_type=="Status":
 					continue
-				if buff["Duration"]=="Passive":
-					if remove_passive:
+				
+				if buf_type=="Passive":
+					if remove_passive: 
 						peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
 						buff_removed.emit()
 						return
-				elif not remove_only_passive_one:
+				else:
 					peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
 					buff_removed.emit()
 					return
@@ -1465,7 +1517,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	var damage_to_take
 	var attacker_damage
 	var self_defence=0
-	var buffs_to_ignore=[]
+	var buff_types_to_ignore=[]
 	var is_field_ignore_magic_defence=false
 	var is_crit=false
 	var crit_removed=false
@@ -1488,7 +1540,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	if !field.recieved_phantasm_config.is_empty():#for phantasm damage
 		damage_to_take=field.recieved_phantasm_config["Damage"]
 		if field.recieved_phantasm_config.has("Ignore"):
-			buffs_to_ignore=field.recieved_phantasm_config["Ignore"]
+			buff_types_to_ignore=field.recieved_phantasm_config["Ignore"]
 		
 	print("damage_type="+str(damage_type)+" damage_to_take="+str(damage_to_take))
 	
@@ -1509,11 +1561,13 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 		if peer_id_has_buff(Globals.self_peer_id, buff):
 			match buff:
 				"Ignore Defence":
-					buffs_to_ignore.append("Defence")
+					buff_types_to_ignore.append("Defence")
 				"Ignore DEF Buffs":
-					buffs_to_ignore.append("Buff Increase Defence")
+					buff_types_to_ignore.append("Buff Increase Defence")
 	
 	
+	
+	var defence_multiplier=1
 	#calculating self defence
 	print("calculating self defence")
 	for skill in peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
@@ -1524,20 +1578,20 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 			skill_type_array=Globals.buffs_types[skill["Name"]]
 		var ignore=false
 		for skill_type in skill_type_array:
-			for skill_to_ignore in buffs_to_ignore:
+			for skill_to_ignore in buff_types_to_ignore:
 				if skill_type==skill_to_ignore:
 					ignore=true
 		if ignore:
 			continue
 		match skill["Name"]:
 			"Def Down X":
-				damage_to_take*=skill["Power"]
+				defence_multiplier*=skill["Power"]
 			"Def Down":
 				damage_to_take+=skill["Power"]
 			"Def Up":
 				damage_to_take-=skill["Power"]
 			"Def Up X":
-				damage_to_take=floor(damage_to_take/skill["Power"])
+				defence_multiplier=floor(damage_to_take/skill["Power"])
 			"Evade":
 				return "evaded"
 			"Invincibility":#if power==0 then all turns else for N hits
@@ -1549,16 +1603,17 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 					damage_to_take-=skill["Power"]
 			"Def Up X Against Trait":
 				if skill["Trait"] in attacker_traits:
-					damage_to_take=floor(damage_to_take/skill["Power"])
+					defence_multiplier=1.0/skill["Power"]
 			"Def Down Against Trait":
 				if skill["Trait"] in attacker_traits:
 					damage_to_take+=skill["Power"]
 			"Def Down X Against Trait":
 				if skill["Trait"] in attacker_traits:
-					damage_to_take*=skill["Power"]
+					defence_multiplier*=skill["Power"]
 					
 		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
 	
+	damage_to_take*=defence_multiplier
 	
 	if special=="Halfed Damage":
 		damage_to_take=floor(damage_to_take/2)
@@ -1576,7 +1631,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 		
 	elif special=="Defence":
 		var ignore=false
-		for skill_to_ignore in buffs_to_ignore:
+		for skill_to_ignore in buff_types_to_ignore:
 			if skill_to_ignore=="Defence":
 				ignore=true
 		if ignore:
@@ -1841,7 +1896,7 @@ func set_random_command_spell_set()->void:
 	field.command_spells_button.texture_normal=ImageTexture.create_from_image(img)
 	pass
 
-@rpc("any_peer","call_local","reliable")
+@rpc("any_peer","call_remote","reliable")
 func reduce_command_spell_on_peer_id(peer_id:int)->void:
 	
 	print("peer_id_to_command_spells_int[peer_id]="+str(peer_id_to_command_spells_int[peer_id]))

@@ -1,7 +1,7 @@
 extends Node2D
 # Called when the node enters the scene tree for the first time.
 var color=Color.GOLD
-
+#var color=Color.FUCHSIA
 func _ready():
 	#self.size=Vector2(60,60)
 	#self.position=Vector2(0,0)
@@ -16,9 +16,14 @@ func _ready():
 func _draw():
 	# Your draw commands here
 	#var p_pos=get_parent().position
-	#p_pos=Vector2(-p_pos.x/2)
+	#p_pos=Vector2(-p_pos.x/2)#
 	#print("writing Button")
-	draw_circle(Vector2(0,0),30, color)
+	if color==Color.FUCHSIA:
+		draw_line(Vector2(-20,-20),Vector2(20,20),Color.RED,5.0)
+		draw_line(Vector2(-20,20),Vector2(20,-20),Color.RED,5.0)
+		#draw_cross
+	else:
+		draw_circle(Vector2(0,0),30, color)
 	pass
 
 

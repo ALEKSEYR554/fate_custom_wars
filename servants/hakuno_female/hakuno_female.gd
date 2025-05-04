@@ -188,7 +188,7 @@ var skills={
 "Third Skill":{
 	"Type":"Buff Granting",
 	"Rank":"B+",
-	"Cooldown":6,
+	"Cooldown":7,
 	"Description":"Заряжает свою Шкалу Фантазма на 2 очка, а также увеличивает свою силу вдвое против противников с Божественностью. (Куллдаун - 7)",
 	
 	"Effect":[
@@ -206,55 +206,7 @@ var skills={
 },
 
 "Class Skill 1":{
-	"Type":"Weapon Change",
-	"Rank":"UNIQ",
-	"Cooldown":0,
-	"Description":"Владеет Оддом который может транформироваться в оружия (Куллдаун - 8, однако, если оружие нужно снять, то Куллдаун игнорируется)",
-	"free_unequip":true,
-	"weapons":{#first is base weapon
-		"Scythe":{
-			"Description":"(Стандарное) радиус 1 стандарт урон, магическая защита - 6, при получении магического урона увеличивает себе силу на 1 до конца следующего хода",
-			"Is One Hit Per Turn":false,"Damage":4,"Range":1,"Buff":
-				{"Name":"Magical Damage Get + Attack",
-				"Trigger": "Magical Damage Taken",
-				"Effect On Trigger":
-					{"Buffs":[
-						{"Name":"ATK Up",
-							"Duration":2,
-							"Power":1}
-						],
-						"Cast":"Self"},
-				"Duration":"Passive",
-				"Power":1},
-		},
-		"Hammer":{
-			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
-			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
-				{"Name":"Ignore DEF Buffs",
-					"Duration":"Passive",
-					"Power":1},
-				{"Name":"Ignore Defence",
-					"Duration":"Passive",
-					"Power":1},
-			]
-		},
-		"Boomerang":{
-			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
-			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
-				{"Name":"pull enemies on attack",
-				"Duration":"Passive",
-				"Trigger":"Success Attack",
-				"Effect On Trigger":"pull enemies on attack"}
-		},
-		"Bow":{
-			"Description":"Радиус 3, урон 2",
-			"Is One Hit Per Turn":false,"Damage":2,"Range":2
-		},
-		"Alebard":{
-			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
-			"Is One Hit Per Turn":false,"Damage":3,"Range":2
-		}
-	}
+	
 }
 }
 var phantasms={
@@ -298,6 +250,7 @@ var phantasms={
 
 
 func _on_button_pressed():
+	#idk what this does but dont touch
 	print(self.name)
 	print("buff="+str(buffs))
 	pass # Replace with function body.

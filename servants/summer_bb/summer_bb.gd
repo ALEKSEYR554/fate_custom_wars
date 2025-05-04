@@ -18,7 +18,7 @@ var TTTTTTTTTTTTTTTTT='''
 Существование За Пределами Домена: Силу БиБи невозможно понизить.
 Тот Кто Поглощает Землю: Постоянный иммунитет к дебаффу Горения.
 Создание Территории: Биби может захватывать или перестраивать клетки под себя и вокруг себя в радиусе трёх клеток. (Максимальное количество захваченных/перстроенных клеток: 3) Захваченные клетки поднимают все характеристики на один ранг выше, если Биби стоит на них. Перестраивая клетки Биби может перекрывать пути на поле или вовсе их обрезать другим слугам, чтобы они не могли свободно перемещаться.
-Изменённые клетки возвращаются к норме через 4 хода. (Куллдаун - 8) s
+Изменённые клетки возвращаются к норме через 4 хода. (Куллдаун - 8)
 Личные Навыки:
 1) Самомодификация (Любовь): ЕХ - Увеличивает свою силу на 3 очка урона на три хода, а также увеличивает шанс критических атак (1 и 6 на втором кубике считаются критической атакой) на три хода.
 2) Aurea Pork Poculum: A - Заряжает свою Шкалу Фантазма на 3 очка, восполняет своё здоровье на 8 очков, увеличивает урон от своего фантазма вдвое на три хода, а также даёт себе одно уклонение. (Куллдаун - 7)
@@ -41,20 +41,20 @@ const default_stats={
 	"luck":"EX",
 	"magic":{"Rank":"A+","Power":0,"resistance":7},
 	"traits":[
-        "Costume-Owning",
-        "Divine Spirit", 
-        "Divinity", 
-        "Existence Outside the Domain", 
-        "Giant", 
-        "Goddess Servant", 
-        "Immune to Pigify", 
-        "Mechanical", 
-        "Non-Hominidae Servant", 
-        "Sakura Series", 
-        "Servant", 
-        "Summer Mode Servant", 
-        "Super Large", 
-        "Weak to Enuma Elish"]
+		"Costume-Owning",
+		"Divine Spirit", 
+		"Divinity", 
+		"Existence Outside the Domain", 
+		"Giant", 
+		"Goddess Servant", 
+		"Immune to Pigify", 
+		"Mechanical", 
+		"Non-Hominidae Servant", 
+		"Sakura Series", 
+		"Servant", 
+		"Summer Mode Servant", 
+		"Super Large", 
+		"Weak to Enuma Elish"]
 }
 
 var servant_class
@@ -88,6 +88,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -98,17 +99,17 @@ var passive_skills=[
 		"Types":["Buff Positive Effect"],#addes as demonstration
 		"Power":0
 		},
-    {"Name":"Debuff Immune",
-        "Display Name":"The One Who Swallows the Earth",#TODO
-        "Type":"Status",
-        "Debuff":["Burn","Strong Burn"]
+	{"Name":"Debuff Immune",
+		"Display Name":"The One Who Swallows the Earth",#TODO
+		"Type":"Status",
+		"Debuff":["Burn","Strong Burn"]
 
-    },
+	},
 	{"Name":"Buff In Range",
 		"Display Name":"Goddess' Essence",
 		"Types":["Buff Positive Effect"],
 		"Trigger":"Turns Dividable By Power",
-		"Power":3,
+		"Power":2,
 		"Effect On Trigger":
 			{"Buffs":[
 				{"Name":"NP Gauge",
@@ -176,107 +177,59 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"NP Gauge",
+			{"Name":"Faceless Moon",
 				"Duration":3,
-				"Power":2},
-			#{"Name":"ATK UP X Against Trait",
-			#	"Duration":3,
-			#	"Power":2,
-			#	"Trait":"Divinity"}
+				"Power":2}
 			],
 			"Cast":"Self"}
 		]
 },
 
 "Class Skill 1":{
-	"Type":"Weapon Change",
-	"Rank":"UNIQ",
-	"Cooldown":0,
-	"Description":"Владеет Оддом который может транформироваться в оружия (Куллдаун - 8, однако, если оружие нужно снять, то Куллдаун игнорируется)",
-	"free_unequip":true,
-	"weapons":{#first is base weapon
-		"Scythe":{
-			"Description":"(Стандарное) радиус 1 стандарт урон, магическая защита - 6, при получении магического урона увеличивает себе силу на 1 до конца следующего хода",
-			"Is One Hit Per Turn":false,"Damage":4,"Range":1,"Buff":
-				{"Name":"Magical Damage Get + Attack",
-				"Trigger": "Magical Damage Taken",
-				"Effect On Trigger":
-					{"Buffs":[
-						{"Name":"ATK Up",
-							"Duration":2,
-							"Power":1}
-						],
-						"Cast":"Self"},
-				"Duration":"Passive",
-				"Power":1},
-		},
-		"Hammer":{
-			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
-			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
-				{"Name":"Ignore DEF Buffs",
-					"Duration":"Passive",
-					"Power":1},
-				{"Name":"Ignore Defence",
-					"Duration":"Passive",
-					"Power":1},
-			]
-		},
-		"Boomerang":{
-			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
-			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
-				{"Name":"pull enemies on attack",
-				"Duration":"Passive",
-				"Trigger":"Success Attack",
-				"Effect On Trigger":"pull enemies on attack"}
-		},
-		"Bow":{
-			"Description":"Радиус 3, урон 2",
-			"Is One Hit Per Turn":false,"Damage":2,"Range":2
-		},
-		"Alebard":{
-			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
-			"Is One Hit Per Turn":false,"Damage":3,"Range":2
-		}
-	}
+	"Type":"Buff Granting",
+	"Rank":"A",
+	"Cooldown":8,
+	"Description":"Создание Территории: Биби может захватывать или перестраивать клетки под себя и вокруг себя в радиусе трёх клеток. (Максимальное количество захваченных/перстроенных клеток: 3) Захваченные клетки поднимают все характеристики на один ранг выше, если Биби стоит на них. Перестраивая клетки Биби может перекрывать пути на поле или вовсе их обрезать другим слугам, чтобы они не могли свободно перемещаться.\nИзменённые клетки возвращаются к норме через 4 хода. (Куллдаун - 8).",
+	"Effect":[
+	{"Buffs":[
+		{"Name":"Field Manipulation",
+		"Amount":3,"Range":3,"Config":
+			{"Stats Up By":1,
+				"Duration":4,
+				"Additional":null}
+			}
+		],
+	"Cast":"Self"}
+	]
 }
 }
 var phantasms={
-	"Rongominiad":{
-		"Type":"Line",
+	"CCC":{
+		#"Type":"All Enemies In Range",
 		"Rank":"A",
-		"Description":"""Ронгоминиад: - Наносит 6 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, заряжает шкалу фантазма на одно очко\n
-Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко
+		"Description":"""Cursed Cutting Crater (ССС): Наносит всем противникам в радиусе четырёх клеток 5 урона, после чего понижает их Шкалу Фантазма на 2 очко.
+Оверчардж: Наносит всем противникам в радиусе четырёх клеток 10 урона, после чего понижает их Шкалу Фантазма на 4 очка.
+(Если сила фантазма увеличена вдвое, то при активации ССС Шкала Фантазма противников будет понижаться вдвое больше) 
 """,
 		"Overcharges":
 			{"Default":
-				{"Cost":6,"Attack Type":"Line","Range":5,"Damage":6,
-				"Ignore":["Buff Increase Defence","Defence"],
+				{"Cost":6,"Attack Type":"All Enemies In Range","Range":4,"Damage":5,
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
-								"Duration":3,
-								"Power":1}
+							{"Name":"Discharge NP",
+								"Power":2}
 						],
 						"Cast":"Self"}
 						]
 					},
 			"Overcharge":
-				{"Cost":12,"Attack Type":"Line","Range":5,"Damage":12,
-				"ignore":["Defence","defensive_buffs"],
+				{"Cost":12,"Attack Type":"All Enemies In Range","Range":4,"Damage":10,
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
-								"Duration":3,
-								"Power":2}
+							{"Name":"Discharge NP",
+								"Power":4}
 						],
-						"Cast":"Self"},
-						
-						{"Buffs":[
-							{"Name":"Def Down",
-								"Duration":3,
-								"Power":2}
-						],
-						"Cast":"Phantasm Attacked"},
+						"Cast":"Self"}
 						]
 					},
 		}
