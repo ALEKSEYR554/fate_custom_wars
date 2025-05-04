@@ -741,6 +741,30 @@ theme_override_font_sizes/font_size = 40
 text = "OK"
 metadata/_edit_use_anchors_ = true
 
+[node name="info_but_choose_1" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.273438
+anchor_top = 0.516975
+anchor_right = 0.471354
+anchor_bottom = 0.614198
+offset_top = 3.05176e-05
+theme_override_font_sizes/font_size = 30
+text = "manipulate"
+metadata/_edit_use_anchors_ = true
+
+[node name="info_but_choose_2" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.547743
+anchor_top = 0.516975
+anchor_right = 0.737847
+anchor_bottom = 0.614198
+offset_top = 3.05176e-05
+theme_override_font_sizes/font_size = 30
+text = "Capture"
+metadata/_edit_use_anchors_ = true
+
 [node name="peer_id_label" type="Label" parent="GUI"]
 anchors_preset = -1
 anchor_left = 0.0164931

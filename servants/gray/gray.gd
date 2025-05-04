@@ -71,7 +71,7 @@ var buffs=[{"Name":"Magical Damage Get + Attack",
 							"Power":1}
 						],
 						"Cast":"Self"},
-				"Duration":"Passive",
+				"Type":"Passive",
 				"Power":1}]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
@@ -163,7 +163,7 @@ var skills={
 	"Effect":[
 		{"Buffs":[
 			{"Name":"Presence Concealment",
-				"Duration":"Passive",
+				"Type":"Passive",
 				"Minimum Turns":2,
 				"Maximum Turns":5,
 				"Power":1
@@ -192,17 +192,17 @@ var skills={
 							"Power":1}
 						],
 						"Cast":"Self"},
-				"Duration":"Passive",
+				"Type":"Passive",
 				"Power":1},
 		},
 		"Hammer":{
 			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
 			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
 				{"Name":"Ignore DEF Buffs",
-					"Duration":"Passive",
+					"Type":"Passive",
 					"Power":1},
 				{"Name":"Ignore Defence",
-					"Duration":"Passive",
+					"Type":"Passive",
 					"Power":1},
 			]
 		},
@@ -210,7 +210,7 @@ var skills={
 			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
 			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
 				{"Name":"pull enemies on attack",
-				"Duration":"Passive",
+				"Type":"Passive",
 				"Trigger":"Success Attack",
 				"Effect On Trigger":"pull enemies on attack"}
 		},
@@ -220,7 +220,10 @@ var skills={
 		},
 		"Alebard":{
 			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
-			"Is One Hit Per Turn":false,"Damage":3,"Range":2
+			"Is One Hit Per Turn":false,"Damage":3,"Range":2,"Buff":
+				{"Name":"Agility Set",
+				"Type":"Passive",
+				"Power":"B++"}
 		}
 	}
 }

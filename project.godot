@@ -27,6 +27,8 @@ file_logging/enable_file_logging=true
 
 [display]
 
+window/size/viewport_width=1024
+window/size/viewport_height=768
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
