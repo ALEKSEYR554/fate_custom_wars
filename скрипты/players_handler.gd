@@ -1611,7 +1611,11 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 				if skill["Trait"] in attacker_traits:
 					defence_multiplier*=skill["Power"]
 					
-		print(str("Buff= ",skill["Name"]," power=",skill["Power"]," damage_to_take=",damage_to_take))
+		var out_string=str("Buff= ",skill["Name"])
+		if skill.has("Power"):
+			out_string+=str(" power=",skill["Power"])
+		out_string+=str(" damage_to_take=",damage_to_take)
+		print(out_string)
 	
 	damage_to_take*=defence_multiplier
 	

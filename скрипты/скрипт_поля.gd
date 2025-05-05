@@ -939,7 +939,8 @@ func _on_evade_button_pressed():
 				rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
-			
+			if damage_to_take==0:
+				rpc("remove_invinsibility_after_hit_for_peer_id",Globals.self_peer_id)
 			rpc("systemlog_message",str(Globals.nickname," halfed damage by throwing ",dice_roll_result_list["main_dice"]))
 			players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
 			players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
@@ -948,16 +949,47 @@ func _on_evade_button_pressed():
 		
 		if typeof(damage_to_take)==TYPE_STRING:
 			if damage_to_take=="evaded":
+				rpc("remove_evade_buff_after_hit_for_peer_id",Globals.self_peer_id)
 				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 				rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+			if damage_to_take==0:
+				rpc("remove_invinsibility_after_hit_for_peer_id",Globals.self_peer_id)
 			players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
 			players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 			rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
 	roll_dice_control_container.visible=false
 	dice_holder_hbox.visible=false
+
+@rpc("any_peer","call_local","reliable")
+func remove_invinsibility_after_hit_for_peer_id(peer_id:int):
+	var peer_id_buffs=players_handler.peer_id_player_info[peer_id]["servant_node"].buffs
+	for i in range(peer_id_buffs.size()):
+		var buff=peer_id_buffs[i]
+		if buff["Name"]=="Invincible":
+			if buff.has("Power"):
+				var evade_power=buff.get("Power",1)
+				if evade_power==1:
+					players_handler.peer_id_player_info[peer_id]["servant_node"].buffs.pop_at(i)
+				else:
+					players_handler.peer_id_player_info[peer_id]["servant_node"].buffs[i]["Power"]-=1
+
+
+@rpc("any_peer","call_local","reliable")
+func remove_evade_buff_after_hit_for_peer_id(peer_id:int):
+	var peer_id_buffs=players_handler.peer_id_player_info[peer_id]["servant_node"].buffs
+	for i in range(peer_id_buffs.size()):
+		var buff=peer_id_buffs[i]
+		if buff["Name"]=="Evade":
+			if buff.has("Power"):
+				var evade_power=buff.get("Power",1)
+				if evade_power==1:
+					players_handler.peer_id_player_info[peer_id]["servant_node"].buffs.pop_at(i)
+				else:
+					players_handler.peer_id_player_info[peer_id]["servant_node"].buffs[i]["Power"]-=1
+				
 
 
 func _on_defence_button_pressed():
@@ -974,10 +1006,13 @@ func _on_defence_button_pressed():
 		
 	if typeof(damage_to_take)==TYPE_STRING:
 		if damage_to_take=="evaded":
+			rpc("remove_evade_buff_after_hit_for_peer_id",Globals.self_peer_id)
 			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 			rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 	else:
 		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+		if damage_to_take==0:
+			rpc("remove_invinsibility_after_hit_for_peer_id",Globals.self_peer_id)
 		players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
 		players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 		rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
@@ -991,7 +1026,6 @@ func _on_defence_button_pressed():
 
 func _on_parry_button_pressed():
 	
-	#TODO fix multyparry error when only parry with no choose
 	if self_action_status!="parrying":
 		you_were_attacked_container.visible=false
 		fill_are_you_sure_screen("Parry")
@@ -1017,10 +1051,13 @@ func _on_parry_button_pressed():
 	
 	if typeof(damage_to_take)==TYPE_STRING:
 		if damage_to_take=="evaded":
+			rpc("remove_evade_buff_after_hit_for_peer_id",Globals.self_peer_id)
 			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 			rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 	else:
 		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+		if damage_to_take==0:
+			rpc("remove_invinsibility_after_hit_for_peer_id",Globals.self_peer_id)
 		players_handler.rpc("take_damage_to_peer_id",Globals.self_peer_id,damage_to_take)
 		players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 		
