@@ -205,9 +205,6 @@ var skills={
 		]
 },
 
-"Class Skill 1":{
-	
-}
 }
 var phantasms={
 	"Rongominiad":{

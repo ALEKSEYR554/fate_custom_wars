@@ -76,6 +76,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Get 3 additional moves"
 
+[node name="command_spell_transfer_button" type="Button" parent="GUI/command_spell_choices_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Transfer to another player"
+
 [node name="make_action" type="Button" parent="GUI"]
 anchors_preset = 5
 anchor_left = 0.5
@@ -644,6 +649,11 @@ Magic
 "
 editable = false
 
+[node name="show_buffs_advanced_way_button" type="Button" parent="GUI/Servant_info_main_container"]
+layout_mode = 2
+toggle_mode = true
+text = "Show buffs advanced way"
+
 [node name="servant_info_skills_textedit" type="TextEdit" parent="GUI/Servant_info_main_container"]
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
@@ -819,6 +829,7 @@ use_native_dialog = true
 [connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_heal_button" to="." method="_on_command_spell_heal_button_pressed"]
 [connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_np_charge_button" to="." method="_on_command_spell_np_charge_button_pressed"]
 [connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_add_moves_button" to="." method="_on_command_spell_add_moves_button_pressed"]
+[connection signal="pressed" from="GUI/command_spell_choices_container/command_spell_transfer_button" to="." method="_on_command_spell_transfer_button_pressed"]
 [connection signal="pressed" from="GUI/make_action" to="." method="_on_make_action_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Attack" to="." method="_on_attack_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Move" to="." method="_on_move_pressed"]
@@ -857,6 +868,7 @@ use_native_dialog = true
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container" to="Camera2D" method="mouse_exited_gui_element"]
 [connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit" to="Camera2D" method="mouse_entered_gui_element"]
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit" to="Camera2D" method="mouse_exited_gui_element"]
+[connection signal="toggled" from="GUI/Servant_info_main_container/show_buffs_advanced_way_button" to="." method="_on_show_buffs_advanced_way_button_toggled"]
 [connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_entered_gui_element"]
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_exited_gui_element"]
 [connection signal="pressed" from="GUI/Button" to="players_handler" method="_on_free_phantasm_pressed"]

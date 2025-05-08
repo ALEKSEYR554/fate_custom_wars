@@ -251,7 +251,7 @@ func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps,current_kletka_loc
 	return output
 
 # Функция для определения пути между клетками через N шагов (BFS способ)
-func get_path_in_n_steps(start, end, steps):
+func get_path_in_n_steps(start, end, steps)->Array:
 	if start == end:
 		return [start]
 	
@@ -760,7 +760,7 @@ func alert_label_text(show=false,text=""):
 		alert_label.visible=false
 		
 
-func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config={}):
+func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_point:bool=true,phantasm_config={}):
 	end_turn_button.disabled=true
 	if attack_type=="Physical" or attack_type=="Magical":
 		if attack_responce_string!="parried":
@@ -830,7 +830,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",phantasm_config
 	roll_dice_optional_label.visible=false
 	if attack_type=="Physical" and Globals.self_servant_node.attack_range<=2:
 		rpc("move_player_from_kletka_id1_to_id2",Globals.self_peer_id,kletka_id,current_kletka,true)
-	if attack_type!="Phantasm":
+	if attack_type!="Phantasm" or not consume_action_point:
 		reduce_one_action_point()
 	dice_holder_hbox.visible=false
 	roll_dice_control_container.visible=false
@@ -892,7 +892,12 @@ func set_action_status(by_whom_peer_id,status,attack_type="Physical",phantasm_co
 			you_were_attacked_label.text=str("You were attacked with this dice rolls:\n",
 "Attack: ", recieved_dice_roll_result["main_dice"] ,"Crit: ",recieved_dice_roll_result["crit_dice"],
 "\nWhat do you do?")
-			if attack_type=="Phantasm":
+
+			var atk_rng=players_handler.get_peer_id_attack_range(Globals.self_peer_id)
+			var attacker_kletka_id=peer_id_to_kletka_number[attacked_by_peer_id]
+			
+			var distance_between_enemie=get_path_in_n_steps(current_kletka,attacker_kletka_id,atk_rng).size()
+			if attack_type=="Phantasm" or distance_between_enemie>atk_rng:
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=true
 			else: 
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=false
@@ -925,6 +930,13 @@ func _on_evade_button_pressed():
 		return
 	
 	await await_dice_roll()
+
+
+
+	var counter_attack=false
+
+	counter_attack = dice_roll_result_list["main_dice"]==dice_roll_result_list["crit_dice"]
+
 	#dice_roll_result_list
 	#recieved_dice_roll_result
 	if dice_roll_result_list["main_dice"]>recieved_dice_roll_result["main_dice"]:
@@ -960,8 +972,28 @@ func _on_evade_button_pressed():
 			players_handler.rpc("change_game_stat_for_peer_id",attacked_by_peer_id,"total_damage_dealt",damage_to_take)
 			rpc("systemlog_message",str(Globals.nickname," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
+
+
 	roll_dice_control_container.visible=false
 	dice_holder_hbox.visible=false
+
+
+	if counter_attack:
+		var atk_rng=players_handler.get_peer_id_attack_range(Globals.self_peer_id)
+		var attacker_kletka_id=peer_id_to_kletka_number[attacked_by_peer_id]
+		
+		var distance_between_enemie=get_path_in_n_steps(current_kletka,attacker_kletka_id,atk_rng).size()
+		if atk_rng>=distance_between_enemie:
+			info_table_show("You rolled crit during evade. You can counter attack!")
+			await info_ok_button.pressed
+			fill_are_you_sure_screen("Counter Attack")
+			are_you_sure_result=await are_you_sure_signal
+			if are_you_sure_result=="no":
+				return
+			systemlog_message(str(Globals.nickname," counter attacking"))
+			
+			await attack_player_on_kletka_id(attacker_kletka_id,false)
+
 
 @rpc("any_peer","call_local","reliable")
 func remove_invinsibility_after_hit_for_peer_id(peer_id:int):
@@ -1139,7 +1171,7 @@ func inital_spawn_of_player():
 	var kletka_to_initial_spawn=get_unoccupied_kletki()
 	choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
 	
-func _on_attack_pressed():
+func _on_attack_pressed(counter_attack:bool=false):
 	print("_________________attack______________")
 	print("occupied_kletki="+str(occupied_kletki))
 	print("current_kletka="+str(current_kletka))
@@ -1147,7 +1179,7 @@ func _on_attack_pressed():
 	var magic_power=players_handler.get_peer_id_magical_attack(Globals.self_peer_id)
 	if magic_power:
 		magical_damage_button.disabled=false
-	if current_action_points>=1:
+	if current_action_points>=1 or counter_attack:
 		type_of_damage_choose_buttons_box.visible=true
 		actions_buttons.visible=false
 		current_action="attack"
@@ -1460,7 +1492,7 @@ func line_attack_phantasm(phantasm_config):
 	await hide_dice_rolls_with_timeout(1)
 	for kletka in already_clicked:
 		if kletka in occupied_kletki.keys():
-			var etmp=await attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
+			var etmp=await attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
 			attacked_enemies.append(etmp)
 			if phantasm_config.has("effect_on_success_attack"):
 				if attack_responce_string!="evaded" or attack_responce_string!="parried":
@@ -1561,11 +1593,13 @@ func _on_chat_send_button_pressed():
 @rpc("any_peer","call_local","reliable")
 func systemlog_message(message):
 	chat_log_main.text+=str(message, "\n")
-	chat_log_main.scroll_vertical = INF
+	#chat_log_main.scroll_vertical = INF
+	chat_log_main.set_deferred("scroll_vertical", INF)
 
 @rpc("any_peer","call_local","reliable")
 func get_message(username,message):
 	chat_log_main.text+=str(username, ": ", message, "\n")
+	chat_log_main.set_deferred("scroll_vertical", INF)
 
 
 func _on_chat_hide_show_button_pressed():
@@ -1758,7 +1792,8 @@ func _on_command_spell_heal_button_pressed():
 	var peer_id_to_cast_to=Globals.self_peer_id
 	if players_handler.peer_id_has_buff(Globals.self_peer_id,"Code Cast"):
 		peer_id_to_cast_to=await players_handler.choose_allie()
-	players_handler.heal_peer_id(peer_id_to_cast_to[0],0,"command_spell")
+		peer_id_to_cast_to=peer_id_to_cast_to[0]
+	players_handler.heal_peer_id(peer_id_to_cast_to,0,"command_spell")
 	players_handler.rpc("reduce_command_spell_on_peer_id",Globals.self_peer_id)
 	
 	players_handler.reduce_command_spell_on_peer_id(Globals.self_peer_id)
@@ -1770,8 +1805,9 @@ func _on_command_spell_np_charge_button_pressed():
 	var peer_id_to_cast_to=Globals.self_peer_id
 	if players_handler.peer_id_has_buff(Globals.self_peer_id,"Code Cast"):
 		peer_id_to_cast_to=await players_handler.choose_allie()
+		peer_id_to_cast_to=peer_id_to_cast_to[0]
 
-	players_handler.rpc("change_phantasm_charge_on_peer_id",peer_id_to_cast_to[0],6)
+	players_handler.rpc("change_phantasm_charge_on_peer_id",peer_id_to_cast_to,6)
 	
 	players_handler.reduce_command_spell_on_peer_id(Globals.self_peer_id)
 	pass # Replace with function body.
@@ -1782,9 +1818,9 @@ func _on_command_spell_add_moves_button_pressed():
 	var peer_id_to_cast_to=Globals.self_peer_id
 	if players_handler.peer_id_has_buff(Globals.self_peer_id,"Code Cast"):
 		peer_id_to_cast_to=await players_handler.choose_allie()
-
+		peer_id_to_cast_to=peer_id_to_cast_to[0]
 	#Globals.self_servant_node.additional_moves+=3
-	players_handler.rpc("reduce_additional_moves_for_peer_id",peer_id_to_cast_to[0],-3)
+	players_handler.rpc("reduce_additional_moves_for_peer_id",peer_id_to_cast_to,-3)
 	players_handler.reduce_command_spell_on_peer_id(Globals.self_peer_id)
 	pass # Replace with function body.
 
@@ -1826,4 +1862,30 @@ func generate_ending():
 func _on_finish_button_pressed():
 	rpc("generate_ending")
 	
+	pass # Replace with function body.
+
+
+func _on_command_spell_transfer_button_pressed():
+	hide_all_gui_windows("command_spells")
+
+
+	info_table_show("Choose player to transfer command spell to")
+	await info_ok_button.pressed
+	var peer_id_to_cast_to=await players_handler.choose_single_in_range(999)
+	peer_id_to_cast_to=peer_id_to_cast_to[0]
+
+	if players_handler.peer_id_to_command_spells_int[peer_id_to_cast_to]>=3:
+		info_table_show("Player has maximum command spells, transfer failed")
+		await info_ok_button.pressed
+		return
+	players_handler.rpc("reduce_command_spell_on_peer_id",peer_id_to_cast_to,-1)
+	players_handler.reduce_command_spell_on_peer_id(peer_id_to_cast_to,-1)
+	players_handler.rpc("reduce_command_spell_on_peer_id",Globals.self_peer_id)
+	players_handler.reduce_command_spell_on_peer_id(Globals.self_peer_id)
+	
+	pass # Replace with function body.
+
+
+func _on_show_buffs_advanced_way_button_toggled(toggled_on):
+	players_handler.servant_info_from_peer_id(players_handler.player_info_button_current_peed_id,toggled_on)
 	pass # Replace with function body.
