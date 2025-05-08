@@ -155,24 +155,6 @@ var skills={
 		]
 },
 
-"Class Skill 2":{
-	"Type":"Buff Granting",
-	"Rank":"B",
-	"Cooldown":7,
-	"Description":"Содзюро может стать невидимым на пять ходов. (Содзюро исчезает с поля) Когда проходит как минимум 2 хода, Содзюро может выйти из состояния невидимости раньше времени и встать на любую клетку поля, однако, после этого он пропускает свой следующий ход. (Куллдаун - 7)",
-	"Effect":[
-		{"Buffs":[
-			{"Name":"Presence Concealment",
-				"Type":"Passive",
-				"Minimum Turns":2,
-				"Maximum Turns":5,
-				"Power":1
-				}
-			],
-			"Cast":"Self"}
-	]
-},
-
 "Class Skill 1":{
 	"Type":"Weapon Change",
 	"Rank":"UNIQ",

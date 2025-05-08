@@ -10,6 +10,7 @@ extends Node2D
 @onready var servant_info_picture:TextureRect = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_picture"
 @onready var servant_info_stats_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit"
 @onready var servant_info_skills_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_skills_textedit"
+@onready var show_buffs_advanced_way_button = $"../GUI/Servant_info_main_container/show_buffs_advanced_way_button"
 
 
 @onready var current_hp_container:HBoxContainer = $"../GUI/current_hp_container"
@@ -411,22 +412,29 @@ func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
 		cct+=1
 	pass
 
-func servant_info_from_peer_id(peer_id:int)->void:
+func servant_info_from_peer_id(peer_id:int,advanced:bool=show_buffs_advanced_way_button.button_pressed)->void:
+	
+	
 	var info=peer_id_player_info[peer_id]["servant_node"]
 	#servant_info_main_container.visible= true#!servant_info_main_container.visible
 	servant_info_stats_textedit.text="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s
-	\nEndurance:%s\nLuck:%s\nMagic:%s\n"%[info.name,info.hp,info.servant_class,info.ideology,info.agility,info.endurance,info.luck,info.magic]
+	Endurance:%s\nLuck:%s\nMagic:%s\n"%[info.name,info.hp,info.servant_class,info.ideology,info.agility,info.endurance,info.luck,info.magic]
 	var buffs:Array=info.buffs
 	var display_buffs=""
-	for buff in buffs:
-		display_buffs+=str("\t",buff["Name"])
-		if buff.has("Power"):
-			display_buffs+=str(" lvl ",buff["Power"])
-		if buff.has("Duration"):
-			display_buffs+=str(" for ",buff["Duration"],"turns")
-			
-		display_buffs+="\n"
+	if advanced:
+		for buff in buffs:
+			display_buffs+=str(buff)+"\n"
+	else:
+		for buff in buffs:
+			display_buffs+=str("\t",buff["Name"])
+			if buff.has("Power"):
+				display_buffs+=str(" lvl ",buff["Power"])
+			if buff.has("Duration"):
+				display_buffs+=str(" for ",buff["Duration"],"turns")
+				
+			display_buffs+="\n"
 	var peer_skills:Dictionary=info.skills
+	servant_info_picture.texture=peer_id_player_info[peer_id]["servant_node"].get_child(0).texture
 	var skill_text_to_display=""
 	for skill in peer_skills.keys():
 		skill_text_to_display+=str("\t",peer_skills[skill]["Description"],"\n")
@@ -835,7 +843,7 @@ func bomb_phantasm(phantasm_config):
 	await field.await_dice_roll()
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
-		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
+		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -861,7 +869,7 @@ func phantasm_in_range(phantasm_config,type="Single"):
 	await field.await_dice_roll()
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
-		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",phantasm_config)
+		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -1901,12 +1909,12 @@ func set_random_command_spell_set()->void:
 	pass
 
 @rpc("any_peer","call_remote","reliable")
-func reduce_command_spell_on_peer_id(peer_id:int)->void:
+func reduce_command_spell_on_peer_id(peer_id:int,amount:int=1)->void:
 	
-	print("peer_id_to_command_spells_int[peer_id]="+str(peer_id_to_command_spells_int[peer_id]))
-	trigger_buffs_on(peer_id,"Command Spell Decreased")
+	print("peer_id_to_command_spells_int["+str(peer_id)+"]="+str(peer_id_to_command_spells_int[peer_id]))
+	#trigger_buffs_on(peer_id,"Command Spell Decreased")
 
-	peer_id_to_command_spells_int[peer_id]-=1
+	peer_id_to_command_spells_int[peer_id]-=amount
 
 	if peer_id==Globals.self_peer_id:
 		var add
