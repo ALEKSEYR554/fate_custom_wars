@@ -225,7 +225,7 @@ var phantasms={
 								{"Name":"Curse",
 										"Duration":5,
 										"Power":2,
-										"Trigger":"end turn"
+										"Trigger":"End Turn"
 										},
 									
 									]}
@@ -256,7 +256,7 @@ var phantasms={
 								{"Name":"Curse",
 										"Duration":5,
 										"Power":2,
-										"Trigger":"end turn"
+										"Trigger":"End Turn"
 										}]
 								}
 						],

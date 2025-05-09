@@ -31,7 +31,7 @@ func _ready():
 	else:
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb"]:
+		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","MHXA"]:
 			var img = Image.new()
 			img.load("res://servants/"+str(folder)+"/sprite.png")
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})

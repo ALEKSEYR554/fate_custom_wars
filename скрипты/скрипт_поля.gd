@@ -931,6 +931,11 @@ func _on_evade_button_pressed():
 	
 	await await_dice_roll()
 
+	var dice_plus_buff=players_handler.peer_id_has_buff(Globals.self_peer_id,"Dice +")
+	if dice_plus_buff:
+		if dice_plus_buff.has("Action"):
+			if dice_plus_buff["Action"]=="Evade":
+				dice_roll_result_list["main_dice"]+=dice_plus_buff.get("Power",1)
 
 
 	var counter_attack=false
@@ -1033,6 +1038,14 @@ func _on_defence_button_pressed():
 		return
 	
 	await await_dice_roll()
+
+	var dice_plus_buff=players_handler.peer_id_has_buff(Globals.self_peer_id,"Dice +")
+	if dice_plus_buff:
+		if dice_plus_buff.has("Action"):
+			if dice_plus_buff["Action"]=="Defence":
+				dice_roll_result_list["main_dice"]+=dice_plus_buff.get("Power",1)
+
+
 	rpc_id(attacked_by_peer_id,"answer_attack","defending")
 	var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_peer_id,recieved_dice_roll_result,recieved_damage_type,"Defence")
 		
@@ -1068,6 +1081,12 @@ func _on_parry_button_pressed():
 		
 	await await_dice_roll()
 	
+	var dice_plus_buff=players_handler.peer_id_has_buff(Globals.self_peer_id,"Dice +")
+	if dice_plus_buff:
+		if dice_plus_buff.has("Action"):
+			if dice_plus_buff["Action"]=="Parry":
+				dice_roll_result_list["main_dice"]+=dice_plus_buff.get("Power",1)
+
 	you_were_attacked_container.visible=false
 	are_you_sure_main_container.visible=false
 	#if rolled+-1==recieved
@@ -1228,6 +1247,8 @@ func add_passive_skills_for_peer_id(peer_id:int):
 		#func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
 		#players_handler.rpc("remove_buff",[peer_id],buff["Name"],true,true)
 		#await players_handler.buff_removed
+		var buff_copy=buff.duplicate(true)
+		buff_copy["Type"]="Status"
 		players_handler.rpc("add_buff",[peer_id],buff)
 
 
@@ -1245,7 +1266,12 @@ func start_turn():
 	paralyzed=false
 	
 	print(players_handler.peer_id_player_game_stat_info)
-	players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
+	#players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
+
+	players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"attacked_this_turn",0,true)
+	players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_this_turn",0,true)
+	players_handler.rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"kletki_moved_this_turn",0,true)
+
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
 		if players_handler.peer_id_has_buff(Globals.self_peer_id,"Paralysis"):
@@ -1539,6 +1565,21 @@ func _on_make_action_pressed():
 		print("players_handler.peer_id_to_items_owned[Globals.self_peer_id]="+str(players_handler.peer_id_to_items_owned[Globals.self_peer_id]))
 	var max_hit= players_handler.peer_id_has_buff(Globals.self_peer_id,"Maximum Hits Per Turn")
 	
+	var maximum_skills=players_handler.peer_id_has_buff(Globals.self_peer_id,"Maximum Skills Per Turn")
+
+
+	if maximum_skills:
+		var used_skills_this_turn=players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["skill_used_this_turn"]
+		if used_skills_this_turn>=maximum_skills["Power"]:
+			$GUI/actions_buttons/Skill.disabled=true
+			print("max skills reached")
+		else:
+			$GUI/actions_buttons/Skill.disabled=false
+			print("max skills not reached")
+	else:
+		$GUI/actions_buttons/Skill.disabled=false
+
+
 	print("\nmax_hit="+str(max_hit or false))
 	if max_hit:
 		
@@ -1571,8 +1612,8 @@ func _on_end_turn_pressed():
 	make_action_button.disabled=true
 	end_turn_button.disabled=true
 	print(players_handler.trigger_buffs_on)
-	await players_handler.trigger_buffs_on(Globals.self_peer_id,"turn_ended")
-	await players_handler.reduce_all_cooldowns(Globals.self_peer_id, "end turn")
+	await players_handler.trigger_buffs_on(Globals.self_peer_id,"End Turn")
+	await players_handler.reduce_all_cooldowns(Globals.self_peer_id, "End Turn")
 	players_handler.rpc("pass_next_turn",Globals.self_peer_id)
 	
 	pass # Replace with function body.
@@ -1735,6 +1776,20 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 		if buff["Name"]=="Skill Seal":
 			skills_available=false
 			break
+
+
+
+	var maximum_skills=players_handler.peer_id_has_buff(Globals.self_peer_id,"Maximum Skills Per Turn")
+
+	if maximum_skills:
+		var used_skills_this_turn=players_handler.peer_id_player_game_stat_info[Globals.self_peer_id]["skill_used_this_turn"]
+		print("used_skills_this_turn=",used_skills_this_turn," =maximum_skills['Power']=",maximum_skills["Power"])
+		if used_skills_this_turn>=maximum_skills["Power"]:
+			skills_available=false
+			print("max skills reached")
+		else:
+			skills_available=true
+			print("max skills not reached")
 	var skill_cooldown=0
 	match tab:
 		0:
