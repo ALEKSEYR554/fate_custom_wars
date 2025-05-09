@@ -6,7 +6,7 @@ const default_stats={
 	"hp":26,
 	"servant_class":"Berserker",
 	"ideology":["Lawful","Good"],
-	"attack_range":1,#most archers has range=3
+	"attack_range":1,#most berserkers has range=1
 	"attack_power":4,#check table info
 	"agility":"B",
 	"endurance":"C",

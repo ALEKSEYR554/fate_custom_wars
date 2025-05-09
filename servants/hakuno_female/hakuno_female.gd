@@ -111,6 +111,7 @@ var skills={
 				{"Buffs":[
 					{"Name":"Evade gain on Attack",
 						"Trigger": "Success Attack",
+						"Types":["Buff Positive Effect"],
 						"Total Trigger Uses":3,
 						"Effect On Trigger":
 							{"Buffs":[
@@ -129,6 +130,7 @@ var skills={
 			{"Buffs":[
 				{"Name":"NP gain on Attack",
 					"Trigger": "Success Attack",
+					"Types":["Buff Positive Effect"],
 					"Effect On Trigger":
 						{"Buffs":[
 							{"Name":"NP Gauge",
@@ -146,6 +148,7 @@ var skills={
 			{"Buffs":[
 				{"Name":"Crit gain on Attack",
 					"Trigger": "Success Attack",
+					"Types":["Buff Positive Effect"],
 					"Effect On Trigger":
 						{"Buffs":[
 							{"Name":"Critical Hit Rate Up",

@@ -48,7 +48,15 @@ const buffs_types:Dictionary={
 	"Magic ATK Up":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	"Magic ATK Up X":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	
-	
+	"ATK Up X Against Class":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	"ATK Up Against Class":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+
+	"ATK Up X Against Alignment":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	"ATK Up Against Alignment":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+
+	"Dice +":["Buff Positive Effect"],
+	"Maximum Skills Per Turn":["Buff Positive Effect"],
+
 	#FGO type buffs	
 		
 	"Def Up":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],

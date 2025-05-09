@@ -93,7 +93,7 @@ const DEFAULT_GAME_STAT={"total_kletki_moved":0,"total_success_hit":0,
 		"total_crit_hit":0,"total_damage_dealt":0,"total_damage_taken":0,
 		"skill_used_this_turn":0,"total_skill_used":0}
 
-const DAMANGE_TYPE= {PHYSICAL="Physical", MAGICAL="Magical", PHANTASM="Phantasm"}
+const DAMAGE_TYPE= {PHYSICAL="Physical", MAGICAL="Magical", PHANTASM="Phantasm"}
 const buff_ignoring=["Ignore Defence","Ignore DEF Buffs"]
 #endregion
 
@@ -367,7 +367,7 @@ func choose_allie()->Array:
 func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
 	print("=====================")
 	var servant_skills:Dictionary=peer_id_player_info[peer_id]["servant_node"].skills
-	var _can_use_skill=true
+	
 	
 	
 	#print(servant_nod)
@@ -565,10 +565,11 @@ func add_item_to_peer_id(peer_id:int,item:Dictionary,item_name:String)->void:
 	peer_id_to_items_owned[peer_id][new_item_name]=item[item_name]
 
 @rpc("any_peer","call_local","reliable")
-func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int)->void:
-	if not(stat in ["hp","attack_range","attack_power"]):
-		return
-	peer_id_player_game_stat_info[peer_id][stat]+=value_to_add
+func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int,reset:bool=false)->void:
+	if reset:
+		peer_id_player_game_stat_info[peer_id][stat]=value_to_add
+	else:
+		peer_id_player_game_stat_info[peer_id][stat]+=value_to_add
 	pass
 
 #region Stat get
@@ -597,60 +598,100 @@ func calculate_crit_damage(peer_id:int,damage:int)->int:
 				new_damage*=skill.get("Power",1)
 	return new_damage
 
-func get_peer_id_attack_power(peer_id:int,damage_type:String,enemy_traits:String="")->int:
+func get_peer_id_attack_power(peer_id:int)->int:
 	var base_attack:int=peer_id_player_info[peer_id]["servant_node"].attack_power
-	var attack_total:int=base_attack+0
+
+	return base_attack+0
+
+func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id:int,damage_type:String,phantasm_config:Dictionary={})->int:
+	var attack_total
+
+
+	match damage_type:
+		DAMAGE_TYPE.PHANTASM:
+			attack_total=phantasm_config.get("Damage",1)
+		DAMAGE_TYPE.MAGICAL:
+			attack_total=get_peer_id_magical_attack(attacker_peer_id)
+		DAMAGE_TYPE.PHYSICAL:
+			attack_total=get_peer_id_attack_power(attacker_peer_id)
+		_:
+			push_error("Wrong damage type while calculate_peer_id_attack_against_peer_id, damage_type=",damage_type)
+			attack_total=1
 	
-	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
-		match skill["Name"]:
+	var taker_servant=peer_id_player_info[taker_peer_id]["servant_node"]
+	var attacker_servant=peer_id_player_info[taker_peer_id]["servant_node"]
+
+	var attacker_buffs=attacker_servant.buffs
+	var taker_traits=taker_servant.traits
+	
+	var phantasm_additional_buffs=phantasm_config.get("Phantasm Buffs",[])
+
+
+	attacker_buffs.append_array(phantasm_additional_buffs)
+
+
+	for buff in attacker_buffs:
+		match buff["Name"]:
 			"ATK Up":
-				attack_total+=skill["Power"]
+				attack_total+=buff["Power"]
 			"ATK Down":
-				attack_total-=skill["Power"]
-			"NP Strength Up" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total+=skill["Power"]
-			"NP Strength Down" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total-=skill["Power"]
-			"Magic ATK Up" when damage_type==DAMANGE_TYPE.MAGICAL:
-				attack_total+=skill["Power"]
+				attack_total-=buff["Power"]
+			"NP Strength Up" when damage_type==DAMAGE_TYPE.PHANTASM:
+				attack_total+=buff["Power"]
+			"NP Strength Down" when damage_type==DAMAGE_TYPE.PHANTASM:
+				attack_total-=buff["Power"]
+			"Magic ATK Up" when damage_type==DAMAGE_TYPE.MAGICAL:
+				attack_total+=buff["Power"]
 			"Madness Enhancement":
-				attack_total*=skill["Power"]
+				attack_total*=buff["Power"]
 			"ATK Up Against Trait":
-				if skill["Trait"] in enemy_traits:
-					attack_total+=skill["Power"]
+				if buff["Trait"] in taker_traits:
+					attack_total+=buff["Power"]
 			"ATK Down Against Trait":
-				if skill["Trait"] in enemy_traits:
-					attack_total-=skill["Power"]		
+				if buff["Trait"] in taker_traits:
+					attack_total-=buff["Power"]
+			"ATK Up X Against Class":
+				if buff["Class"]==taker_servant.class:
+					attack_total+=buff["Power"]
+			"ATK Up Against Alignment":
+				if buff["Alignment"] in taker_servant.ideology:
+					attack_total+=buff["Power"]
 		var poww=""
-		if skill.has("Power"):
-			poww=str(" power=",skill["Power"])
-		print(str("Buff= ",skill["Name"],poww," damage_to_take=",attack_total))
+		if buff.has("Power"):
+			poww=str(" power=",buff["Power"])
+		print(str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
 	
-	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
-		match skill["Name"]:
+	for buff in attacker_buffs:
+		match buff["Name"]:
 			"ATK UP X":
-				attack_total*=skill["Power"]
+				attack_total*=buff["Power"]
 			"ATK Down X":
-				attack_total=floor(attack_total/skill["Power"])
-			"NP Strength Up X" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total*=skill["Power"]
-			"NP Strength Down X" when damage_type==DAMANGE_TYPE.PHANTASM:
-				attack_total*=floor(attack_total/skill["Power"])
-			"Magic ATK Up X" when damage_type==DAMANGE_TYPE.MAGICAL:
-				attack_total*=skill["Power"]
+				attack_total=floor(attack_total/buff["Power"])
+			"NP Strength Up X" when damage_type==DAMAGE_TYPE.PHANTASM:
+				attack_total*=buff["Power"]
+			"NP Strength Down X" when damage_type==DAMAGE_TYPE.PHANTASM:
+				attack_total*=floor(attack_total/buff["Power"])
+			"Magic ATK Up X" when damage_type==DAMAGE_TYPE.MAGICAL:
+				attack_total*=buff["Power"]
 			"ATK Up X Against Trait":
-				if skill["Trait"] in enemy_traits:
-					attack_total*=skill["Power"]
+				if buff["Trait"] in taker_traits:
+					attack_total*=buff["Power"]
 			"ATK Down X Against Trait":
-				if skill["Trait"] in enemy_traits:
-					attack_total=floor(attack_total/skill["Power"])
+				if buff["Trait"] in taker_traits:
+					attack_total=floor(attack_total/buff["Power"])
+			"ATK Up X Against Class":
+				if buff["Class"]==taker_servant.class:
+					attack_total*=buff["Power"]
+			"ATK Up X Against Alignment":
+				if buff["Alignment"] in taker_servant.ideology:
+					attack_total*=buff["Power"]
 		
 		var poww=""
-		if skill.has("Power"):
-			poww=str(" power=",skill["Power"])
-		print(str("Buff= ",skill["Name"],poww," damage_to_take=",attack_total))
+		if buff.has("Power"):
+			poww=str(" power=",buff["Power"])
+		print(str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
 		
-	
+	attack_total=ceil(attack_total)
 	return attack_total
 
 func get_peer_id_agility(peer_id:int)->int:
@@ -865,7 +906,7 @@ func phantasm_in_range(phantasm_config,type="Single"):
 		"All enemies":
 			tmp=await get_all_enemies_in_range(range)
 	for peer_id in tmp:
-		kletki_to_attack_array+=field.peer_id_to_kletka_number[peer_id]
+		kletki_to_attack_array.append(field.peer_id_to_kletka_number[peer_id])
 	await field.await_dice_roll()
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
@@ -1114,7 +1155,7 @@ func reduce_all_cooldowns(peer_id,type="start turn"):
 			rpc("reduce_skills_cooldowns",peer_id,type)
 			#await skills_cooldown_reduced
 			print("skills_cooldown_reduced")
-		"end turn":
+		"End Turn":
 			await reduce_buffs_cooldowns(peer_id,type)
 			rpc("reduce_buffs_cooldowns",peer_id,type)
 			#await buffs_cooldown_reduced
@@ -1134,7 +1175,7 @@ func reduce_buffs_cooldowns(peer_id,type="start turn"):
 			print("buff_name=",buffs[i]["Name"])
 			if str(buff_duration).is_valid_float():
 				match type:
-					"end turn":
+					"End Turn":
 						if buff_duration - int(buff_duration)!=0:#if duration 0.5 then it is reduced and the end of the turn
 							if buff_duration-1<=0:
 								buffs_list_to_remove.append(buffs[i])
@@ -1194,6 +1235,10 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 						#print_debug("turns_counter=",turns_counter-1," buff[Power]=",buff["Power"])
 						if not ((turns_counter-1) % buff["Power"]==0):
 							continue
+				if not buff.has("Effect On Trigger"):
+					if buff.has("Total Trigger Uses"):
+						buffs_ids_to_reduce_trigger_uses.append(count)
+					continue
 				print("trigger="+str(trigger)+" effect"+str(buff["Effect On Trigger"]))
 				if typeof(buff["Effect On Trigger"])==4:#if set action string
 					match buff["Effect On Trigger"]:
@@ -1201,11 +1246,13 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 							rpc("take_damage_to_peer_id",peer_id,buff["Power"])
 						"pull enemies on attack":
 							field.pull_enemy(field.attacking_peer_id)
+						_:
+							push_error("Wrong set trigger effect="+str(buff["Effect On Trigger"]))
 				else:
 					print("using trigger buff")
 					var buff_to_add=buff["Effect On Trigger"].duplicate(true)
 					await use_skill(buff_to_add,triggered_by_peer_id)
-					buffs_ids_to_reduce_trigger_uses.append(buff)
+					#buffs_ids_to_reduce_trigger_uses.append(buff)
 					if buff.has("Total Trigger Uses"):
 						buffs_ids_to_reduce_trigger_uses.append(count)
 						
@@ -1244,7 +1291,7 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 	5-1=4%3==0
 	
 	"""
-	if trigger=="turn_ended":
+	if trigger=="End Turn":
 		if field.current_kletka!=-1:
 			var cu_klet_config=field.kletka_preference[field.current_kletka]
 			#{ "Owner": 1, "Np Up Every N Turn": 1,"turn_casted":1 , "Additional": <null> }
@@ -1318,23 +1365,27 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 		#field._on_dices_toggle_button_pressed()
 	pass
 
-func apply_madness_enhancement(peer_id:int)->void:
-	var user_buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+func apply_madness_enhancement(peer_id:int,buff_info:Dictionary)->void:
+	var user_buffs=peer_id_player_info[peer_id]["servant_node"].buffs.duplicate(true)
 	print_debug("apply_madness_enhancement, peer_id=",peer_id)
-
+	var main_buff_duration=buff_info.get("Duration",1)
+	var main_buff_power=buff_info.get("Power",2)
 	for buff in user_buffs:
 		print("buff=",buff)
-		var buff_type= buff.get("Type",0)
-		var buff_duration=buff.get("Duration",0)
+		var buff_type= buff.get("Type","")
 		if buff_type:
 			print("buff not removed")
 			continue
-		if buff_duration:
-			print_debug("removing buff")
-			await remove_buff([peer_id],buff.get("Name"))
+		print_debug("removing buff")
+		await remove_buff([peer_id],buff.get("Name"))
 	
-	add_buff(peer_id,{"Name":"ATK Up X","Display Name":"Madness Enhancement","Type":"Status","Duration":3,"Power":2})
-	add_buff(peer_id,{"Name":"Skill Seal","Type":"Status","Duration":3})
+	add_buff(peer_id,{"Name":"ATK Up X","Display Name":"Madness Enhancement","Type":"Status","Duration":main_buff_duration,"Power":main_buff_power})
+
+	var smart=buff_info.get("Can Use 1 Skill",false)
+	if smart:
+		add_buff(peer_id,{"Name":"Maximum Skills Per Turn","Type":"Status","Power":1,"Duration":main_buff_duration})
+	else:
+		add_buff(peer_id,{"Name":"Skill Seal","Type":"Status","Duration":main_buff_duration})
 	return
 
 
@@ -1351,7 +1402,7 @@ func add_buff(cast_array,skill_info:Dictionary):
 		match skill_info["Name"]:
 			"Madness Enhancement":
 				#TODO REMAKE THIS BRO THIS IS SHIT
-				await apply_madness_enhancement(who_to_cast_peer_id)
+				await apply_madness_enhancement(who_to_cast_peer_id,skill_info)
 				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
 				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
 				#	{"Name":"ATK Up X",
@@ -1532,7 +1583,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	var damage_before_crit:int=0
 	var self_traits=get_peer_id_traits(Globals.self_peer_id)
 	var attacker_traits=get_peer_id_traits(attacker_peer_id)
-	
+	var additional_buffs=[]
 	if damage_type=="Magical":
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].magic["Power"]
 		
@@ -1545,18 +1596,21 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	else:
 		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].attack_power
 	
-	if !field.recieved_phantasm_config.is_empty():#for phantasm damage
-		damage_to_take=field.recieved_phantasm_config["Damage"]
-		if field.recieved_phantasm_config.has("Ignore"):
-			buff_types_to_ignore=field.recieved_phantasm_config["Ignore"]
+	if damage_type=="Phantasm":
+		if !field.recieved_phantasm_config.is_empty():#for phantasm damage
+			damage_to_take=field.recieved_phantasm_config["Damage"]
+			if field.recieved_phantasm_config.has("Ignore"):
+				buff_types_to_ignore=field.recieved_phantasm_config["Ignore"]
+		additional_buffs= field.recieved_phantasm_config.get("Phantasm Buffs",[])
 		
 	print("damage_type="+str(damage_type)+" damage_to_take="+str(damage_to_take))
 	
 	#calculating attacker damage
 	print("calculating attacker damage")
 
-	damage_to_take=get_peer_id_attack_power(attacker_peer_id,damage_type)
+	#damage_to_take=get_peer_id_attack_power(attacker_peer_id,damage_type,[],additional_buffs)
 
+	damage_to_take=calculate_peer_id_attack_against_peer_id(attacker_peer_id,Globals.self_peer_id,damage_type,additional_buffs)
 	is_crit=check_if_peer_id_got_crit(attacker_peer_id,enemies_dice_results)
 	
 	if is_crit:
