@@ -36,6 +36,7 @@ const default_stats={
 	"ideology":["Lawful","Good"],
 	"attack_range":1,
 	"attack_power":4,
+	"strength":"B",
 	"agility":"B",
 	"endurance":"C",
 	"luck":"C",
@@ -61,6 +62,7 @@ var luck
 #magic power / magic resistance
 var magic #["C",0,3]
 var traits=[]
+var strength
 
 var buffs=[{"Name":"Magical Damage Get + Attack",
 				"Trigger": "Magical Damage Taken",
@@ -92,6 +94,7 @@ func _ready():
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
+	strength=default_stats["strength"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -130,7 +133,7 @@ var skills={
 				"Power":2},
 			{"Name":"Invincible",
 				"Duration":1,
-				"hit times":1}
+				"Hit Times":1}
 				],
 		"Cast":"Self"}
 		]
@@ -223,7 +226,7 @@ var phantasms={
 				"Ignore":["Buff Increase Defence","Defence"],
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
+							{"Name":"NP Charge",
 								"Duration":3,
 								"Power":1}
 						],
@@ -235,7 +238,7 @@ var phantasms={
 				"ignore":["Defence","defensive_buffs"],
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
+							{"Name":"NP Charge",
 								"Duration":3,
 								"Power":2}
 						],

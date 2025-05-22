@@ -36,6 +36,7 @@ const default_stats={
 	"ideology":["Chaotic","Evil"],
 	"attack_range":2,
 	"attack_power":3,
+	"strength":"C",
 	"agility":"C",
 	"endurance":"C",
 	"luck":"EX",
@@ -59,6 +60,7 @@ const default_stats={
 
 var servant_class
 var ideology
+var strength
 var attack_range
 var attack_power
 var agility#ловкость
@@ -66,7 +68,7 @@ var endurance#вынослиость
 var hp
 var luck
 #magic power / magic resistance
-var magic #["C",0,3]
+var magic 
 var traits
 
 var buffs=[]
@@ -89,6 +91,7 @@ func _ready():
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
+	strength=default_stats["strength"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -112,7 +115,7 @@ var passive_skills=[
 		"Power":2,
 		"Effect On Trigger":
 			{"Buffs":[
-				{"Name":"NP Gauge",
+				{"Name":"NP Charge",
 					"Duration":0,
 					"Power":1}
 				],
@@ -151,7 +154,7 @@ var skills={
 	"Description":"Заряжает свою Шкалу Фантазма на 3 очка, восполняет своё здоровье на 8 очков, увеличивает урон от своего фантазма вдвое на три хода, а также даёт себе одно уклонение. (Куллдаун - 7)",
 	"Effect":[
 		{"Buffs":[
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Power":3
 			},
 			{"Name":"Heal",
@@ -216,7 +219,7 @@ var phantasms={
 				{"Cost":6,"Attack Type":"All Enemies In Range","Range":4,"Damage":5,
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"Discharge NP",
+							{"Name":"NP Discharge",
 								"Power":2}
 						],
 						"Cast":"Self"}
@@ -226,7 +229,7 @@ var phantasms={
 				{"Cost":12,"Attack Type":"All Enemies In Range","Range":4,"Damage":10,
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"Discharge NP",
+							{"Name":"NP Discharge",
 								"Power":4}
 						],
 						"Cast":"Self"}

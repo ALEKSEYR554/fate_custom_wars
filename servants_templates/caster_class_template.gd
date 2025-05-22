@@ -7,7 +7,8 @@ const default_stats={
 	"servant_class":"Caster",
 	"ideology":["Lawful","Good"],
 	"attack_range":1,#most casters has range=1
-	"attack_power":4,#check table info
+	"attack_power":3,#check table info
+	"strength":"C",
 	"agility":"B",
 	"endurance":"C",
 	"luck":"C",
@@ -80,7 +81,7 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Power":1#1 point
                 }
 				],

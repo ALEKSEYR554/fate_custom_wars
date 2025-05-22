@@ -1,25 +1,45 @@
 extends Node
 
 var host_or_user:String="host"
-var connected_players:Array=[]
+var connected_players:Array=[]#array of peer_id s
 var self_servant_node:Node2D
 var self_peer_id:int
 var self_field_color:Color
 var nickname:String
+var debug_mode:bool=false
+var peer_id_to_nickname:Dictionary={}
 # Called when the node enters the scene tree for the first time.
 
 const SKILL_COST_TYPES={NP="NP"}
-
+const CLASS_NAMES:Array=[
+	"Saber",
+	"Archer",
+	"Lancer",
+	"Rider",
+	"Caster",
+	"Assassin",
+	"Berserker",
+	"Ruler",
+	"Avenger",
+	"Moon Cancer",
+	"Alter Ego",
+	"Foreigner",
+	"Pretender",
+	"Shielder",
+	"Beast"
+]
 const buffs_types:Dictionary={
 	#exclusive buffs
 	"Attack Range Set":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
 	"Attack Range Add":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
-	"Discharge Enemies NP":[],#instant
-	"Discharge NP":[],#instant
-	"Discharge Allies NP":[],#instant
-	"Discharge Everyone NP":[],#instant
-	"Heal":[],#instant
-	"NP Gauge":[],#instant
+	"NP Discharge":["Instant"],#instant
+	"Heal":["Instant"],#instant
+	"HP Drain":["Instant"],
+	"Debuff Removal":["Instant"],
+	"NP Charge":["Instant"],#instant
+	"Reduce Skills Cooldown":["Instant"],
+	"Multiply NP":["Instant"],
+	"Buff Removal":["Instant"],
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],
 	"Maximum Hits Per Turn":["Buff Negative Effect","Buff Decrease Damage"],
@@ -74,8 +94,6 @@ const buffs_types:Dictionary={
 	
 	"Critical Strength Up":["Buff Positive Effect", "Buff Increase Damage", "Buff Crit Damage Up"],
 	"Critical Strength Up X":["Buff Positive Effect", "Buff Increase Damage", "Buff Crit Damage Up"],
-	"Debuff Immune":["Buff Positive Effect", "Buff Negative Effect Immunity"],
-	"Nullify Buff":["Buff Negative Effect","Buff Nullify Buff"],
 	"Guts":["Buff Positive Effect", "Buff Guts"],
 	"ATK Up":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	"ATK Down":["Buff Negative Effect", "Buff Decrease Damage", "Buff Atk Down"],
@@ -92,9 +110,6 @@ const buffs_types:Dictionary={
 	"Burn":["Buff Negative Effect", "Buff Burn"],
 	"Curse":["Buff Negative Effect", "Buff Curse", "Curse"],
 	"Stun":["Buff Negative Effect", "Buff Stun", "Buff Immobilize"],
-	"Strong Burn":["Buff Negative Effect", "Buff Burn"],
-	"Strong Poison":["Buff Negative Effect", "Buff Poison"],
-	"Strong Curse":["Buff Negative Effect", "Buff Curse", "Curse"],
 	"NP Strength Up":["Buff Positive Effect", "Buff Increase Damage","Buff Np Damage Up"],
 	"NP Strength Up X":["Buff Positive Effect", "Buff Increase Damage","Buff Np Damage Up"],
 	"NP Strength Down":["Buff Negative Effect","Buff Decrease Damage","Buff Np Damage Down"],
@@ -103,9 +118,26 @@ const buffs_types:Dictionary={
 	"NP Gain Up":["Buff Positive Effect"],
 	"NP Gain Up X":["Buff Positive Effect"],
 	"NP Seal":["Buff Negative Effect", "Buff Np Seal"],
-	"Skill Seal":["Buff Negative Effect","Skill Seal"]	
+	"Skill Seal":["Buff Negative Effect","Skill Seal"],
 	
 	
-	
+	"Buff Block":["Buff Negative Effect", "Buff Nullify Buff"],
+	"Restore HP Each Turn":["Buff Positive Effect","Buff Hp Recovery Per Turn"],
+	"Class Change":["Buff Positive Effect"],
+	"Nullify Buff":["Buff Negative Effect","Buff Nullify Buff"],
+	"Nullify Debuff":["Buff Positive Effect", "Buff Negative Effect Immunity"],
+	"Trait Set":["Buff Positive Effect"],
+	"Faceless Moon":["Buff Positive Effect","Buff Lock Cards Deck"],
+	"Ignore Defense":["Buff Positive Effect" ,"Buff Increase Damage"],
+	"Ignore Invincible":["Buff Positive Effect", "Buff Invincible Pierce" ,"Buff Increase Damage"],
+	"Max HP Plus":["Buff Positive Effect","Buff Max Hp Up"],
+	"NP Gain When Damaged":["Buff Positive Effect"],
+	"Overcharge Up":["Buff Positive Effect"],
+	"NP Damage Def Up":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
+	"NP Damage Def Up X":["Buff Positive Effect", "Buff Increase Defence", "Buff Defence Up", "Buff Def Up"],
+	"NP Gain Each Turn":["Buff Positive Effect", "Buff Np Per Turn"],
+	"Buff Removal Resist":["Buff Positive Effect"],
+	"Paralysis":["Buff Negative Effect","Buff Paralysis", "Buff Immobilize"],
+	"Sure Hit":["Buff Positive Effect","Buff Sure Hit","Buff Increase Damage"]
 	
 }

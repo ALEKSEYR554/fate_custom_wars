@@ -92,3 +92,8 @@ func _on_settings_pressed():
 	
 	back_button.visible=true
 	pass # Replace with function body.
+
+
+func _on_check_button_toggled(toggled_on):
+	Globals.debug_mode=toggled_on
+	pass # Replace with function body.
