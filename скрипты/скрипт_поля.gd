@@ -177,6 +177,7 @@ var scene_bounds = Vector2(3000, 1500)
 var min_distance = 200.0
 @onready var gui = $GUI
 
+@onready var camera_2d = $Camera2D
 
 # Словарь позиций клеток, где ключ - индекс клетки, значение - позиция клетки
 var cell_positions = {}
@@ -190,6 +191,22 @@ func _ready():
 	character_selection_container.visible=true
 	if Globals.host_or_user=='host':
 		pass
+		
+		$GUI/debug_character_control.visible=Globals.debug_mode
+	
+	#connecting every GUI item to camera script
+	#mouse_entered_gui_element()
+
+	#mouse_exited_gui_element()
+	for child:Node in get_all_children($GUI):
+		#if "Control" in str(child.get_class()):
+		if child.is_class("Control"):
+			if child.has_signal("mouse_entered"):
+				if not child.mouse_entered.is_connected(camera_2d.mouse_entered_gui_element):
+					child.mouse_entered.connect(camera_2d.mouse_entered_gui_element)
+			if child.has_signal("mouse_exited"):
+				if not child.mouse_exited.is_connected(camera_2d.mouse_exited_gui_element):
+					child.mouse_exited.connect(camera_2d.mouse_exited_gui_element)
 		#host_buttons.visible=true
 	#gui.z_index=99
 	players_handler.fuck_you()
@@ -789,8 +806,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 	disable_every_button()
 	if attack_type=="Physical" and Globals.self_servant_node.attack_range<=2:
 		rpc("move_player_from_kletka_id1_to_id2",Globals.self_peer_id,current_kletka,kletka_id,true)
-	
-	
+		
 	alert_label_text(true,"You've attacked an enemie, waiting for it's responce")
 	await attack_response
 	match attack_responce_string:
@@ -1274,7 +1290,7 @@ func start_turn():
 
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
-		if players_handler.peer_id_has_buff(Globals.self_peer_id,"Paralysis"):
+		if players_handler.peer_id_has_buff(Globals.self_peer_id,"Paralysis") or players_handler.peer_id_has_buff(Globals.self_peer_id,"Stun"):
 			paralyzed=true
 			disable_every_button()
 			info_table_show("You're paralyzed\n")
@@ -1301,7 +1317,8 @@ func start_turn():
 	
 	players_handler.reduce_buffs_cooldowns(Globals.self_peer_id)
 	players_handler.rpc("reduce_buffs_cooldowns",Globals.self_peer_id)
-	players_handler.trigger_buffs_on(Globals.self_peer_id,"turn started")
+	players_handler.trigger_buffs_on(Globals.self_peer_id,"Turn Started")
+	players_handler.check_if_hp_is_bigger_than_max_hp_for_peer_id(Globals.self_peer_id)
 	#removing and adding skill in case it got remove by something
 	
 

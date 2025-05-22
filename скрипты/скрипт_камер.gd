@@ -1,4 +1,5 @@
 extends Camera2D
+@onready var gui:CanvasLayer = $"../GUI"
 
 # Lower cap for the `_zoom_level`.
 var min_zoom := 0.4
@@ -37,6 +38,7 @@ func zoom_():
 	
 	#print("curr_zoom="+str(get_zoom())+"\n")
 func _input(event):
+	#print(event)
 	if event.is_action("drag"):
 		if event.is_pressed():
 			mouse_start_pos = event.position
@@ -46,5 +48,8 @@ func _input(event):
 			dragging = false
 	elif event is InputEventMouseMotion and dragging and not gui_focused:
 		position =  (mouse_start_pos - event.position)/zoom + screen_start_position
+		
+
 func _physics_process(delta):
 	zoom_()
+	pass

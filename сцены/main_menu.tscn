@@ -86,8 +86,22 @@ grow_vertical = 0
 theme_override_font_sizes/font_size = 100
 text = "BACK"
 
+[node name="CheckButton" type="CheckButton" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -44.0
+offset_top = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "debug"
+
 [connection signal="button_up" from="start_screen/Host" to="." method="_on_host_button_up"]
 [connection signal="button_up" from="start_screen/Connect" to="." method="_on_connect_button_up"]
 [connection signal="pressed" from="start_screen/Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="start_screen/User_folder_button" to="." method="_on_user_folder_button_pressed"]
 [connection signal="button_up" from="Back_button" to="." method="_on_back_button_button_up"]
+[connection signal="toggled" from="CheckButton" to="." method="_on_check_button_toggled"]

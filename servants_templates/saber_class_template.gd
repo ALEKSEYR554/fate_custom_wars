@@ -7,7 +7,8 @@ const default_stats={
 	"servant_class":"Saber",
 	"ideology":["Lawful","Good"],
 	"attack_range":1,#most sabers has range=1
-	"attack_power":4,#check table info
+	"attack_power":3,#check table info
+	"strength":"C",
 	"agility":"B",
 	"endurance":"C",
 	"luck":"C",
@@ -91,7 +92,7 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Power":1#1 point
                 }
 				],
@@ -128,7 +129,7 @@ var phantasms={
 				"Ignore":["Buff Increase Defence","Defence"],
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
+							{"Name":"NP Charge",
 								"Duration":3,
 								"Power":1}
 						],
@@ -140,7 +141,7 @@ var phantasms={
 				"ignore":["Defence","defensive_buffs"],
 				"effect_after_attack":[
 						{"Buffs":[
-							{"Name":"NP Gauge",
+							{"Name":"NP Charge",
 								"Duration":3,
 								"Power":2}
 						],

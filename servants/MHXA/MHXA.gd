@@ -8,6 +8,7 @@ const default_stats={
 	"ideology":["Neutral","Evil"],
 	"attack_range":1,#most berserkers has range=1
 	"attack_power":5,#check table info
+	"strength":"A",
 	"agility":"B",
 	"endurance":"B",
 	"luck":"C",
@@ -25,7 +26,7 @@ var hp
 var luck
 var magic
 var traits=[]
-
+var strength
 var buffs=[]
 var skill_cooldowns=[]
 var additional_moves=0
@@ -44,6 +45,7 @@ func _ready():
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
+	strength=default_stats["strength"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -56,7 +58,7 @@ var passive_skills=[
 		"Power":2,
 		"Effect On Trigger":
 			{"Buffs":[
-				{"Name":"NP Gauge",
+				{"Name":"NP Charge",
 					"Duration":0,
 					"Power":1}
 				],
@@ -72,28 +74,28 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-            {"Name":"ATK Up",
-                "Trigger": "Success Attack",
-                "Types":["Buff Positive Effect"],
-                "Total Trigger Uses":3,
-                "Duration":3,
-                "Power":3},
-            {"Name":"Heal",
-                "Power":7},
-            {"Name":"Heal Each Turn",
-                "Types":["Buff Positive Effect"],
-                "Duration":3,
-                "Trigger": "End Turn",
-                "Effect On Trigger":
-                    {"Buffs":[
-                        {"Name":"Heal",
-                            "Power":4}
-                        ],
-                        "Cast":"Self"
-                    }}
-            ],
-        "Cast":"Self"
-        },
+			{"Name":"ATK Up",
+				"Trigger": "Success Attack",
+				"Types":["Buff Positive Effect"],
+				"Total Trigger Uses":3,
+				"Duration":3,
+				"Power":3},
+			{"Name":"Heal",
+				"Power":7},
+			{"Name":"Restore HP Each Turn",
+				"Types":["Buff Positive Effect","Buff Hp Recovery Per Turn"],
+				"Duration":3,
+				"Trigger": "End Turn",
+				"Effect On Trigger":
+					{"Buffs":[
+						{"Name":"Heal",
+							"Power":4}
+						],
+						"Cast":"Self"
+					}}
+			],
+		"Cast":"Self"
+		},
 	]
 },
 
@@ -106,14 +108,14 @@ var skills={
 	"Effect":[
 		{"Buffs":[
 			{"Name":"Dice +",
-                "Action":"Evade",
+				"Action":"Evade",
 				"Duration":3,
 				"Power":1#1 point
-            },
-            {"Name":"Critical Hit Rate Up",
-                "Crit Chances":[1,6],
-                "Duration":3
-            }
+			},
+			{"Name":"Critical Hit Rate Up",
+				"Crit Chances":[1,6],
+				"Duration":3
+			}
 				],
 		"Cast":"Self"}
 		]
@@ -130,9 +132,9 @@ var skills={
 			{"Name":"ATK Up",
 				"Duration":3,
 				"Power":2},
-            {"Name":"Critical Hit Rate Up",
-                "Crit Chances":[1,6],
-                "Duration":3}
+			{"Name":"Critical Hit Rate Up",
+				"Crit Chances":[1,6],
+				"Duration":3}
 			],
 			"Cast":"All Allies"}
 		]
@@ -146,7 +148,7 @@ var skills={
 	{"Buffs":[
 		{"Name":"Madness Enhancement",
 		"Duration":3,
-        "Can Use 1 Skill":true,
+		"Can Use 1 Skill":true,
 		"Power":2}
 		],
 	"Cast":"Self"}
@@ -163,24 +165,24 @@ var phantasms={
 			{"Default":
 				{"Cost":6,"Attack Type":"Single In Range","Range":3,"Damage":7,
 				"Phantasm Buffs":[
-                    {"Name":"ATK Up Against Class",
-                        "Class":"Saber",
-                        "Power":3},
-                    {"Name":"ATK Up Against Alignment",
-                        "Alignment":"Good",
-                        "Power":3},
-                    ]
+					{"Name":"ATK Up Against Class",
+						"Class":"Saber",
+						"Power":3},
+					{"Name":"ATK Up Against Alignment",
+						"Alignment":"Good",
+						"Power":3},
+					]
 				},
 			"Overcharge":
 				{"Cost":12,"Attack Type":"Single In Range","Range":3,"Damage":14,
 				"Phantasm Buffs":[
-                    {"Name":"ATK Up Against Class",
-                        "Class":"Saber",
-                        "Power":3},
-                    {"Name":"ATK Up Against Alignment",
-                        "Alignment":"Good",
-                        "Power":3},
-                    ]
+					{"Name":"ATK Up Against Class",
+						"Class":"Saber",
+						"Power":3},
+					{"Name":"ATK Up Against Alignment",
+						"Alignment":"Good",
+						"Power":3},
+					]
 				},
 		}
 	}

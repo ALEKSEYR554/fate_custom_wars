@@ -34,6 +34,7 @@ const default_stats={
 	"ideology":["Neutral","Good"],
 	"attack_range":1,
 	"attack_power":1,
+	"strength":"E",
 	"agility":"D",
 	"endurance":"E",
 	"luck":"B+",
@@ -66,6 +67,7 @@ var additional_moves=0
 var additional_attack=0
 var traits=[]
 var phantasm_charge=0
+var strength
 # Called when the node enters the scene tree for the first time.
 
 
@@ -80,6 +82,7 @@ func _ready():
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
+	strength=default_stats["strength"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -95,12 +98,13 @@ var skills={
 		{"Name":"Critical Strength Up X",
 			"Duration":3,
 			"Power":2},
-		{"Name":"NP Gauge",
+		{"Name":"NP Charge",
 			"Duration":3,
 			"Power":2},
 		],
 	"Cast":"single allie"}
-]},
+	]
+},
 "Second Skill":{
 	"Type":"Buff Granting",
 	"Rank":"A+",
@@ -114,7 +118,7 @@ var skills={
 			{"Name":"Def Up",
 				"Duration":3,
 				"Power":2},
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Duration":3,
 				"Power":1}
 			],
@@ -131,7 +135,7 @@ var skills={
 			{"Name":"ATK Up",
 				"Duration":3,
 				"Power":3},
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Duration":1,
 				"Power":1}
 			],
@@ -205,7 +209,7 @@ var phantasms={
 			{"Cost":6,"Attack Type":"Buff Granting","Range":0,"Damage":0,
 				"Effect":[
 					{"Buffs":[
-						{"Name":"Discharge NP",
+						{"Name":"NP Discharge",
 							"Duration":3,
 							"Power":1},
 						{"Name":"Def Down X",
@@ -236,7 +240,7 @@ var phantasms={
 			{"Cost":12,"Attack Type":"Buff Granting","Range":0,"Damage":0,
 				"Effect":[
 					{"Buffs":[
-						{"Name":"Discharge NP",
+						{"Name":"NP Discharge",
 							"Duration":3,
 							"Power":2},
 						{"Name":"Def Down X",

@@ -37,6 +37,7 @@ const default_stats={
 	"ideology":["Neutral","Good"],
 	"attack_range":3,
 	"attack_power":3,
+	"strength":"C",
 	"agility":"B-",
 	"endurance":"C",
 	"luck":"B",
@@ -61,6 +62,7 @@ var luck
 var magic #["C",0,3]
 var traits
 
+var strength
 var buffs=[]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
@@ -81,6 +83,7 @@ func _ready():
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
+	strength=default_stats["strength"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
@@ -133,7 +136,7 @@ var skills={
 					"Types":["Buff Positive Effect"],
 					"Effect On Trigger":
 						{"Buffs":[
-							{"Name":"NP Gauge",
+							{"Name":"NP Charge",
 								"Duration":0,
 								"Power":1}
 							],
@@ -152,7 +155,7 @@ var skills={
 					"Effect On Trigger":
 						{"Buffs":[
 							{"Name":"Critical Hit Rate Up",
-								"Duration":0,
+								"Duration":1,
 								"Power":1,
 								"Crit Chances":[1,3,6]}
 							],
@@ -196,7 +199,7 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"NP Gauge",
+			{"Name":"NP Charge",
 				"Duration":3,
 				"Power":2},
 			{"Name":"ATK UP X Against Trait",

@@ -2,11 +2,12 @@ extends Node2D
 #Bynyan
 @onready var players_handler = self.get_parent()
 const default_stats={
-	"hp":1,
+	"hp":40,
 	"servant_class":"Berserker",
 	"ideology":["Balanced","Neutral"],
 	"attack_range":1,
 	"attack_power":3,
+	"strength":"C",
 	"agility":"C",
 	"endurance":"A",
 	"luck":"E+",
@@ -39,7 +40,7 @@ var skill_cooldowns=[]
 var additional_moves=0
 var additional_attack=0
 var traits
-
+var strength
 var phantasm_charge=0
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -52,6 +53,7 @@ func _ready():
 	hp=default_stats["hp"]
 	magic=default_stats["magic"]
 	luck=default_stats["luck"]
+	strength=default_stats["strength"]
 	traits=default_stats["traits"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
