@@ -34,7 +34,9 @@ const default_stats={
 	"hp":26,
 	"servant_class":"Moon Cancer",
 	"ideology":["Chaotic","Evil"],
+	"attribute":"Earth",
 	"attack_range":2,
+	"gender":"Female",
 	"attack_power":3,
 	"strength":"C",
 	"agility":"C",
@@ -70,7 +72,7 @@ var luck
 #magic power / magic resistance
 var magic 
 var traits
-
+var gender
 var buffs=[]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
@@ -78,6 +80,7 @@ var additional_moves=0
 var additional_attack=0
 var current_weapon#="Scythe"
 var phantasm_charge=0
+var attribute
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -92,23 +95,27 @@ func _ready():
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
 	strength=default_stats["strength"]
+	attribute=default_stats["attribute"]
+	gender=default_stats["gender"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
 
 var passive_skills=[
-	{"Name":"Existence Outside the Domain",
+	{
+		"Name":"Existence Outside the Domain",
 		"Type":"Status",
 		"Types":["Buff Positive Effect"],#addes as demonstration
 		"Power":0
 		},
-	{"Name":"Debuff Immune",
+	{
+		"Name":"Nullify Debuff",
 		"Display Name":"The One Who Swallows the Earth",#TODO
 		"Type":"Status",
-		"Debuff":["Burn","Strong Burn"]
-
+		"Types To Block":["Buff Burn"]
 	},
-	{"Name":"Buff In Range",
+	{
+		"Name":"Buff In Range",
 		"Display Name":"Goddess' Essence",
 		"Types":["Buff Positive Effect"],
 		"Trigger":"Turns Dividable By Power",

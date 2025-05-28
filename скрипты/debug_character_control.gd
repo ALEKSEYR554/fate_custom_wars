@@ -32,6 +32,12 @@ const ranks = [
 
 @onready var use_skill_raw_edit = $PanelContainer/VBoxContainer/main_container/VBoxContainer/use_skill_raw_edit
 
+
+@onready var dmg_label = $PanelContainer/VBoxContainer/main_container/VBoxContainer/Dmg_container/dmg_Label
+@onready var dmg_refresh_button = $PanelContainer/VBoxContainer/main_container/VBoxContainer/Dmg_container/dmg_refresh_button
+
+
+
 var old_text := ""
 
 func get_stat_in_number(stat:String)->int:
@@ -274,4 +280,10 @@ func _on_use_skill_button_pressed():
 	else:
 		erorr_label.text=str("JSON Parse Error: ", json.get_error_message(), " in ", use_skill_raw_edit.text, " at line ", json.get_error_line())
 		print("FUCK")
+	pass # Replace with function body.
+
+
+func _on_dmg_refresh_button_pressed():
+	dmg_label.text=str("Ph:",players_handler.calculate_peer_id_attack_against_peer_id(Globals.self_peer_id,-1,"Physical"),
+	" Mg:",players_handler.calculate_peer_id_attack_against_peer_id(Globals.self_peer_id,-1,"Magical"))
 	pass # Replace with function body.

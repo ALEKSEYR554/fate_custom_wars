@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=12 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_c6n5g"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_chyh4"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://скрипты/players_handler.gd" id="7_naqg5"]
 [ext_resource type="Script" path="res://скрипты/рейтинг.gd" id="8_8trl2"]
 [ext_resource type="Script" path="res://скрипты/uploade_images.gd" id="9_j25dr"]
+[ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://sun.png" id="11_hbe8m"]
 
 [node name="game_field" type="Node2D"]
 position = Vector2(-10, -5)
@@ -833,6 +834,10 @@ mode_overrides_title = false
 file_mode = 0
 access = 2
 use_native_dialog = true
+
+[node name="day_or_night_sprite2d" type="Sprite2D" parent="."]
+position = Vector2(986, -111)
+texture = ExtResource("11_hbe8m")
 
 [connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]

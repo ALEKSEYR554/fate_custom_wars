@@ -10,6 +10,15 @@ var debug_mode:bool=false
 var peer_id_to_nickname:Dictionary={}
 # Called when the node enters the scene tree for the first time.
 
+const ranks:Array = [
+	"EX",
+	"A+++", "A++", "A+", "A", "A-",
+	"B+++", "B++", "B+", "B","B-",
+	"C+++", "C++", "C+", "C","C-",
+	"D+++", "D++", "D+", "D","D-",
+	"E+++",  "E++", "E+", "E", "E-"
+]
+
 const SKILL_COST_TYPES={NP="NP"}
 const CLASS_NAMES:Array=[
 	"Saber",
@@ -32,20 +41,26 @@ const buffs_types:Dictionary={
 	#exclusive buffs
 	"Attack Range Set":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
 	"Attack Range Add":["Buff Positive Effect","Buff Increase Stat","Buff Range Change"],
-	"NP Discharge":["Instant"],#instant
-	"Heal":["Instant"],#instant
-	"HP Drain":["Instant"],
-	"Debuff Removal":["Instant"],
-	"NP Charge":["Instant"],#instant
+	"NP Discharge":["Instant","NP Discharge"],#instant
+	"Absorb Buffs":["Buff Positive Effect","Absorb Buffs"],
+	"Heal":["Instant","Heal"],#instant
+	"HP Drain":["Instant","HP Drain"],
+	"Debuff Removal":["Instant","Debuff Removal"],
+	"NP Charge":["Instant","NP Charge"],#instant
 	"Reduce Skills Cooldown":["Instant"],
-	"Multiply NP":["Instant"],
+	"Multiply NP":["Instant","Multiply NP"],
 	"Buff Removal":["Instant"],
+	"Madness Enhancement":[],
+	"Presence Concealment":["Instant","Presence Concealment"],
+
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],
+	"Ignore Evade":["Buff Positive Effect","Buff Increase Damage"],
+
 	"Maximum Hits Per Turn":["Buff Negative Effect","Buff Decrease Damage"],
 	"Magical Damage Get + Attack":["Buff Positive Effect","Buff Increase Damage"],
 	"pull enemies on attack":["Buff Positive Effect","Buff Increase Damage"],
-	"Critical Remove":["Buff Negative Effect","Buff Decrease Damage"],
+	"Critical Remove":["Buff Negative Effect","Buff Decrease Damage","Crit Block"],
 	
 	"Agility Add":["Buff Positive Effect","Buff Increase Stat"],
 	"Agility Set":["Buff Positive Effect","Buff Increase Stat"],
@@ -74,6 +89,13 @@ const buffs_types:Dictionary={
 	"ATK Up X Against Alignment":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 	"ATK Up Against Alignment":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
 
+	"ATK Up X Against Gender":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	"ATK Up Against Gender":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+
+	"ATK Up X Against Attribute":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+	"ATK Up Against Attribute":["Buff Positive Effect","Buff Increase Damage","Buff Atk Up"],
+
+
 	"Dice +":["Buff Positive Effect"],
 	"Maximum Skills Per Turn":["Buff Positive Effect"],
 
@@ -92,6 +114,8 @@ const buffs_types:Dictionary={
 	"Critical Hit Rate Up":["Buff Positive Effect", "Buff Increase Damage", "Buff Crit Rate Up"],
 	# "Crit Chances":[1,3,6]
 	
+	"Blessing of Kur":["Buff Positive Effect"],
+	"Instant-Kill Immunity":["Buff Positive Effect"],
 	"Critical Strength Up":["Buff Positive Effect", "Buff Increase Damage", "Buff Crit Damage Up"],
 	"Critical Strength Up X":["Buff Positive Effect", "Buff Increase Damage", "Buff Crit Damage Up"],
 	"Guts":["Buff Positive Effect", "Buff Guts"],

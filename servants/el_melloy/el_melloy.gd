@@ -32,13 +32,15 @@ const default_stats={
 	"hp":15,
 	"servant_class":"Caster",
 	"ideology":["Neutral","Good"],
+	"gender":"Male",
 	"attack_range":1,
 	"attack_power":1,
 	"strength":"E",
+	"attribute":"Human",
 	"agility":"D",
 	"endurance":"E",
 	"luck":"B+",
-	"magic":{"Rank":"A+","Power":6,"resistance":12},
+	"magic":{"Rank":"A+","Power":12,"resistance":6},
 	"traits":[
 		"Hominidae Servant",
 		"Humanoid",
@@ -68,6 +70,8 @@ var additional_attack=0
 var traits=[]
 var phantasm_charge=0
 var strength
+var attribute
+var gender
 # Called when the node enters the scene tree for the first time.
 
 
@@ -83,6 +87,8 @@ func _ready():
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
 	strength=default_stats["strength"]
+	attribute=default_stats["attribute"]
+	gender=default_stats["gender"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
