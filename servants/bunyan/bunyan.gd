@@ -5,9 +5,11 @@ const default_stats={
 	"hp":40,
 	"servant_class":"Berserker",
 	"ideology":["Balanced","Neutral"],
+	"gender":"Female",
 	"attack_range":1,
 	"attack_power":3,
 	"strength":"C",
+	"attribute":"Earth",
 	"agility":"C",
 	"endurance":"A",
 	"luck":"E+",
@@ -42,6 +44,8 @@ var additional_attack=0
 var traits
 var strength
 var phantasm_charge=0
+var attribute
+var gender
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	servant_class=default_stats["servant_class"]
@@ -55,6 +59,8 @@ func _ready():
 	luck=default_stats["luck"]
 	strength=default_stats["strength"]
 	traits=default_stats["traits"]
+	attribute=default_stats["attribute"]
+	gender=default_stats["gender"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.

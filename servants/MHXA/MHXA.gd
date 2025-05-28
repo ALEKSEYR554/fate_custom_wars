@@ -6,6 +6,8 @@ const default_stats={
 	"hp":38,
 	"servant_class":"Berserker",
 	"ideology":["Neutral","Evil"],
+	"gender":"Female",
+	"attribute":"Star",
 	"attack_range":1,#most berserkers has range=1
 	"attack_power":5,#check table info
 	"strength":"A",
@@ -33,7 +35,8 @@ var additional_moves=0
 var additional_attack=0
 var current_weapon="Scythe"#if character doen't have weapon then dont touch it
 var phantasm_charge=0
-
+var attribute
+var gender
 func _ready():
 	servant_class=default_stats["servant_class"]
 	ideology=default_stats["ideology"]
@@ -46,6 +49,8 @@ func _ready():
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
 	strength=default_stats["strength"]
+	attribute=default_stats["attribute"]
+	gender=default_stats["gender"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.

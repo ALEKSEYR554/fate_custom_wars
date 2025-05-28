@@ -17,7 +17,7 @@ func open_folder_pressed():
 func _ready():
 	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
 	if !OS.has_feature("editor"):
-		print("servant selection type EXE")
+		print("servant selection type Compiled")
 		var count=1
 		characters =[]
 		var dir = DirAccess.open("user://servants/")
@@ -31,7 +31,7 @@ func _ready():
 	else:
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","MHXA"]:
+		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man"]:
 			var img = Image.new()
 			img.load("res://servants/"+str(folder)+"/sprite.png")
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cx3m1fecta1u4"]
+[gd_scene load_steps=3 format=3 uid="uid://cx3m1fecta1u4"]
 
 [ext_resource type="Script" path="res://скрипты/debug_character_control.gd" id="1_7e0en"]
+[ext_resource type="Texture2D" uid="uid://5q7rs7jvtu8o" path="res://refresh.svg" id="2_2e6ob"]
 
 [node name="debug_character_control" type="Control"]
 top_level = true
@@ -144,6 +145,19 @@ wrap_mode = 1
 layout_mode = 2
 text = "Use"
 
+[node name="Dmg_container" type="HBoxContainer" parent="PanelContainer/VBoxContainer/main_container/VBoxContainer"]
+layout_mode = 2
+
+[node name="dmg_Label" type="Label" parent="PanelContainer/VBoxContainer/main_container/VBoxContainer/Dmg_container"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dmg:"
+
+[node name="dmg_refresh_button" type="Button" parent="PanelContainer/VBoxContainer/main_container/VBoxContainer/Dmg_container"]
+layout_mode = 2
+theme_override_constants/icon_max_width = 20
+icon = ExtResource("2_2e6ob")
+
 [node name="Apply_Button" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "APPLY"
@@ -156,4 +170,5 @@ clip_text = true
 [connection signal="item_selected" from="PanelContainer/VBoxContainer/main_container/Stats_contaner/HBoxContainer/Peer_id_OptionButton" to="." method="_on_peer_id_option_button_item_selected"]
 [connection signal="toggled" from="PanelContainer/VBoxContainer/main_container/Stats_contaner/Mana_hContaier4/Magical_attack_check_box" to="." method="_on_magical_attack_check_box_toggled"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/main_container/VBoxContainer/use_skill_Button" to="." method="_on_use_skill_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/main_container/VBoxContainer/Dmg_container/dmg_refresh_button" to="." method="_on_dmg_refresh_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Apply_Button" to="." method="_on_apply_button_pressed"]

@@ -34,10 +34,12 @@ const default_stats={
 	"hp":26,
 	"servant_class":"Assasin",
 	"ideology":["Lawful","Good"],
+	"gender":"Female",
 	"attack_range":1,
 	"attack_power":4,
 	"strength":"B",
 	"agility":"B",
+	"attribute":"Human",
 	"endurance":"C",
 	"luck":"C",
 	"magic":{"Rank":"C","Power":0,"resistance":3},
@@ -63,7 +65,7 @@ var luck
 var magic #["C",0,3]
 var traits=[]
 var strength
-
+var gender
 var buffs=[{"Name":"Magical Damage Get + Attack",
 				"Trigger": "Magical Damage Taken",
 				"Effect On Trigger":
@@ -81,6 +83,7 @@ var additional_moves=0
 var additional_attack=0
 var current_weapon="Scythe"
 var phantasm_charge=0
+var attribute
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -95,6 +98,8 @@ func _ready():
 	luck=default_stats["luck"]
 	traits=default_stats["traits"]
 	strength=default_stats["strength"]
+	attribute=default_stats["attribute"]
+	gender=default_stats["gender"]
 	for i in skills.size():
 		skill_cooldowns.append(0)
 	pass # Replace with function body.
