@@ -13,19 +13,21 @@ signal sleep
 
 func open_folder_pressed():
 	OS.shell_open(ProjectSettings.globalize_path("user://"))
+	
 
 func _ready():
 	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
+	#$FileDialog.root_subfolder = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
 	if !OS.has_feature("editor"):
 		print("servant selection type Compiled")
 		var count=1
 		characters =[]
-		var dir = DirAccess.open("user://servants/")
+		var dir = DirAccess.open(Globals.user_folder+"servants/")
 		print(OS.get_user_data_dir())
 		for folder in dir.get_directories():
 			print("appending characters\n")
 			var img = Image.new()
-			img.load("user://servants/"+str(folder)+"/sprite.png")
+			img.load(Globals.user_folder+"servants/"+str(folder)+"/sprite.png")
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(count)+" Description "})
 			print("characters="+str(characters))
 	else:

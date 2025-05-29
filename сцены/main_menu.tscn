@@ -99,6 +99,26 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "debug"
 
+[node name="android_FileDialog" type="FileDialog" parent="."]
+mode = 2
+title = "Open a Directory"
+initial_position = 1
+size = Vector2i(700, 400)
+ok_button_text = "Выбрать текущую папку"
+file_mode = 2
+access = 2
+show_hidden_files = true
+use_native_dialog = true
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_right = 40.0
+grow_vertical = 0
+
 [connection signal="button_up" from="start_screen/Host" to="." method="_on_host_button_up"]
 [connection signal="button_up" from="start_screen/Connect" to="." method="_on_connect_button_up"]
 [connection signal="pressed" from="start_screen/Settings" to="." method="_on_settings_pressed"]

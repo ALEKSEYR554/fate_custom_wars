@@ -14,12 +14,23 @@ extends Node
 @onready var start_screen = $start_screen
 @onready var back_button = $Back_button
 const GAME_FIELD = preload("res://сцены/game_field.tscn")
+@onready var android_file_dialog:FileDialog = $android_FileDialog
 
 func _ready():
+	OS.request_permissions()
 	#DisplayServer.window_set_title("gogod_debug="+str(OS.get_process_id()))
 	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
+	var use_folder="user://"
+	if OS.has_feature("mobile"):
+		android_file_dialog.visible=true
+		use_folder=await android_file_dialog.dir_selected
+		
+		Globals.user_folder=use_folder+'/'
+		$Label.text=Globals.user_folder
 	
-	var folders_in_user=DirAccess.open("user://").get_directories()
+	var folders_in_user=DirAccess.open(use_folder).get_directories()
+	
+	$Label.text=str("folder in\n"+OS.get_user_data_dir()+"\n debug="+str(folders_in_user))
 	if !folders_in_user.has("servants") and !OS.has_feature("editor"):
 		self.visible=false
 		var vb=VBoxContainer.new()
@@ -27,7 +38,7 @@ func _ready():
 		butt.text="open"
 		butt.pressed.connect(_on_button_pressed)
 		var ll=Label.new()
-		ll.text="ERROR\n ADD 'servants' folder in\n"+OS.get_user_data_dir()
+		ll.text="ERROR\n ADD 'servants' folder in\n"+OS.get_user_data_dir()+"\n debug="+str(folders_in_user)
 		
 		ll.add_theme_font_size_override("font_size", 20)
 		ll.add_theme_color_override("font_color",Color.RED)
