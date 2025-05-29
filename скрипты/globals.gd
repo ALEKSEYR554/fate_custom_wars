@@ -8,6 +8,8 @@ var self_field_color:Color
 var nickname:String
 var debug_mode:bool=false
 var peer_id_to_nickname:Dictionary={}
+
+var user_folder="user://"
 # Called when the node enters the scene tree for the first time.
 
 const ranks:Array = [

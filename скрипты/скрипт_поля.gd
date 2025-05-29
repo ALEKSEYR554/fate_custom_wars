@@ -9,6 +9,8 @@ var is_game_started=false
 @onready var players_handler = $players_handler
 var is_pole_generated=false
 @onready var character_selection_container = $GUI/character_selection_container
+
+@onready var char_select:Control = $GUI/character_selection_container/Char_select
 @onready var alert_label = $GUI/alert_label
 
 var glow_cletki_node
@@ -195,6 +197,8 @@ var field_status={"Default":"City","Field Buffs":[]}
 
 func _ready():
 	character_selection_container.visible=true
+	#$GUI/peer_id_label/android_debug_label.text=str(char_select.characters)
+	
 	day_or_night_sprite_2d.position=Vector2(scene_bounds.x/2,-400)
 	if Globals.host_or_user=='host':
 		pass
@@ -219,7 +223,7 @@ func _ready():
 	players_handler.fuck_you()
 	#print(get_all_children(self))
 
-@rpc("call_local","reliable")
+@rpc("call_local","reliable","authority")
 func generate_pole(preset_time):
 	print("iiiiiiiiiii="+str(preset_time))
 	cell_positions = {}
