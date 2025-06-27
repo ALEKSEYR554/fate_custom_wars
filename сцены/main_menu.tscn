@@ -119,6 +119,7 @@ anchor_bottom = 1.0
 offset_top = -23.0
 offset_right = 40.0
 grow_vertical = 0
+horizontal_alignment = 1
 
 [connection signal="button_up" from="start_screen/Host" to="." method="_on_host_button_up"]
 [connection signal="button_up" from="start_screen/Connect" to="." method="_on_connect_button_up"]
