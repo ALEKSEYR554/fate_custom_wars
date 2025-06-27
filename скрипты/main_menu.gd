@@ -28,10 +28,14 @@ func _ready():
 		
 		Globals.user_folder=use_folder+'/'
 		$Label.text=Globals.user_folder
+	else:
+		use_folder=OS.get_executable_path().get_base_dir()
+		Globals.user_folder=OS.get_executable_path().get_base_dir()
 	
 	var folders_in_user=DirAccess.open(use_folder).get_directories()
 	
-	$Label.text=str("folder in\n"+OS.get_user_data_dir()+"\n debug="+str(folders_in_user))
+	$Label.text=str("folder in\n"+Globals.user_folder+"\n debug="+str(folders_in_user))
+	#$Label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	if !folders_in_user.has("servants") and !OS.has_feature("editor"):
 		self.visible=false
 		var vb=VBoxContainer.new()
@@ -39,8 +43,9 @@ func _ready():
 		butt.text="open"
 		butt.pressed.connect(_on_button_pressed)
 		var ll=Label.new()
-		ll.text="ERROR\n ADD 'servants' folder in\n"+OS.get_user_data_dir()+"\n debug="+str(folders_in_user)
-		
+		ll.text="ERROR\n ADD 'servants' folder in\n"+Globals.user_folder#+"\n debug="+str(folders_in_user)
+		ll.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		#ll.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
 		ll.add_theme_font_size_override("font_size", 20)
 		ll.add_theme_color_override("font_color",Color.RED)
 		#ll.autowrap_mode=TextServer.AUTOWRAP_WORD
@@ -60,11 +65,11 @@ func _on_host_button_up():
 	pass # Replace with function body.
 
 func _on_connect_button_up():
-	var file_content = FileAccess.get_file_as_bytes("res://jopa.png")
+	#var file_content = FileAccess.get_file_as_bytes("res://jopa.png")
 	#print(file_content)
-	var file2 = FileAccess.open("user://save_game.png", FileAccess.WRITE)
+	#var file2 = FileAccess.open("user://save_game.png", FileAccess.WRITE)
 	DisplayServer.window_set_title("gogod_debug= USER")
-	file2.store_buffer(file_content)
+	#file2.store_buffer(file_content)
 	start_screen.visible=false
 	connect_scene.visible=true
 	back_button.visible=true
@@ -86,7 +91,8 @@ func _on_back_button_button_up():
 
 
 func _on_button_pressed():
-	OS.shell_open(ProjectSettings.globalize_path("user://"))
+	#OS.shell_open(ProjectSettings.globalize_path("user://"))
+	OS.shell_open(Globals.user_folder)
 	pass # Replace with function body.
 	
 func game_initiate():
@@ -97,7 +103,8 @@ func game_initiate():
 
 
 func _on_user_folder_button_pressed():
-	OS.shell_open(ProjectSettings.globalize_path("user://"))
+	#OS.shell_open(ProjectSettings.globalize_path("user://"))
+	OS.shell_open(Globals.user_folder)
 	pass # Replace with function body.
 
 
