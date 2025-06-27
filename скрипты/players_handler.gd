@@ -113,14 +113,6 @@ func _ready():
 @rpc("call_local","authority","reliable")
 func load_servant(pu_id:String):
 	print("loading servant for pu_id=",pu_id)
-	var folderr
-	if OS.has_feature("editor"):
-		folderr="res://"
-	else:
-		folderr="user://"
-	
-	if OS.has_feature("mobile"):
-		folderr=Globals.user_folder
 	
 	var servant_name:String=Globals.pu_id_player_info[pu_id].get("servant_name",null)
 	if servant_name==null:
@@ -146,7 +138,7 @@ func load_servant(pu_id:String):
 	var buff_name_label:Label= Label.new()
 	#var servant_folder_name:String=folderr+"servants/"+str(servant_name)
 	
-	player.set_script(load(Globals.user_folder+"servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
+	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	#print("servant_folder_name=",servant_folder_name)
 	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
 	#print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
