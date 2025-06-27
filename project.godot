@@ -35,6 +35,7 @@ window/stretch/aspect="expand"
 [editor]
 
 movie_writer/movie_file="C:/Users/alefi/Documents/fgo_vk_war/1.avi"
+export/convert_text_resources_to_binary=false
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
 

@@ -54,6 +54,10 @@ func _ready():
 	someone_status_changed.connect(status_changed)
 	_load_or_generate_persistent_id()
 	print("My Persistent ID (PUID): ", self_pu_id)
+	if !OS.has_feature("mobile"):
+		#use_folder=OS.get_executable_path().get_base_dir()
+
+		Globals.user_folder=OS.get_executable_path().get_base_dir()
 	preload_all_servant_sprites()
 
 
@@ -64,12 +68,30 @@ func preload_all_servant_sprites():
 		print("servant selection type Compiled")
 		var count=1
 		characters =[]
-		var dir = DirAccess.open(Globals.user_folder+"servants/")
+		var dir = DirAccess.open(Globals.user_folder+"/servants/")
 		print(OS.get_user_data_dir())
 		for folder in dir.get_directories():
 			print("appending characters\n")
 			#var img = Image.new()
-			var img=ResourceLoader.load(Globals.user_folder+"servants/"+str(folder)+"/sprite.png").get_image()
+			var path=Globals.user_folder+"/servants/"+str(folder)+"/sprite.png"
+			print("loading sprite = "+path)
+
+
+
+			var image = Image.new()
+			image.load(path)
+			var data = image.data
+			data["format"] = image.get_format()
+			
+			var img = Image.new()
+			img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
+
+			#var img=load(path)
+
+			print("img=",img)
+
+
+			#img=img.get_image()
 			#img=ImageTexture.create_from_image(img)
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(count)+" Description "})
 			print("characters="+str(characters))
@@ -80,7 +102,7 @@ func preload_all_servant_sprites():
 		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
-			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png").get_image()
+			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
 			print(img)
 			#img=ImageTexture.create_from_image(img)
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})
