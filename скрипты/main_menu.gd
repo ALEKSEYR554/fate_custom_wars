@@ -118,4 +118,5 @@ func _on_settings_pressed():
 
 func _on_check_button_toggled(toggled_on):
 	Globals.debug_mode=toggled_on
+	Globals.self_pu_id=Globals._generate_new_puid()
 	pass # Replace with function body.
