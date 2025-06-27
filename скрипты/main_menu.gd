@@ -8,6 +8,7 @@ extends Node
 
 @onready var main_menu = $"."
 @onready var settings_screen = $Settings_screen
+@onready var logo = $logo
 
 @onready var connect_scene = $Connect_scene
 @onready var host_scene = $Host_scene
@@ -54,6 +55,7 @@ func _on_host_button_up():
 	start_screen.visible=false
 	host_scene.visible=true
 	back_button.visible=true
+	logo.visible=false
 	DisplayServer.window_set_title("gogod_debug= HOST")
 	pass # Replace with function body.
 
@@ -66,6 +68,7 @@ func _on_connect_button_up():
 	start_screen.visible=false
 	connect_scene.visible=true
 	back_button.visible=true
+	logo.visible=false
 	pass # Replace with function body.
 
 @rpc
@@ -78,6 +81,7 @@ func _on_back_button_button_up():
 	back_button.visible=false
 	start_screen.visible=true
 	settings_screen.visible=false
+	logo.visible=true
 	pass # Replace with function body.
 
 

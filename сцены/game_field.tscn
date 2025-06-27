@@ -13,12 +13,14 @@
 [ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://sun.png" id="11_hbe8m"]
 
 [node name="game_field" type="Node2D"]
+process_mode = 1
 position = Vector2(-10, -5)
 script = ExtResource("1_c6n5g")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 
 [node name="host_buttons" type="VBoxContainer" parent="GUI"]
+visible = false
 offset_right = 99.0
 offset_bottom = 66.0
 metadata/_edit_lock_ = true
@@ -752,6 +754,33 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
+[node name="disconnect_alert_panel" type="Panel" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.253472
+anchor_top = 0.158951
+anchor_right = 0.715278
+anchor_bottom = 0.450617
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="disconnect_alert_label" type="Label" parent="GUI/disconnect_alert_panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 30
+text = "Someone disconnected
+awaiting reconnection"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
 [node name="info_ok_button" type="Button" parent="GUI"]
 visible = false
 anchors_preset = -1
@@ -819,6 +848,37 @@ text = "Add Image"
 metadata/_edit_use_anchors_ = true
 metadata/_edit_lock_ = true
 
+[node name="menu_vbox_container" type="VBoxContainer" parent="GUI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -110.0
+offset_top = -71.0
+offset_right = 110.0
+offset_bottom = 71.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="disconnect_Button" type="Button" parent="GUI/menu_vbox_container"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Disconnect"
+
+[node name="reconnect_button" type="Button" parent="GUI/menu_vbox_container"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Reconnect"
+
+[node name="settings_button" type="Button" parent="GUI/menu_vbox_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Settings"
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
@@ -839,6 +899,7 @@ metadata/_edit_lock_ = true
 
 [node name="FileDialog" type="FileDialog" parent="."]
 title = "Open Image"
+size = Vector2i(338, 159)
 ok_button_text = "Открыть"
 mode_overrides_title = false
 file_mode = 0
@@ -903,4 +964,7 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/buffs_temp_container/refresh_buffs_button" to="." method="_on_refresh_buffs_button_pressed"]
 [connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="pressed" from="GUI/add_image_button" to="uploaded_images_layer" method="_on_add_image_button_pressed"]
+[connection signal="pressed" from="GUI/menu_vbox_container/disconnect_Button" to="." method="_on_disconnect_button_pressed"]
+[connection signal="pressed" from="GUI/menu_vbox_container/reconnect_button" to="." method="_on_reconnect_button_pressed"]
+[connection signal="pressed" from="GUI/menu_vbox_container/settings_button" to="." method="_on_settings_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
