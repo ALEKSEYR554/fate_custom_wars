@@ -108,8 +108,8 @@ func _ready():
 	for servant_class in Globals.CLASS_NAMES:
 		class_label_option_button.add_item(servant_class)
 	
-	for peer_id in Globals.peer_id_to_nickname.keys():
-		peer_id_to_name_label.text+=str("Id=",peer_id," nick=",Globals.peer_id_to_nickname[peer_id],"\n")
+	for pu_id in Globals.pu_id_to_nickname.keys():
+		peer_id_to_name_label.text+=str("Id=",pu_id," nick=",Globals.pu_id_to_nickname[pu_id],"\n")
 	
 	
 	class_label_option_button.select(randi_range(0,Globals.CLASS_NAMES.size()-1))
@@ -149,19 +149,19 @@ func _on_refresh_button_pressed(choose:bool=false):
 	if not choose:
 		peer_id_to_name_label.text=""
 		peer_id_option_button.clear()
-		for peer_id in Globals.peer_id_to_nickname.keys():
-			peer_id_to_name_label.text+=str("Id=",peer_id," nick=",Globals.peer_id_to_nickname[peer_id],"\n")
-			peer_id_option_button.add_item(str(peer_id))
+		for pu_id in Globals.pu_id_to_nickname.keys():
+			peer_id_to_name_label.text+=str("Id=",pu_id," nick=",Globals.pu_id_to_nickname[pu_id],"\n")
+			peer_id_option_button.add_item(str(pu_id))
 	if peer_id_option_button.get_selected()==-1:
 		print('peer_id_option_button.get_selected()==-1')
 		return
 	var peer_id_text=peer_id_option_button.get_item_text(peer_id_option_button.get_selected())
-	if peer_id_text.is_valid_int():
-		print("peer_id=",peer_id_text)
-		if not peer_id_text.to_int() in Globals.peer_id_to_nickname.keys():
-			print('not peer_id_text.to_int() in Globals.peer_id_to_nickname.keys()')
+	if not peer_id_text.is_empty():
+		print("pu_id=",peer_id_text)
+		if not peer_id_text in Globals.pu_id_to_nickname.keys():
+			print('not pu_id_text.to_int() in Globals.pu_id_to_nickname.keys()')
 			return
-		var servant_node=players_handler.peer_id_player_info[peer_id_text.to_int()]["servant_node"]
+		var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
 		var stats:Dictionary={}
 
 		var buffs_str=str(servant_node.buffs)
@@ -203,15 +203,15 @@ func _on_refresh_button_pressed(choose:bool=false):
 
 func _on_apply_button_pressed():
 	if peer_id_option_button.get_selected()==-1:
-		print('peer_id_option_button.get_selected()==-1')
+		print('pu_id_option_button.get_selected()==-1')
 		return
 	var peer_id_text=peer_id_option_button.get_item_text(peer_id_option_button.get_selected())
-	if peer_id_text.is_valid_int():
+	if peer_id_text:
 		print("peer_id=",peer_id_text)
-		if not peer_id_text.to_int() in Globals.peer_id_to_nickname.keys():
-			print('not peer_id_text.to_int() in Globals.peer_id_to_nickname.keys()')
+		if not peer_id_text.to_int() in Globals.pu_id_to_nickname.keys():
+			print('not peer_id_text.to_int() in Globals.pu_id_to_nickname.keys()')
 			return
-		var servant_node=players_handler.peer_id_player_info[peer_id_text.to_int()]["servant_node"]
+		var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
 		var stats:Dictionary={}
 
 		#var buffs_str=str(skills_raw_text_edit.text)
@@ -235,14 +235,14 @@ func _on_apply_button_pressed():
 		#servant_node.luck=stats.luck
 		#servant_node.servant_class=stats.servant_class
 		#servant_node.buffs=get_buffs_array()
-		rpc("set_peer_id_stats_and_buffs",peer_id_text.to_int(),stats,get_buffs_array(),get_magic(stats.magic,magical_attack_check_box.toggle_mode))
+		rpc("set_pu_id_stats_and_buffs",peer_id_text,stats,get_buffs_array(),get_magic(stats.magic,magical_attack_check_box.toggle_mode))
 
 
 	pass # Replace with function body.
 
 @rpc("authority","call_local","reliable")
-func set_peer_id_stats_and_buffs(peer_id:int,stats:Dictionary,buffs:Array,magic:Dictionary):
-	var servant_node=players_handler.peer_id_player_info[peer_id]["servant_node"]
+func set_pu_id_stats_and_buffs(pu_id:String,stats:Dictionary,buffs:Array,magic:Dictionary):
+	var servant_node=Globals.pu_id_player_info[pu_id]["servant_node"]
 	servant_node.strength=stats.strength
 	servant_node.agility=stats.agility
 	servant_node.endurance=stats.endurance
@@ -284,6 +284,6 @@ func _on_use_skill_button_pressed():
 
 
 func _on_dmg_refresh_button_pressed():
-	dmg_label.text=str("Ph:",players_handler.calculate_peer_id_attack_against_peer_id(Globals.self_peer_id,-1,"Physical"),
-	" Mg:",players_handler.calculate_peer_id_attack_against_peer_id(Globals.self_peer_id,-1,"Magical"))
+	dmg_label.text=str("Ph:",players_handler.calculate_pu_id_attack_against_pu_id(Globals.self_pu_id,-1,"Physical"),
+	" Mg:",players_handler.calculate_pu_id_attack_against_pu_id(Globals.self_pu_id,-1,"Magical"))
 	pass # Replace with function body.

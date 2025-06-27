@@ -38,12 +38,12 @@ extends Node2D
 
 #region Usable Variables
 var custom_id_to_skill:Dictionary={}
-var turns_order_by_peer_id:Array=[]
+var turns_order_by_pu_id:Array=[]
 
-var teams_by_peer_id:Array=[]
+var teams_by_pu_id:Array=[]
 
 var turns_counter:int=1
-var current_player_peer_id_turn:int
+var current_player_pu_id_turn:String
 
 
 
@@ -54,24 +54,25 @@ var last_camera_zoom:Vector2
 
 # peer_id={"servant_name":"bunyan","servant_node":NODE,
 #"Buffs":[["buff_name",duration_int]],"debuffs:[["debuff_name",duration_int]]"}
-var peer_id_player_info:Dictionary={}
+#var peer_id_player_info:Dictionary={}
 
 #peer_id={"total_kletki_moved":INT,"total_success_hit":INT,"kletki_moved_this_turn":INT,"attacked_this_turn":INT,
 #"total_crit_hit":INT,"total_damage_dealt":INT,"total_damage_taken":INT,"skill_used_this_turn":INT,
 #"total_skill_used":INT}
-var peer_id_player_game_stat_info={}
+var pu_id_player_game_stat_info={}
 
-var peer_id_to_command_spells_int:Dictionary={}
+var pu_id_to_command_spells_int:Dictionary={}
 
-var peer_id_to_items_owned:Dictionary={}
+var pu_id_to_items_owned:Dictionary={}
 
-var peer_id_to_np_points:Dictionary={}
+var pu_id_to_np_points:Dictionary={}
 
-var peer_id_to_inventory_array:Dictionary={}
-var player_info_button_current_peed_id:int=-1
+var pu_id_to_inventory_array:Dictionary={}
+var player_info_button_current_pu_id:String=""
 
 var self_command_spell_type:String=""
-var servant_name_to_peer_id:Dictionary={}
+var servant_name_to_pu_id:Dictionary={}
+
 #Current users ready 0/?
 var current_users_ready:int=0
 var choosen_allie_return_value:Node2D
@@ -102,15 +103,16 @@ func fuck_you():
 #region Starting and Loading
 func _ready():
 	self.z_index=50
-	Globals.self_peer_id=multiplayer.get_unique_id()
-	$"../GUI/peer_id_label".text=str(Globals.self_peer_id)
-	rpc("update_ready_users_count")
+	#Globals.self_peer_id=multiplayer.get_unique_id()
+	$"../GUI/peer_id_label".text=str(Globals.self_pu_id)
+	rpc("update_ready_users_count",current_users_ready,Globals.pu_id_player_info.size())
 	#print(str(dir.get_directories()))
 	return
 
 
 @rpc("call_local","authority","reliable")
-func load_servant(peer_id:int):
+func load_servant(pu_id:String):
+	print("loading servant for pu_id=",pu_id)
 	var folderr
 	if OS.has_feature("editor"):
 		folderr="res://"
@@ -120,9 +122,10 @@ func load_servant(peer_id:int):
 	if OS.has_feature("mobile"):
 		folderr=Globals.user_folder
 	
-	var servant_name:String=peer_id_player_info[peer_id].get("servant_name","NULL")
-	if servant_name=="NULL":
+	var servant_name:String=Globals.pu_id_player_info[pu_id].get("servant_name",null)
+	if servant_name==null:
 		push_error("servant is not found while loading")
+		print("\n\nservant is not found while loading=",pu_id," Globals.pu_id_player_info=",Globals.pu_id_player_info)
 		return
 	
 	#var dir = DirAccess.open(folderr+"://servants/")
@@ -183,16 +186,21 @@ func load_servant(peer_id:int):
 	player.add_child(effect_layer)
 	player.add_child(buff_name_label)
 	
-	if peer_id==Globals.self_peer_id:
+	
+	
+	print("pu_id==Globals.self_pu_id=",pu_id," ",Globals.self_pu_id)
+	if pu_id==Globals.self_pu_id:
+		print("pu==Globals self, adding")
 		Globals.self_servant_node=player
-	peer_id_player_info[peer_id]["servant_node"]=player
+		print("Globals.self_servant_node=",Globals.self_servant_node)
+	Globals.pu_id_player_info[pu_id]["servant_node"]=player
 	
 	self.add_child(player,true)
 	
-	servant_name_to_peer_id[player.name]=peer_id
-	peer_id_player_info[peer_id]["servant_name"]=player.name
+	servant_name_to_pu_id[player.name]=pu_id
+	#Globals.pu_id_player_info[pu_id]["servant_name"]=player.name
 	
-	print("servant_name_to_peer_id=",servant_name_to_peer_id)
+	print("servant_name_to_pu_id=",servant_name_to_pu_id)
 	#print(rand_kletka)
 	#print(cell_positions[rand_kletka])
 	#jopa.position = cord
@@ -203,22 +211,28 @@ func get_selected_servant()->void:
 	var servant_name:String=char_select.get_current_servant()
 	get_selected_character_button.disabled=true
 	print(servant_name)
-	rpc("set_nickname_for_peer_id",Globals.self_peer_id,Globals.nickname)
-	rpc_id(1,"check_if_players_ready",multiplayer.get_unique_id(),servant_name)
+	rpc("set_nickname_for_pu_id",Globals.self_pu_id,Globals.nickname)
+	rpc_id(1,"check_if_players_ready",Globals.self_pu_id,servant_name)
 
 @rpc("call_local","any_peer","reliable")
-func set_nickname_for_peer_id(peer_id:int,nickk:String):
-	Globals.peer_id_to_nickname[peer_id]=nickk
+func set_nickname_for_pu_id(pu_id:String,nickk:String):
+	Globals.pu_id_to_nickname[pu_id]=nickk
 
 @rpc("any_peer","call_local","reliable")
-func check_if_players_ready(peer_id:int,servant_name:String):
-	peer_id_player_info[peer_id]={"servant_name":servant_name,"servant_node":null}
-	print("peer_id="+str(peer_id_player_info)+" is ready")
+func check_if_players_ready(pu_id:String,servant_name:String):
+	print("\n\n check_if_players_ready id=",pu_id," sevanntName=",servant_name)
+	Globals.pu_id_player_info[pu_id]["servant_name"]=servant_name#,"servant_node":null}
+
+	print("pu_id=",pu_id, "  "+str(Globals.pu_id_player_info)+" is ready")
 	current_users_ready+=1
-	update_ready_users_count()
+	rpc("update_ready_users_count",current_users_ready,Globals.pu_id_player_info.size())
+
+	rpc("sync_pu_id_player_info",Globals.pu_id_player_info.duplicate(true))
+	sync_pu_id_player_info(Globals.pu_id_player_info.duplicate(true))
+
 	#print("Globals.connected_players="+str(Globals.connected_players)+"Globals.connected_players.size()="+str(Globals.connected_players.size()))
-	#print("=current_users_ready="+str(current_users_ready))
-	if Globals.connected_players.size()==current_users_ready:
+	print("=current_users_ready="+str(current_users_ready))
+	if Globals.pu_id_player_info.size()==current_users_ready:
 		if Globals.host_or_user=="host":
 			host_buttons.visible=true
 	
@@ -229,37 +243,38 @@ func inital_spawn_of_player_forwarder():
 	field.inital_spawn_of_player()
 
 @rpc("any_peer","call_local","reliable")
-func update_ready_users_count():
-	current_players_ready_label.text="Current users ready"+str(current_users_ready)+"/"+str(Globals.connected_players.size())
+func update_ready_users_count(current_users_ready_local:int,max_players:int):
+	current_players_ready_label.text="Current users ready"+str(current_users_ready_local)+"/"+str(max_players)
 
 
 @rpc("authority","call_local","reliable")
-func sync_peer_id_player_info(peer_id_player_info_temp:Dictionary):
-	peer_id_player_info=peer_id_player_info_temp
+func sync_pu_id_player_info(pu_id_player_info_temp:Dictionary):
+	print_debug("sync_pu_id_player_info=",pu_id_player_info_temp)
+	Globals.pu_id_player_info=pu_id_player_info_temp
 
 @rpc("authority","call_local","reliable")
 func set_teams_and_turns_order(shiffled_players_array,turn_order):
 	var len_=shiffled_players_array.size()/2
-	teams_by_peer_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
-	print("teams="+str(teams_by_peer_id))
+	teams_by_pu_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
+	print("teams="+str(teams_by_pu_id))
 	
-	turns_order_by_peer_id=turn_order
-	for peer_id in turns_order_by_peer_id:
+	turns_order_by_pu_id=turn_order
+	for pu_id in turns_order_by_pu_id:
 		var servant_button=Button.new()
-		servant_button.text=peer_id_player_info[peer_id]["servant_name"]
-		servant_button.button_down.connect(player_info_button_pressed.bind(peer_id))
+		servant_button.text=Globals.pu_id_player_info[pu_id]["servant_node"].name
+		servant_button.button_down.connect(player_info_button_pressed.bind(pu_id))
 		players_info_buttons_container.add_child(servant_button,true)
 	
 
 @rpc("authority","call_local","reliable")
-func initialise_start_variables(peer_id_list:Array):
+func initialise_start_variables(pu_id_list:Array):
 	field.add_all_additional_nodes()
-	for peer_id in peer_id_list:
-		peer_id_to_items_owned[peer_id]={}
-		peer_id_to_inventory_array[peer_id]=[]
-		peer_id_to_np_points[peer_id]=0
-		peer_id_to_command_spells_int[peer_id]=3
-		peer_id_player_game_stat_info[peer_id]=DEFAULT_GAME_STAT.duplicate(true)
+	for pu_id in pu_id_list:
+		pu_id_to_items_owned[pu_id]={}
+		pu_id_to_inventory_array[pu_id]=[]
+		pu_id_to_np_points[pu_id]=0
+		pu_id_to_command_spells_int[pu_id]=3
+		pu_id_player_game_stat_info[pu_id]=DEFAULT_GAME_STAT.duplicate(true)
 		Globals.self_field_color = Color(randf(), randf(), randf())
 		
 	start_camera_position=$"../Camera2D".position
@@ -269,54 +284,64 @@ func initialise_start_variables(peer_id_list:Array):
 
 func start():
 	#выдаем каждому игроку свой NODE слуги
-	rpc("sync_peer_id_player_info",peer_id_player_info)
-	var temp_pl=peer_id_player_info.keys()
+	rpc("sync_pu_id_player_info",Globals.pu_id_player_info.duplicate(true))
+	sync_pu_id_player_info(Globals.pu_id_player_info.duplicate(true))
+	var temp_pl=Globals.pu_id_player_info.keys()
 	temp_pl.shuffle()
 	var sh1=temp_pl
 	temp_pl.shuffle()
 	var sh2=temp_pl
 	print("temp_pl+"+str(temp_pl))
 	
-	print_debug("set_teams_and_turns_order=",sh1,sh2)
-	rpc("set_teams_and_turns_order",sh1,sh2)
-	for peer_id in peer_id_player_info.keys():
+	
+
+	print("\n\ninfo before loading=",Globals.pu_id_player_info)
+
+	print("\n START SELF PEER_ID=",Globals.get_self_peer_id(), " =", multiplayer.get_unique_id())
+
+	for pu_id in Globals.pu_id_player_info.keys():
+		print("just before load servant for id=",pu_id)
 		#var node_to_add=load_servant_by_name(peer_id_player_info[peer_id]["servant_name"])
-		rpc("load_servant",peer_id)
+		rpc("load_servant",pu_id)
 		#peer_id_player_info[peer_id]["servant_node"]=node_to_add
 		#add_child(node_to_add,true)
 		#print(node_to_add)
 		#rpc_id(peer_id,"set_player_node",inst_to_dict(node_to_add))
-		print("peer_id_player_info="+str(peer_id_player_info))
+		print("\njust after loading servant pu_id_player_info="+str(Globals.pu_id_player_info))
+	
+	print_debug("set_teams_and_turns_order=",sh1,sh2)
+	rpc("set_teams_and_turns_order",sh1,sh2)
 	#первоначальное выставление слуг на поле
-	rpc("initialise_start_variables",turns_order_by_peer_id)
-	for peer_id in turns_order_by_peer_id: 
-		current_player_peer_id_turn=peer_id
-		rpc_id(peer_id,"inital_spawn_of_player_forwarder")
+	rpc("initialise_start_variables",turns_order_by_pu_id)
+	for pu_id in turns_order_by_pu_id: 
+		current_player_pu_id_turn=pu_id
+		var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
+		rpc_id(pu_peer_id,"inital_spawn_of_player_forwarder")
 		await next_turn_pass
-		print(peer_id)
+		print(pu_id)
 	turns_loop()
 
 #endregion
 
 #region Turns Handler
 @rpc("any_peer","call_local","reliable")
-func pass_next_turn(peer_id:int)->void:
-	if peer_id==current_player_peer_id_turn:
+func pass_next_turn(pu_id:String)->void:
+	if pu_id==current_player_pu_id_turn:
 		field.my_turn=false
 		next_turn_pass.emit()
 		
 
 
 func is_only_one_team_stand()->bool:
-	var peer_id_alive=[]+turns_order_by_peer_id
-	if get_all_peer_ids().size()==1:#for debug only
+	var pu_id_alive=turns_order_by_pu_id.duplicate(true)
+	if get_all_pu_ids().size()==1:#for debug only
 		return false
 	var teams_alive=[]
-	for team in teams_by_peer_id:
+	for team in pu_id_alive:
 		for member in team:
 			if team in teams_alive:
 				break
-			if member in peer_id_alive:
+			if member in pu_id_alive:
 				teams_alive.append(team)
 	print("teams_alive="+str(teams_alive))
 	print(teams_alive.size()==1)
@@ -328,10 +353,18 @@ func turns_loop() -> void:
 		turn_update(turns_counter)
 		rpc("turn_update",turns_counter)
 		
-		for peer_id in turns_order_by_peer_id:
-			print("\n\nNow "+str(peer_id)+" turn\n\n")
-			current_player_peer_id_turn=peer_id
-			rpc("update_current_player_turn",current_player_peer_id_turn)
+		for pu_id in turns_order_by_pu_id:
+			print("\n\nNow "+str(pu_id)+" turn\n\n")
+			var peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
+
+			if Globals.pu_id_player_info[pu_id]["disconnected_more_than_timeout"]:
+				continue
+
+
+			current_player_pu_id_turn=pu_id
+			rpc("update_current_player_turn",current_player_pu_id_turn)
+
+			
 			field.rpc_id(peer_id,"start_turn")
 			await next_turn_pass
 		turns_counter+=1
@@ -341,8 +374,8 @@ func turns_loop() -> void:
 	$"../GUI/host_buttons/finish_button".visible=true
 
 @rpc("any_peer","call_local","reliable")
-func update_current_player_turn(cur_player_turn:int):
-	current_player_peer_id_turn=cur_player_turn
+func update_current_player_turn(cur_player_turn_pu_id:String):
+	current_player_pu_id_turn=cur_player_turn_pu_id
 
 @rpc("any_peer","reliable","call_remote")
 func turn_update(turn) -> void:
@@ -352,32 +385,32 @@ func turn_update(turn) -> void:
 #endregion
 
 
-func player_info_button_pressed(peer_id:int):
-	print("player_info_button_pressed="+str(peer_id))
-	servant_info_from_peer_id(peer_id)
-	if peer_id!=player_info_button_current_peed_id and servant_info_main_container.visible:
+func player_info_button_pressed(pu_id:String):
+	print("player_info_button_pressed="+str(pu_id))
+	servant_info_from_pu_id(pu_id)
+	if pu_id!=player_info_button_current_pu_id and servant_info_main_container.visible:
 		#servant_info_main_container.visible= false
-		#servant_info_from_peer_id(peer_id)
-		player_info_button_current_peed_id=peer_id
+		#servant_info_from_pu_id(peer_id)
+		player_info_button_current_pu_id=pu_id
 		pass
 	else:
-		player_info_button_current_peed_id=peer_id
+		player_info_button_current_pu_id=pu_id
 		field.hide_all_gui_windows("servant_info_main_container")
-		#servant_info_from_peer_id(peer_id)
+		#servant_info_from_pu_id(peer_id)
 
 
 func choose_allie()->Array:
 	var ketki_with_allies=[]
-	for peer_id in get_allies():
-		ketki_with_allies.append(field.peer_id_to_kletka_number[peer_id])
+	for pu_id in get_allies():
+		ketki_with_allies.append(field.pu_id_to_kletka_number[pu_id])
 	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
 	field.current_action="choose_allie"
 	await chosen_allie
-	return [servant_name_to_peer_id[choosen_allie_return_value.name]]
+	return [servant_name_to_pu_id[choosen_allie_return_value.name]]
 
-func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
+func show_skill_info_tab(pu_id:String=Globals.self_pu_id)->void:
 	print("=====================")
-	var servant_skills:Dictionary=peer_id_player_info[peer_id]["servant_node"].skills
+	var servant_skills:Dictionary=Globals.pu_id_player_info[pu_id]["servant_node"].skills
 	
 	
 	
@@ -405,7 +438,7 @@ func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
 			tab_cont.name="Weapon change"
 			tab_cont.tab_alignment=TabBar.ALIGNMENT_CENTER
 			
-			for weapon in peer_id_player_info[peer_id]["servant_node"].skills[class_skill_name]["weapons"]:
+			for weapon in Globals.pu_id_player_info[pu_id]["servant_node"].skills[class_skill_name]["weapons"]:
 				var t_edit_new=TextEdit.new()
 				t_edit_new.editable=false
 				t_edit_new.name=weapon
@@ -423,10 +456,10 @@ func show_skill_info_tab(peer_id:int=Globals.self_peer_id)->void:
 		cct+=1
 	pass
 
-func servant_info_from_peer_id(peer_id:int,advanced:bool=show_buffs_advanced_way_button.button_pressed)->void:
+func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_button.button_pressed)->void:
 	
 	
-	var info=peer_id_player_info[peer_id]["servant_node"]
+	var info=Globals.pu_id_player_info[pu_id]["servant_node"]
 	#servant_info_main_container.visible= true#!servant_info_main_container.visible
 	servant_info_stats_textedit.text="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s
 	Endurance:%s\nLuck:%s\nMagic:%s\n"%[info.name,info.hp,info.servant_class,info.ideology,info.agility,info.endurance,info.luck,info.magic]
@@ -445,19 +478,19 @@ func servant_info_from_peer_id(peer_id:int,advanced:bool=show_buffs_advanced_way
 				
 			display_buffs+="\n"
 	var peer_skills:Dictionary=info.skills
-	servant_info_picture.texture=peer_id_player_info[peer_id]["servant_node"].get_child(0).texture
+	servant_info_picture.texture=Globals.pu_id_player_info[pu_id]["servant_node"].get_child(0).texture
 	var skill_text_to_display=""
 	for skill in peer_skills.keys():
 		skill_text_to_display+=str("\t",peer_skills[skill]["Description"],"\n")
 	servant_info_skills_textedit.text="Buffs:\n\t%sSkills:\n\t%s"%[display_buffs,skill_text_to_display]
 
 func get_enemies_teams()->Array:
-	var all_enemies_peer_id=[]
-	for team in teams_by_peer_id:
+	var all_enemies_pu_id=[]
+	for team in teams_by_pu_id:
 		for member in team:
-			if Globals.self_peer_id!=member:
-				all_enemies_peer_id+=team
-	return all_enemies_peer_id
+			if Globals.self_pu_id!=member:
+				all_enemies_pu_id+=team
+	return all_enemies_pu_id
 
 
 
@@ -544,7 +577,7 @@ func _on_use_custom_button_pressed()->void:
 		CUSTOM_TYPES.POTION_CREATING:
 			var dict={custom_id:custom_id_to_skill[custom_id]}
 			#dict.merge(custom_id_to_skill[custom_id])
-			rpc("add_item_to_peer_id",Globals.self_peer_id,dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
+			rpc("add_item_to_pu_id",Globals.self_pu_id,dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
 			field.reduce_one_action_point(0)
 			#rpc("use_skill",custom_id_to_skill[custom_id]["Effect"])
 		CUSTOM_TYPES.BUFF_CHOOSING:
@@ -563,56 +596,56 @@ func _on_use_custom_button_pressed()->void:
 	
 
 @rpc("any_peer","call_local","reliable")
-func add_item_to_peer_id(peer_id:int,item:Dictionary,item_name:String)->void:
-	print("item for peer_id="+str(peer_id)+" = "+str(item))
+func add_item_to_pu_id(pu_id:String,item:Dictionary,item_name:String)->void:
+	print("item for pu_id="+str(pu_id)+" = "+str(item))
 	var valid:bool=false
 	var count:int=1
 	var new_item_name=item_name+""
 	while !valid:
-		if peer_id_to_items_owned[peer_id].has(new_item_name):
+		if pu_id_to_items_owned[pu_id].has(new_item_name):
 			new_item_name=item_name+str(count)
 			count+=1
 		else:
 			valid=true
 	#var new_dict_to_append={new_item_name:item[item_name]}
-	peer_id_to_items_owned[peer_id][new_item_name]=item[item_name]
+	pu_id_to_items_owned[pu_id][new_item_name]=item[item_name]
 
 @rpc("any_peer","call_local","reliable")
-func change_game_stat_for_peer_id(peer_id:int,stat:String,value_to_add:int,reset:bool=false)->void:
+func change_game_stat_for_pu_id(pu_id:String,stat:String,value_to_add:int,reset:bool=false)->void:
 	if reset:
-		peer_id_player_game_stat_info[peer_id][stat]=value_to_add
+		pu_id_player_game_stat_info[pu_id][stat]=value_to_add
 	else:
-		peer_id_player_game_stat_info[peer_id][stat]+=value_to_add
+		pu_id_player_game_stat_info[pu_id][stat]+=value_to_add
 	pass
 
 
-func check_field_buffs_under_peer_id(peer_id)->Array:
-	var kletk_id=get_peer_id_kletka_number(peer_id)
+func check_field_buffs_under_pu_id(pu_id)->Array:
+	var kletk_id=get_pu_id_kletka_number(pu_id)
 	var kletka_config:Dictionary=field.kletka_preference[kletk_id]
 	var out_buffs=[]
 	if not kletka_config.is_empty():
 		if kletka_config.get("Ignore Magical Defence",false):
 			if kletka_config.get("Owner",0):
-				out_buffs.append({"Name":"Disable Magic Resistance","Type":"Status","Peer Id":kletka_config["Owner"]})
+				out_buffs.append({"Name":"Disable Magic Resistance","Type":"Status","Pu Id":kletka_config["Owner"]})
 	return out_buffs
 
 
 #region Stat get
 
-func get_peer_id_buffs(peer_id:int)->Array:
-	var default_buffs:Array=peer_id_player_info[peer_id]["servant_node"].buffs.duplicate(true)
+func get_pu_id_buffs(pu_id:String)->Array:
+	var default_buffs:Array=Globals.pu_id_player_info[pu_id]["servant_node"].buffs.duplicate(true)
 
 	var new_buffs=default_buffs
 
-	new_buffs.append_array(check_field_buffs_under_peer_id(peer_id))
+	new_buffs.append_array(check_field_buffs_under_pu_id(pu_id))
 
 	return new_buffs
 
 
-func check_if_peer_id_got_crit(peer_id:int,dice_results:Dictionary)->bool:
+func check_if_pu_id_got_crit(pu_id:String,dice_results:Dictionary)->bool:
 	var crit_removed=false
 	var is_crit=false
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Critical Remove":
 				crit_removed=true
@@ -623,9 +656,9 @@ func check_if_peer_id_got_crit(peer_id:int,dice_results:Dictionary)->bool:
 		is_crit=false
 	return is_crit
 
-func calculate_crit_damage(peer_id:int,damage:int)->int:
+func calculate_crit_damage(pu_id:String,damage:int)->int:
 	var new_damage:int=damage+0
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Critical Strength Up":
 				new_damage+=skill.get("Power",0)
@@ -633,8 +666,8 @@ func calculate_crit_damage(peer_id:int,damage:int)->int:
 				new_damage*=skill.get("Power",1)
 	return new_damage
 
-func get_peer_id_attack_power(peer_id:int)->int:
-	var base_attack:int=peer_id_player_info[peer_id]["servant_node"].attack_power
+func get_pu_id_attack_power(pu_id:String)->int:
+	var base_attack:int=Globals.pu_id_player_info[pu_id]["servant_node"].attack_power
 
 	return base_attack+0
 
@@ -644,7 +677,7 @@ func get_current_time()->String:
 		return "Night"
 	else:
 		return "Day"
-	return ""
+	#return ""
 
 func check_condition_wrapper(condition:Dictionary):
 	var who_to_check=condition.get("Who To Check","")
@@ -656,60 +689,60 @@ func check_condition_wrapper(condition:Dictionary):
 	if not (who_to_check and what_to_check):
 		return false
 	
-	var peer_id_to_check:Array
+	var pu_id_to_check:Array
 	match who_to_check:
 		"Enemie":
-			peer_id_to_check=get_enemies_teams()
+			pu_id_to_check=get_enemies_teams()
 		"Self":
-			peer_id_to_check=[Globals.self_peer_id]
+			pu_id_to_check=[Globals.self_pu_id]
 
 	var condition_check=false
-	for peer_id in peer_id_to_check:
-		var peer_node=peer_id_player_info[peer_id]["servant_node"]
+	for pu_id in pu_id_to_check:
+		var pu_id_node=Globals.pu_id_player_info[pu_id]["servant_node"]
 		var stat_to_check
 		match what_to_check:
 			"Magic Power":
 				#stat_to_check=peer_node.magic["Power"]
-				stat_to_check=get_peer_id_magical_attack(peer_id)
+				stat_to_check=get_pu_id_magical_attack(pu_id)
 			"Magic Resistance":
 				#stat_to_check=peer_node.magic["resistance"]
-				stat_to_check=get_peer_id_magical_defence(peer_id)
+				stat_to_check=get_pu_id_magical_defence(pu_id)
 			"Magic Rank":
-				stat_to_check=peer_node.magic["Rank"]
+				stat_to_check=pu_id_node.magic["Rank"]
 			"Attack Power":
-				stat_to_check=get_peer_id_attack_power(peer_id)
+				stat_to_check=get_pu_id_attack_power(pu_id)
 			"Trait":
-				var traits=get_peer_id_traits(peer_id)
+				var traits=get_pu_id_traits(pu_id)
 				return intersect(traits,exact)
 			"Attack Range":
-				stat_to_check=get_peer_id_attack_range(peer_id)
+				stat_to_check=get_pu_id_attack_range(pu_id)
 			"Attribute":
-				stat_to_check=peer_node.attribute
+				stat_to_check=pu_id_node.attribute
 			"Ideology":
-				var ideology=peer_node.ideology
+				var ideology=pu_id_node.ideology
 				if typeof(exact)!=TYPE_ARRAY:
 					continue
 				return intersect(ideology,exact)
 				
 			"Class":
-				var ser_class=get_peer_id_class(peer_id)
+				var ser_class=get_pu_id_class(pu_id)
 				if typeof(exact)!=TYPE_STRING:
 					continue
 				return exact==ser_class
 			"HP":
-				stat_to_check=peer_node.hp
+				stat_to_check=pu_id_node.hp
 			"Gender":
-				stat_to_check=get_peer_id_gender(peer_id)
+				stat_to_check=get_pu_id_gender(pu_id)
 			"Strength":
-				stat_to_check=get_peer_id_strength(peer_id)
+				stat_to_check=get_pu_id_strength(pu_id)
 			"Agility":
-				stat_to_check=get_peer_id_agility(peer_id)
+				stat_to_check=get_pu_id_agility(pu_id)
 			"Endurance":
-				stat_to_check=get_peer_id_endurance(peer_id)
+				stat_to_check=get_pu_id_endurance(pu_id)
 			"Luck":
-				stat_to_check=get_peer_id_luck(peer_id)
+				stat_to_check=get_pu_id_luck(pu_id)
 			"Buff Name":
-				if peer_id_has_buff(peer_id,exact):
+				if pu_id_has_buff(pu_id,exact):
 					return true
 				else:
 					return false
@@ -750,7 +783,7 @@ func stat_one_bigger_than_second(stat1:String,stat2:String)->bool:
 	#print_debug("stat_one_bigger_than_second, stat1=",first_pos," stat2=",second_pos)
 	return first_pos<second_pos
 
-func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id:int,damage_type:String,phantasm_config:Dictionary={})->int:
+func calculate_pu_id_attack_against_pu_id(attacker_pu_id:String,taker_pu_id:String,damage_type:String,phantasm_config:Dictionary={})->int:
 	var attack_total
 
 
@@ -758,26 +791,26 @@ func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id
 		DAMAGE_TYPE.PHANTASM:
 			attack_total=phantasm_config.get("Damage",1)
 		DAMAGE_TYPE.MAGICAL:
-			attack_total=get_peer_id_magical_attack(attacker_peer_id)
+			attack_total=get_pu_id_magical_attack(attacker_pu_id)
 		DAMAGE_TYPE.PHYSICAL:
-			attack_total=get_peer_id_attack_power(attacker_peer_id)
+			attack_total=get_pu_id_attack_power(attacker_pu_id)
 		_:
-			push_error("Wrong damage type while calculate_peer_id_attack_against_peer_id, damage_type=",damage_type)
+			push_error("Wrong damage type while calculate_pu_id_attack_against_pu_id, damage_type=",damage_type)
 			attack_total=1
 	
 	var taker_servant
 	var taker_traits
 	var taker_gender
 
-	if taker_peer_id!=-1:
-		taker_servant=peer_id_player_info[taker_peer_id]["servant_node"]
+	if taker_pu_id!="":
+		taker_servant=Globals.pu_id_player_info[taker_pu_id]["servant_node"]
 		taker_traits=taker_servant.traits
-		taker_gender=get_peer_id_gender(taker_peer_id)
+		taker_gender=get_pu_id_gender(taker_pu_id)
 
 
 
-	var attacker_servant=peer_id_player_info[attacker_peer_id]["servant_node"]
-	var attacker_buffs=get_peer_id_buffs(attacker_peer_id)
+	var attacker_servant=Globals.pu_id_player_info[attacker_pu_id]["servant_node"]
+	var attacker_buffs=get_pu_id_buffs(attacker_pu_id)
 
 
 	var phantasm_additional_buffs=phantasm_config.get("Phantasm Buffs",[])
@@ -808,19 +841,19 @@ func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id
 					attack_total+=buff["Power"]
 			"Madness Enhancement":
 				attack_total*=buff["Power"]
-			"ATK Up Against Gender" when taker_peer_id!=-1:
+			"ATK Up Against Gender" when taker_pu_id!="":
 				if buff.get("Gender","")==taker_gender:
 					attack_total+=buff["Power"]
-			"ATK Up Against Trait" when taker_peer_id!=-1:
+			"ATK Up Against Trait" when taker_pu_id!="":
 				if buff.get("Trait","") in taker_traits:
 					attack_total+=buff["Power"]
-			"ATK Down Against Trait" when taker_peer_id!=-1:
+			"ATK Down Against Trait" when taker_pu_id!="":
 				if buff.get("Trait","") in taker_traits:
 					attack_total-=buff["Power"]
-			"ATK Up X Against Class" when taker_peer_id!=-1:
+			"ATK Up X Against Class" when taker_pu_id!="":
 				if buff.get("Class","")==taker_servant.class:
 					attack_total+=buff["Power"]
-			"ATK Up Against Alignment" when taker_peer_id!=-1:
+			"ATK Up Against Alignment" when taker_pu_id!="":
 				if buff.get("Alignment","") in taker_servant.ideology:
 					attack_total+=buff["Power"]
 		var poww=""
@@ -840,22 +873,22 @@ func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id
 				attack_total*=floor(attack_total/buff["Power"])
 			"Magic ATK Up X" when damage_type==DAMAGE_TYPE.MAGICAL:
 				attack_total*=buff["Power"]
-			"ATK Up X Against Gender" when taker_peer_id!=-1:
+			"ATK Up X Against Gender" when taker_pu_id!="":
 				if buff.get("Gender","")==taker_gender:
 					attack_total*=buff["Power"]
 			"ATK Up X Against Attribute":
 				if buff.get("Attribute","")==taker_servant.attribute:
 					attack_total*=buff["Power"]
-			"ATK Up X Against Trait" when taker_peer_id!=-1:
+			"ATK Up X Against Trait" when taker_pu_id!="":
 				if buff.get("Trait","") in taker_traits:
 					attack_total*=buff["Power"]
-			"ATK Down X Against Trait" when taker_peer_id!=-1:
+			"ATK Down X Against Trait" when taker_pu_id!="":
 				if buff.get("Trait","") in taker_traits:
 					attack_total=floor(attack_total/buff["Power"])
-			"ATK Up X Against Class" when taker_peer_id!=-1:
+			"ATK Up X Against Class" when taker_pu_id!="":
 				if buff.get("Class","")==taker_servant.class:
 					attack_total*=buff["Power"]
-			"ATK Up X Against Alignment" when taker_peer_id!=-1:
+			"ATK Up X Against Alignment" when taker_pu_id!="":
 				if buff.get("Alignment","") in taker_servant.ideology:
 					attack_total*=buff["Power"]
 		
@@ -867,11 +900,11 @@ func calculate_peer_id_attack_against_peer_id(attacker_peer_id:int,taker_peer_id
 	attack_total=ceil(attack_total)
 	return attack_total
 
-func get_peer_id_agility(peer_id:int)->String:
-	var base_agility:String=peer_id_player_info[peer_id]["servant_node"].agility
+func get_pu_id_agility(pu_id:String)->String:
+	var base_agility:String=Globals.pu_id_player_info[pu_id]["servant_node"].agility
 	#TODO fix this later AKA after Andersen
 	var _new_agility:String=""
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Agility Add":
 				_new_agility+=""#skill.get("Power",0)*1.0/base_agility
@@ -879,11 +912,11 @@ func get_peer_id_agility(peer_id:int)->String:
 				_new_agility=""#get_agility_in_numbers(skill.get("Power","C"))
 	return base_agility#int(base_agility+new_agility)
 
-func get_peer_id_endurance(peer_id:int)->String:
-	var base_stat:String=peer_id_player_info[peer_id]["servant_node"].endurance
+func get_pu_id_endurance(pu_id:String)->String:
+	var base_stat:String=Globals.pu_id_player_info[pu_id]["servant_node"].endurance
 	var _new_stat:String=base_stat+""
 	#TODO fix this later AKA after Andersen
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Endurance Add":
 				_new_stat+=skill.get("Power",0)
@@ -910,10 +943,10 @@ func get_agility_in_numbers(Endurance)->int:
 		_:
 			return 1
 
-func get_peer_id_attack_range(peer_id:int)->int:
-	var base_range:int=peer_id_player_info[peer_id]["servant_node"].attack_range
+func get_pu_id_attack_range(pu_id:String)->int:
+	var base_range:int=Globals.pu_id_player_info[pu_id]["servant_node"].attack_range
 	var new_range:int=base_range+0
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Attack Range Add":
 				new_range+=skill.get("Power",0)
@@ -921,10 +954,10 @@ func get_peer_id_attack_range(peer_id:int)->int:
 				new_range=skill.get("Power",1)
 	return new_range
 
-func get_peer_id_magical_attack(peer_id:int)->int:
-	var base_stat:int=peer_id_player_info[peer_id]["servant_node"].magic.get("Power",0)
+func get_pu_id_magical_attack(pu_id:String)->int:
+	var base_stat:int=Globals.pu_id_player_info[pu_id]["servant_node"].magic.get("Power",0)
 	var new_stat:int=base_stat+0
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Magical Attack Add":
 				new_stat+=skill.get("Power",0)
@@ -932,10 +965,10 @@ func get_peer_id_magical_attack(peer_id:int)->int:
 				new_stat=skill.get("Power",1)
 	return new_stat
 
-func get_peer_id_magical_defence(peer_id:int)->int:
-	var base_stat:int=peer_id_player_info[peer_id]["servant_node"].magic.get("Defence",0)
+func get_pu_id_magical_defence(pu_id:String)->int:
+	var base_stat:int=Globals.pu_id_player_info[pu_id]["servant_node"].magic.get("Defence",0)
 	var new_stat:int=base_stat+0
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Magical Defence Add":
 				new_stat+=skill.get("Power",0)
@@ -943,11 +976,11 @@ func get_peer_id_magical_defence(peer_id:int)->int:
 				new_stat=skill.get("Power",1)
 	return new_stat
 
-func get_peer_id_luck(peer_id:int)->String:
-	var base_stat:String=peer_id_player_info[peer_id]["servant_node"].luck
+func get_pu_id_luck(pu_id:String)->String:
+	var base_stat:String=Globals.pu_id_player_info[pu_id]["servant_node"].luck
 	var _new_stat:String=base_stat+""
 	#TODO fix this later AKA after Andersen
-	for skill in get_peer_id_buffs(peer_id):
+	for skill in get_pu_id_buffs(pu_id):
 		match skill["Name"]:
 			"Luck Add":
 				_new_stat+=skill.get("Power",0)
@@ -970,7 +1003,7 @@ func _on_phantasm_pressed()->void:
 		use_custom_button.disabled=true
 		pass
 	
-	if peer_id_has_buff(Globals.self_peer_id,"NP Seal"):
+	if pu_id_has_buff(Globals.self_pu_id,"NP Seal"):
 		custom_choices_tab_container.visible=false
 		use_custom_but_label_container.visible=false
 		field.info_table_show("Your NP is sealed by debuff")
@@ -996,7 +1029,7 @@ func _on_phantasm_pressed()->void:
 
 func get_maximum_overcharge_name_available(phantasms_config: Dictionary) -> String:
 
-	var overcharge_up_buff=peer_id_has_buff(Globals.self_peer_id,"Overcharge Up")
+	var overcharge_up_buff=pu_id_has_buff(Globals.self_pu_id,"Overcharge Up")
 
 	var sorted_by_cost = []
 	for phantasm_name in phantasms_config:
@@ -1083,18 +1116,18 @@ func use_phantasm(phantasm_info):
 		await use_skill(overcharge_use["effect_after_attack"],attacked_by_phantasm)
 	
 	
-	rpc("charge_np_to_peer_id_by_number",Globals.self_peer_id,-overcharge_use["Cost"])
+	rpc("charge_np_to_pu_id_by_number",Globals.self_pu_id,-overcharge_use["Cost"])
 	#for effect in 
 	
 	pass
 
-func get_peer_id_kletka_number(peer_id:int)->int:
-	var servant_name=peer_id_player_info[peer_id]["servant_name"]
-	print("servant_name=",servant_name," peer_id=",peer_id)
+func get_pu_id_kletka_number(pu_id:String)->int:
+	var servant_name=Globals.pu_id_player_info[pu_id]["servant_node"].name
+	print("servant_name=",servant_name," pu_id=",pu_id)
 	for kletka_id in field.occupied_kletki:
 		if field.occupied_kletki[kletka_id].name==servant_name:
 			return kletka_id
-	push_error("couldn't get peer_id's kletka number=",peer_id, " name=",servant_name," field.occupied_kletki=",field.occupied_kletki)
+	push_error("couldn't get pu_id's kletka number=",pu_id, " name=",servant_name," field.occupied_kletki=",field.occupied_kletki)
 	return 0
 
 
@@ -1103,17 +1136,19 @@ func bomb_phantasm(phantasm_config):
 	var aoe_range=phantasm_config["AOE_Range"]
 	var kletki_to_attack_array=[]
 	var attacked_enemies=[]
-	var first_peer_id=await choose_single_in_range(range_to_choose_enemie)
-	kletki_to_attack_array.append(get_peer_id_kletka_number(first_peer_id[0]))
+	var first_pu_id=await choose_single_in_range(range_to_choose_enemie)
+	kletki_to_attack_array.append(get_pu_id_kletka_number(first_pu_id[0]))
 
-	var peer_ids_around=get_all_enemies_in_range(aoe_range,first_peer_id[0])
+	var pu_ids_around=get_all_enemies_in_range(aoe_range,first_pu_id[0])
 
-	kletki_to_attack_array.append_array(peer_ids_around)
+	kletki_to_attack_array.append_array(pu_ids_around)
 	
 	await field.await_dice_roll()
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
 		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
+		if etmp=="ERROR":
+			continue
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -1134,12 +1169,14 @@ func phantasm_in_range(phantasm_config,type="Single"):
 			tmp=await choose_single_in_range(range)
 		"All enemies":
 			tmp=await get_all_enemies_in_range(range)
-	for peer_id in tmp:
-		kletki_to_attack_array.append(field.peer_id_to_kletka_number[peer_id])
+	for pu_id in tmp:
+		kletki_to_attack_array.append(field.pu_id_to_kletka_number[pu_id])
 	await field.await_dice_roll()
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
 		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
+		if etmp=="ERROR":
+			continue
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -1149,58 +1186,62 @@ func phantasm_in_range(phantasm_config,type="Single"):
 
 
 func _on_free_phantasm_pressed():
-	#peer_id_player_info[Globals.self_peer_id]["servant_node"].phantasm_charge+=6
+	#pu_id_player_info[Globals.self_pu_id]["servant_node"].phantasm_charge+=6
 	#field.disable_every_button()
-	rpc("charge_np_to_peer_id_by_number",Globals.self_peer_id,6)
+	rpc("charge_np_to_pu_id_by_number",Globals.self_pu_id,6)
 	pass
 
 @rpc("any_peer","call_local","reliable")
-func change_phantasm_charge_on_peer_id(peer_id,amount):
-	print("change_phantasm_charge_on_peer_id("+str(peer_id)+","+str(amount))
-	var cur_charge=peer_id_player_info[peer_id]["servant_node"].phantasm_charge
+func change_phantasm_charge_on_pu_id(pu_id,amount):
+	print("change_phantasm_charge_on_pu_id("+str(pu_id)+","+str(amount))
+	var cur_charge=Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge
 	if cur_charge+amount>=12:
-		peer_id_player_info[peer_id]["servant_node"].phantasm_charge=12
+		Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=12
 	else:
-		peer_id_player_info[peer_id]["servant_node"].phantasm_charge+=amount
-	if peer_id==Globals.self_peer_id:
-		$"../GUI/action/np_points_number_label".text=str(peer_id_player_info[peer_id]["servant_node"].phantasm_charge)
+		Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge+=amount
+	if pu_id==Globals.self_pu_id:
+		$"../GUI/action/np_points_number_label".text=str(Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge)
 
-func get_allies(peer_id_to_search:int=Globals.self_peer_id):
-	for team in teams_by_peer_id:
+func get_allies(pu_id_to_search:String=Globals.self_pu_id):
+	for team in teams_by_pu_id:
 		for member in team:
-			if peer_id_to_search==member:
+			if pu_id_to_search==member:
 				return team
 	pass
 	#cast self,allies, 
 	
 
-func get_all_peer_ids():
+func get_all_pu_ids():
+
+
+	return Globals.get_connected_persistent_ids()
+
 	var output=[]
-	for team in teams_by_peer_id:
+	for team in teams_by_pu_id:
 		for member in team:
 			output.append(member)
 	return output
 
-func choose_single_in_range(_range,peer_id_to_search:int=Globals.self_peer_id):
+func choose_single_in_range(_range,pu_id_to_search:String=Globals.self_pu_id):
 	var ketki_array=[]
-	var per_id_kletka=get_peer_id_kletka_number(peer_id_to_search)
-	print("choose_single_in_range per_id_kletka=",per_id_kletka)
-	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(_range,per_id_kletka):
+	var pur_id_kletka=get_pu_id_kletka_number(pu_id_to_search)
+	print("choose_single_in_range pur_id_kletka=",pur_id_kletka)
+	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(_range,pur_id_kletka):
 		ketki_array.append(kletka_id)
 	ketki_array.append(field.current_kletka)
 	field.choose_glowing_cletka_by_ids_array(ketki_array)
 	print("choose_single_in_range=",ketki_array)
 	field.current_action="choose_allie"
 	await chosen_allie
-	return [servant_name_to_peer_id[choosen_allie_return_value.name]]
+	return [servant_name_to_pu_id[choosen_allie_return_value.name]]
 
 @rpc("any_peer","call_local",'reliable')
-func check_if_hp_is_bigger_than_max_hp_for_peer_id(peer_id)->void:
-	var max_hp=get_peer_id_maximun_hp(peer_id)
-	var servant_node=peer_id_player_info[peer_id]["servant_node"]
+func check_if_hp_is_bigger_than_max_hp_for_pu_id(pu_id)->void:
+	var max_hp=get_pu_id_maximun_hp(pu_id)
+	var servant_node=Globals.pu_id_player_info[pu_id]["servant_node"]
 	if servant_node.hp>max_hp:
 		servant_node.hp=servant_node.default_stats["hp"]
-	update_hp_on_peer_id(peer_id,servant_node.hp)
+	update_hp_on_pu_id(pu_id,servant_node.hp)
 	return
 
 
@@ -1214,43 +1255,43 @@ func check_if_hp_is_bigger_than_max_hp_for_peer_id(peer_id)->void:
 #			out.append(field.occupied_kletki.get(kletka_id))
 #	return out
 
-func get_all_enemies_in_range(_range,peer_id_to_search:int=Globals.self_peer_id):
+func get_all_enemies_in_range(_range,pu_id_to_search:String=Globals.self_pu_id)->Array:
 	var enemies=get_enemies_teams()
 	var out=[]
-	for peer_id in get_everyone_in_range(_range,peer_id_to_search):
-		if peer_id in enemies:
-			out+=peer_id
+	for pu_id in get_everyone_in_range(_range,pu_id_to_search):
+		if pu_id in enemies:
+			out+=pu_id
 	return out
 
-func get_everyone_in_range(range_local:int,peer_id_to_search:int=Globals.self_peer_id)->Array:
+func get_everyone_in_range(range_local:int,pu_id_to_search:String=Globals.self_pu_id)->Array:
 	var out=[]
 	#var kletka_id=0
-	var peer_id_kletk_id=field.peer_id_to_kletka_number[peer_id_to_search]
-	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range_local,peer_id_kletk_id):
+	var pu_id_kletk_id=field.pu_id_to_kletka_number[pu_id_to_search]
+	for kletka_id in field.get_kletki_ids_with_enemies_you_can_reach_in_steps(range_local,pu_id_kletk_id):
 		if field.occupied_kletki.get(kletka_id,0):
 			var servant_node=field.occupied_kletki.get(kletka_id)
-			out.append(servant_name_to_peer_id[servant_node.name])
+			out.append(servant_name_to_pu_id[servant_node.name])
 	return out
 
 
-func check_if_peer_id_has_skill_currency(peer_id:int,currency:String,amount:int):
+func check_if_pu_id_has_skill_currency(pu_id:String,currency:String,amount:int)->bool:
 	match currency:
 		"NP":
-			if peer_id_player_info[peer_id]["servant_node"].phantasm_charge>=amount:
+			if Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge>=amount:
 				return true
 		"HP":
-			if peer_id_player_info[peer_id]["servant_node"].hp>=amount:
+			if Globals.pu_id_player_info[pu_id]["servant_node"].hp>=amount:
 				return true
 		_:
 			push_warning("UNKNOWN CURRENCY:"+str(currency))
 	return false
 
-func reduce_peer_id_currency(peer_id:int,currency:String,amount:int):
+func reduce_pu_id_currency(pu_id:String,currency:String,amount:int)->void:
 	match currency:
 		"NP":
-			rpc("charge_np_to_peer_id_by_number",peer_id,-amount)
+			rpc("charge_np_to_pu_id_by_number",pu_id,-amount)
 		"HP":
-			rpc("take_damage_to_peer_id",peer_id,amount,false)
+			rpc("take_damage_to_pu_id",pu_id,amount,false)
 		_:
 			push_warning("UNKNOWN CURRENCY:"+str(currency))
 
@@ -1266,16 +1307,16 @@ func get_buff_types(buff:Dictionary)->Array:
 	#print_debug("buff types=",buff_specific_types)
 	return buff_specific_types
 
-func get_all_allies_in_range(_range:int,peer_id_to_search:int=Globals.self_peer_id)->Array:
-	var allies=get_allies(peer_id_to_search)
+func get_all_allies_in_range(_range:int,pu_id_to_search:String=Globals.self_pu_id)->Array:
+	var allies=get_allies(pu_id_to_search)
 	var out=[]
-	for peer_id in get_everyone_in_range(_range,peer_id_to_search):
-		if peer_id in allies:
-			out+=peer_id
+	for pu_id in get_everyone_in_range(_range,pu_id_to_search):
+		if pu_id in allies:
+			out+=pu_id
 	return out
 
 func can_use_mandness_enhancement() -> bool:
-	var self_bufs=get_peer_id_buffs(Globals.self_peer_id)
+	var self_bufs=get_pu_id_buffs(Globals.self_pu_id)
 	
 	for buff in self_bufs:
 		if buff.get("Type",""):
@@ -1300,9 +1341,9 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[])->bool:
 			print("checking cost")
 			var curr=skill_info_hash["Cost"].get("Currency","")
 			var amount=skill_info_hash["Cost"].get("Amount",0)
-			if check_if_peer_id_has_skill_currency(Globals.self_peer_id,curr,amount):
+			if check_if_pu_id_has_skill_currency(Globals.self_pu_id,curr,amount):
 				print_debug("you have currency"+str(curr)+" value:"+str(amount))
-				reduce_peer_id_currency(Globals.self_peer_id,curr,amount)
+				reduce_pu_id_currency(Globals.self_pu_id,curr,amount)
 			else:
 				field.info_table_show("Not enought "+str(curr)+" value:"+str(amount))
 				await field.info_ok_button.pressed
@@ -1336,20 +1377,20 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[])->bool:
 				cast=get_allies()
 			"all allies except self":
 				cast=get_allies()
-				cast.erase(Globals.self_peer_id)
+				cast.erase(Globals.self_pu_id)
 			"all allies in range":
 				cast=get_all_allies_in_range(cast_range)
 			"all allies in range except self":
 				cast=get_all_allies_in_range(cast_range)
-				cast.erase(Globals.self_peer_id)
+				cast.erase(Globals.self_pu_id)
 			"self":
-				cast=[Globals.self_peer_id]
+				cast=[Globals.self_pu_id]
 			"all enemies":
 				cast=get_enemies_teams()
 			"single allie":
 				cast=await choose_allie()
 			"everyone":
-				cast=get_all_peer_ids()
+				cast=get_all_pu_ids()
 			"single in range":
 				cast=await choose_single_in_range(cast_range)
 			"all enemies in range":
@@ -1371,7 +1412,7 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[])->bool:
 			continue
 		print("cast_condition=",cast_condition)
 		if not cast_condition.is_empty():
-			var new_cast=get_peer_ids_satisfying_condition(cast,cast_condition)
+			var new_cast=get_pu_ids_satisfying_condition(cast,cast_condition)
 			print_debug("New cast=",new_cast)
 			if new_cast.is_empty():
 				continue
@@ -1382,7 +1423,7 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[])->bool:
 				"Potion creation":
 					await create_potion(single_skill_info["Potions"])
 				"Field Change":
-					change_field(single_skill_info,Globals.self_peer_id)
+					change_field(single_skill_info,Globals.self_pu_id)
 				"Field Creation":
 					await field.capture_field_kletki(single_skill_info["Amount"],single_skill_info["Config"])
 				"Field Manipulation":
@@ -1397,16 +1438,16 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[])->bool:
 	return was_skill_used
 
 
-func change_field(skill:Dictionary,peer_id:int)->void:
+func change_field(skill:Dictionary,pu_id:String)->void:
 	#field.field_status={"Default":"City","Field Buffs":[]}
 	var new_skill=skill.duplicate(true)
-	new_skill["Owner"]=peer_id
+	new_skill["Owner"]=pu_id
 	field.field_status["Field Buffs"].append(new_skill)
 
 	return
 
 @rpc("any_peer","reliable","call_remote")
-func reduce_field_skills_cooldowns(peer_id:int):
+func reduce_field_skills_cooldowns(pu_id:String):
 	var field_buffs=field.field_status.get("Field Buffs",[])
 	if field_buffs.is_empty():
 		return
@@ -1415,7 +1456,7 @@ func reduce_field_skills_cooldowns(peer_id:int):
 	for i in range(field_buffs.size()):
 		print("i="+str(i)+" "+str(field_buffs[i]))
 		var buff_owner=field_buffs[i].get("Owner",-1)
-		if buff_owner!=peer_id:
+		if buff_owner!=pu_id:
 			continue
 		if field_buffs[i].has("Duration"):
 			var buff_duration=field_buffs[i]["Duration"]
@@ -1424,7 +1465,7 @@ func reduce_field_skills_cooldowns(peer_id:int):
 				if buff_duration-1<=0:
 					field_buffs.append(field_buffs[i])
 				else:
-					#field_buffs[peer_id]["servant_node"].field_buffs[i]["Duration"]-=1
+					#field_buffs[pu_id]["servant_node"].field_buffs[i]["Duration"]-=1
 					field.field_status["Field Buffs"]["Duration"]-=1
 
 	for i in buffs_to_remove:
@@ -1446,31 +1487,31 @@ func get_current_fields()->Array:
 
 	return output_field
 
-func get_peer_ids_satisfying_condition(cast:Array,cast_condition:Dictionary)->Array:
-	print("get_peer_ids_satisfying_condition=",cast," condition=",cast_condition)
+func get_pu_ids_satisfying_condition(cast:Array,cast_condition:Dictionary)->Array:
+	print("get_pu_ids_satisfying_condition=",cast," condition=",cast_condition)
 	var condition=cast_condition.get("Condition","")
 	var output:Array=[]
-	for peer_id in cast:
+	for pu_id in cast:
 		match condition:
 			"Trait":
 				var condition_trait=cast_condition.get("Trait","")
-				var peer_traits=get_peer_id_traits(peer_id)
+				var peer_traits=get_pu_id_traits(pu_id)
 				if condition_trait in peer_traits:
-					output.append(peer_id)
+					output.append(pu_id)
 			"Class":
 				var serv_class=cast_condition.get("Class","")
-				var peer_class=get_peer_id_class(peer_id)
+				var peer_class=get_pu_id_class(pu_id)
 				if serv_class == peer_class:
-					output.append(peer_id)
+					output.append(pu_id)
 			"Gender":
 				var serv_gender=cast_condition.get("Gender","")
-				var peer_gender=get_peer_id_gender(peer_id)
+				var peer_gender=get_pu_id_gender(pu_id)
 				if peer_gender == serv_gender:
-					output.append(peer_id)
+					output.append(pu_id)
 			"Buff":
 				var buff_name=cast_condition.get("Buff","")
-				if peer_id_has_buff(peer_id,buff_name):
-					output.append(peer_id)
+				if pu_id_has_buff(pu_id,buff_name):
+					output.append(pu_id)
 	return output
 
 
@@ -1509,24 +1550,24 @@ func create_potion(potions_dict):
 	pass
 
 #@rpc("any_peer","reliable","call_local")
-func reduce_all_cooldowns(peer_id,type="Turn Started"):
+func reduce_all_cooldowns(pu_id,type="Turn Started"):
 	match type:
 		"Turn Started":
-			await reduce_buffs_cooldowns(peer_id,type)
-			rpc("reduce_buffs_cooldowns",peer_id,type)
+			await reduce_buffs_cooldowns(pu_id,type)
+			rpc("reduce_buffs_cooldowns",pu_id,type)
 			#await buffs_cooldown_reduced
 			
-			await reduce_skills_cooldowns(peer_id,type)
-			rpc("reduce_skills_cooldowns",peer_id,type)
+			await reduce_skills_cooldowns(pu_id,type)
+			rpc("reduce_skills_cooldowns",pu_id,type)
 
-			await reduce_field_skills_cooldowns(peer_id)
-			rpc("reduce_field_skills_cooldowns",peer_id)
+			await reduce_field_skills_cooldowns(pu_id)
+			rpc("reduce_field_skills_cooldowns",pu_id)
 
 			#await skills_cooldown_reduced
 			print("skills_cooldown_reduced")
 		"End Turn":
-			await reduce_buffs_cooldowns(peer_id,type)
-			rpc("reduce_buffs_cooldowns",peer_id,type)
+			await reduce_buffs_cooldowns(pu_id,type)
+			rpc("reduce_buffs_cooldowns",pu_id,type)
 			#await buffs_cooldown_reduced
 	
 	field.update_field_icon()
@@ -1535,10 +1576,10 @@ func reduce_all_cooldowns(peer_id,type="Turn Started"):
 
 
 @rpc("any_peer","reliable","call_remote")
-func reduce_buffs_cooldowns(peer_id,type="Turn Started"):
+func reduce_buffs_cooldowns(pu_id:String,type="Turn Started"):
 	
 	print("reduce_buffs_cooldowns\n\n")
-	var buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+	var buffs=Globals.pu_id_player_info[pu_id]["servant_node"].buffs
 	print("\nbuffs="+str(buffs))
 	var buffs_list_to_remove=[]
 	
@@ -1554,14 +1595,14 @@ func reduce_buffs_cooldowns(peer_id,type="Turn Started"):
 							if buff_duration-1<=0:
 								buffs_list_to_remove.append(buffs[i])
 							else:
-								peer_id_player_info[peer_id]["servant_node"].buffs[i]["Duration"]-=1
+								Globals.pu_id_player_info[pu_id]["servant_node"].buffs[i]["Duration"]-=1
 							continue
 					"Turn Started":
 						if buff_duration-1<=0:
 							print_debug("removing buff")
 							buffs_list_to_remove.append(buffs[i])
 						else:
-							peer_id_player_info[peer_id]["servant_node"].buffs[i]["Duration"]-=1
+							Globals.pu_id_player_info[pu_id]["servant_node"].buffs[i]["Duration"]-=1
 					_:
 						push_error("attemt reducing buffs cooldown with unhandled type=",type)
 			
@@ -1570,7 +1611,7 @@ func reduce_buffs_cooldowns(peer_id,type="Turn Started"):
 	#it is removing buff by erasing full inclusion so it it valid
 	#it is removing not by ids
 	for i in buffs_list_to_remove:
-		peer_id_player_info[peer_id]["servant_node"].buffs.erase(i)
+		Globals.pu_id_player_info[pu_id]["servant_node"].buffs.erase(i)
 	
 	#remove_buffs_for_peer_id_at_index_array(peer_id,buffs_list_to_remove)
 	
@@ -1578,18 +1619,18 @@ func reduce_buffs_cooldowns(peer_id,type="Turn Started"):
 	buffs_cooldown_reduced.emit()
 	
 @rpc("any_peer","reliable","call_remote")
-func reduce_skills_cooldowns(peer_id,_type="Turn Started",amount:int=1):
-	for i in range(peer_id_player_info[peer_id]["servant_node"].skill_cooldowns.size()):
-		peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]-=amount
-		if peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]<=0:
-			peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[i]=0
+func reduce_skills_cooldowns(pu_id:String,_type="Turn Started",amount:int=1):
+	for i in range(Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns.size()):
+		Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns[i]-=amount
+		if Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns[i]<=0:
+			Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns[i]=0
 	
 	skills_cooldown_reduced.emit()
 
 
 @rpc("any_peer","reliable","call_local")
-func reduce_custom_param(peer_id:int,buff_id_array:Array,param:String):
-	print_debug("reduce_custom_param, peer_id=",peer_id," param=",param," buff_id_array=",buff_id_array)
+func reduce_custom_param(pu_id:String,buff_id_array:Array,param:String):
+	print_debug("reduce_custom_param, pu_id=",pu_id," param=",param," buff_id_array=",buff_id_array)
 	buff_id_array.sort()
 	print_debug("buff_id_array.size()=",buff_id_array.size())
 	print_debug(range(buff_id_array.size() - 1, -1, -1))
@@ -1597,29 +1638,29 @@ func reduce_custom_param(peer_id:int,buff_id_array:Array,param:String):
 	for i in range(buff_id_array.size() - 1, -1, -1):
 		var buff_id=buff_id_array[i]
 		print("buff_id=",buff_id)
-		if peer_id_player_info[peer_id]["servant_node"].buffs[buff_id][param]-1<=0:
-			peer_id_player_info[peer_id]["servant_node"].buffs.pop_at(buff_id)
+		if Globals.pu_id_player_info[pu_id]["servant_node"].buffs[buff_id][param]-1<=0:
+			Globals.pu_id_player_info[pu_id]["servant_node"].buffs.pop_at(buff_id)
 			print_debug("buff popped at",buff_id)
 		else:
-			peer_id_player_info[peer_id]["servant_node"].buffs[buff_id][param]-=1
+			Globals.pu_id_player_info[pu_id]["servant_node"].buffs[buff_id][param]-=1
 			print_debug("param=",param," reduces")
 
 @rpc("any_peer","reliable","call_local")
-func remove_buffs_for_peer_id_at_index_array(peer_id:int,ids:Array)->void:
+func remove_buffs_for_pu_id_at_index_array(pu_id:String,ids:Array)->void:
 	ids.sort()
 	for i in range(ids.size() - 1, -1, -1):
 		var buff_id=ids[i]
 		print_debug("buff_id=",buff_id)
-		peer_id_player_info[peer_id]["servant_node"].buffs.pop_at(buff_id)
+		Globals.pu_id_player_info[pu_id]["servant_node"].buffs.pop_at(buff_id)
 		print_debug("buff popped at",buff_id)
 
-func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
-	var buffs=peer_id_player_info[peer_id]["servant_node"].buffs
+func trigger_buffs_on(pu_id:String,trigger:String,triggered_by_pu_id=null):
+	var buffs=Globals.pu_id_player_info[pu_id]["servant_node"].buffs
 	var i=0
 	var buffs_ids_to_reduce_trigger_uses:Array=[]
 	var buffs_to_reduce_custom_param:Array=[]
 	var count=0
-	print("trigger_buffs_on="+str(trigger)+" triggered_by_peer_id="+str(triggered_by_peer_id))
+	print("trigger_buffs_on="+str(trigger)+" triggered_by_pu_id="+str(triggered_by_pu_id))
 	for buff in buffs:
 		var buff_trigger=buff.get("Trigger","")
 		if buff_trigger:
@@ -1649,9 +1690,9 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 				if typeof(buff["Effect On Trigger"])==TYPE_STRING:#if set action string
 					match buff["Effect On Trigger"]:
 						"Take Damage By Power":
-							rpc("take_damage_to_peer_id",peer_id,buff["Power"])
+							rpc("take_damage_to_pu_id",pu_id,buff["Power"])
 						"pull enemies on attack":
-							field.pull_enemy(field.attacking_peer_id)
+							field.pull_enemy(field.attacking_pu_id)
 						_:
 							push_error("Wrong set trigger effect="+str(buff["Effect On Trigger"]))
 				else:
@@ -1661,12 +1702,12 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 						buffs_to_add=[buffs_to_add]
 
 					for effect in buffs_to_add:
-						await use_skill(effect,[triggered_by_peer_id])
+						await use_skill(effect,[triggered_by_pu_id])
 					#buffs_ids_to_reduce_trigger_uses.append(buff)
 					if buff.has("Total Trigger Uses"):
 						buffs_ids_to_reduce_trigger_uses.append(count)
 						
-						#rpc("reduce_custom_param",peer_id,i,"Total Trigger Uses")
+						#rpc("reduce_custom_param",pu_id,i,"Total Trigger Uses")
 
 		count+=1
 		
@@ -1675,15 +1716,15 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 			match buff["Name"]:
 				"Invincibility":
 					if buff.has("Hit Times"):
-						rpc("reduce_custom_param",peer_id,[i],"Hit Times")
+						rpc("reduce_custom_param",pu_id,[i],"Hit Times")
 						break
 		i+=1
 	if !buffs_ids_to_reduce_trigger_uses.is_empty():
-		rpc("reduce_custom_param",peer_id,buffs_ids_to_reduce_trigger_uses,"Total Trigger Uses")
+		rpc("reduce_custom_param",pu_id,buffs_ids_to_reduce_trigger_uses,"Total Trigger Uses")
 	
 	for buff in buffs_to_reduce_custom_param:
 		print_debug("buffs_to_reduce_custom_param=",buff)
-		rpc("reduce_custom_param",peer_id,[buff["Id"]],buff["Param"])
+		rpc("reduce_custom_param",pu_id,[buff["Id"]],buff["Param"])
 	
 	var calculata="""just in case to variable
 	casted=3
@@ -1712,14 +1753,14 @@ func trigger_buffs_on(peer_id:int,trigger:String,triggered_by_peer_id=null):
 			#print("type="+str(typeof(cu_klet_config)))
 			if not cu_klet_config.is_empty():
 				print("\n\ncu_klet_config="+str(cu_klet_config))
-				if cu_klet_config["Owner"]==peer_id:
+				if cu_klet_config["Owner"]==pu_id:
 					print(str("cu_klet_config[owner]=",cu_klet_config["Owner"]))
 					if cu_klet_config.has("Np Up Every N Turn"):
 						print(str("cal=",turns_counter,"-",cu_klet_config["turn_casted"],"%",cu_klet_config["Np Up Every N Turn"],"=",(turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]))
 						if (turns_counter-cu_klet_config["turn_casted"])%cu_klet_config["Np Up Every N Turn"]==0:
 							
 							print("TRRRR")
-							rpc("charge_np_to_peer_id_by_number",peer_id,1)
+							rpc("charge_np_to_pu_id_by_number",pu_id,1)
 		
 	
 	if trigger=="Turn Started":
@@ -1738,7 +1779,7 @@ func remove_all_expired_captured_kletki():
 		print("Found kletka captured")
 		print(cu_klet_config)
 		if cu_klet_config.has("Duration"):
-			if cu_klet_config["Owner"]==current_player_peer_id_turn:
+			if cu_klet_config["Owner"]==current_player_pu_id_turn:
 				print("Is owner turn=true")
 				var kletka_duration=cu_klet_config["Duration"]
 				var turn_casted=cu_klet_config.get("Turn Casted",1)
@@ -1759,12 +1800,21 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 	var dice_result=field.dice_roll_result_list
 	var is_casted=null
 	field.systemlog_message(str(Globals.nickname," thowing to decide bad status"))
-	for peer_id in cast:
+	for pu_id in cast:
 		is_casted=null
+		var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
 		while true:
-			field.rpc_id(peer_id,"receice_dice_roll_results",dice_result)
-			field.rpc_id(peer_id,"set_action_status",Globals.self_peer_id,"roll_dice_for_result")
-			await field.attack_response
+			field.rpc_id(pu_peer_id,"receice_dice_roll_results",dice_result)
+			field.rpc_id(pu_peer_id,"set_action_status",Globals.self_pu_id,"roll_dice_for_result")
+
+			var status= await field.attack_response
+			match status:
+				"OK":
+					pass
+				"Disconnect":
+					field.attack_responce_string="Getting bad status"
+					field.rpc("systemlog_message",str(Globals.nickname," disconnected, applying effect"))
+			
 			match field.attack_responce_string:
 				"Evaded bad status":
 					is_casted=false
@@ -1772,17 +1822,17 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 					pass
 				"Getting bad status":
 					for single_skill in skill_info["Buff To Add"]:#shit
-						rpc("add_buff",peer_id,single_skill)
+						rpc("add_buff",pu_id,single_skill)
 					is_casted=true
 			if is_casted!=null:
 				break
 		#field._on_dices_toggle_button_pressed()
 	pass
 
-func apply_madness_enhancement(peer_id:int,buff_info:Dictionary)->void:
+func apply_madness_enhancement(pu_id:String,buff_info:Dictionary)->void:
 	#already in rpc invoke
-	var user_buffs=peer_id_player_info[peer_id]["servant_node"].buffs.duplicate(true)
-	print_debug("apply_madness_enhancement, peer_id=",peer_id)
+	var user_buffs=Globals.pu_id_player_info[pu_id]["servant_node"].buffs.duplicate(true)
+	print_debug("apply_madness_enhancement, pu_id=",pu_id)
 	var main_buff_duration=buff_info.get("Duration",1)
 	var main_buff_power=buff_info.get("Power",2)
 	for buff in user_buffs:
@@ -1792,33 +1842,33 @@ func apply_madness_enhancement(peer_id:int,buff_info:Dictionary)->void:
 			print("buff not removed")
 			continue
 		print_debug("removing buff")
-		await remove_buff([peer_id],buff.get("Name"))
+		await remove_buff([pu_id],buff.get("Name"))
 	
-	add_buff(peer_id,{"Name":"ATK Up X","Display Name":"Madness Enhancement","Type":"Status","Duration":main_buff_duration,"Power":main_buff_power})
+	add_buff([pu_id],{"Name":"ATK Up X","Display Name":"Madness Enhancement","Type":"Status","Duration":main_buff_duration,"Power":main_buff_power})
 
 	var smart=buff_info.get("Can Use 1 Skill",false)
 	if smart:
-		add_buff(peer_id,{"Name":"Maximum Skills Per Turn","Type":"Status","Power":1,"Duration":main_buff_duration})
+		add_buff([pu_id],{"Name":"Maximum Skills Per Turn","Type":"Status","Power":1,"Duration":main_buff_duration})
 	else:
-		add_buff(peer_id,{"Name":"Skill Seal","Type":"Status","Duration":main_buff_duration})
+		add_buff([pu_id],{"Name":"Skill Seal","Type":"Status","Duration":main_buff_duration})
 	return
 
-func reduce_custom_param_for_buff_name(peer_id:int,buff_name:String,param:String,first_only:bool=true):
+func reduce_custom_param_for_buff_name(pu_id:String,buff_name:String,param:String,first_only:bool=true):
 	var buffs_ids=[]
-	var peer_id_buffs_arr=peer_id_player_info[peer_id]["servant_node"].buffs
-	for i in range(peer_id_buffs_arr.size()):
-		if peer_id_buffs_arr[i]["Name"]==buff_name:
-			if peer_id_buffs_arr[i].has(param):
+	var pu_id_buffs_arr=Globals.pu_id_player_info[pu_id]["servant_node"].buffs
+	for i in range(pu_id_buffs_arr.size()):
+		if pu_id_buffs_arr[i]["Name"]==buff_name:
+			if pu_id_buffs_arr[i].has(param):
 				buffs_ids.append(i)
 				if first_only:
 					break
-	reduce_custom_param(peer_id,buffs_ids,param)
+	reduce_custom_param(pu_id,buffs_ids,param)
 
-func get_peer_id_class(peer_id:int)->String:
-	var peer_node=peer_id_player_info[peer_id]["servant_node"]
+func get_pu_id_class(pu_id:String)->String:
+	var peer_node=Globals.pu_id_player_info[pu_id]["servant_node"]
 	var default_peer_class=peer_node.servant_class
 	
-	var class_buff=peer_id_has_buff(peer_id,"Class Change")
+	var class_buff=pu_id_has_buff(pu_id,"Class Change")
 	var buffs_class:String
 	if class_buff:
 		buffs_class = class_buff.get("Class","")
@@ -1835,14 +1885,14 @@ func intersect(array1, array2):
 	return false
 
 
-func peer_id_can_get_buff(peer_id:int,buff_info:Dictionary)->bool:
-	var buff_block=peer_id_has_buff(peer_id,"Nullify Buff")
+func pu_id_can_get_buff(pu_id:String,buff_info:Dictionary)->bool:
+	var buff_block=pu_id_has_buff(pu_id,"Nullify Buff")
 	var buff_block_types=[]
 	if buff_block:
 		buff_block_types.append_array(buff_block.get("Types To Block",["Buff Positive Effect"]))
 	
 
-	var debuff_immunity=peer_id_has_buff(peer_id,"Nullify Debuff")
+	var debuff_immunity=pu_id_has_buff(pu_id,"Nullify Debuff")
 	if debuff_immunity:
 		buff_block_types.append_array(debuff_immunity.get("Types To Block",["Buff Negative Effect"]))
 
@@ -1854,18 +1904,18 @@ func peer_id_can_get_buff(peer_id:int,buff_info:Dictionary)->bool:
 	
 	if buff_block and intersect(buff_block_types,buff_types):
 		if buff_block.has("Uses"):
-			reduce_custom_param_for_buff_name(peer_id,buff_info["Name"],"Uses")
+			reduce_custom_param_for_buff_name(pu_id,buff_info["Name"],"Uses")
 		return false
 	
 	if debuff_immunity and "Buff Negative Effect" in buff_types:
 		if debuff_immunity.has("Uses"):
-			reduce_custom_param_for_buff_name(peer_id,buff_info["Name"],"Uses")
+			reduce_custom_param_for_buff_name(pu_id,buff_info["Name"],"Uses")
 		return false
 	return true
 
-func buffs_removal(peer_id: int, buff_info: Dictionary) -> void:
+func buffs_removal(pu_id: String, buff_info: Dictionary) -> void:
 	var buff_types_to_remove: Array = buff_info.get("Types To Remove", [])
-	var is_buff_removal_resist=peer_id_has_buff(peer_id,"Buff Removal Resist")
+	var is_buff_removal_resist=pu_id_has_buff(pu_id,"Buff Removal Resist")
 	if is_buff_removal_resist:
 		if "Buff Positive Effect" in buff_types_to_remove:
 			buff_types_to_remove.erase("Buff Positive Effect")
@@ -1881,7 +1931,7 @@ func buffs_removal(peer_id: int, buff_info: Dictionary) -> void:
 	var amount_to_remove: int = buff_info.get("Amount", -1)
 	var order: String = buff_info.get("Order", "Newest")
 	
-	var target_buffs_array: Array = peer_id_player_info[peer_id]["servant_node"].buffs
+	var target_buffs_array: Array = Globals.pu_id_player_info[pu_id]["servant_node"].buffs
 	if target_buffs_array.is_empty():
 		return
 
@@ -1940,7 +1990,7 @@ func buffs_removal(peer_id: int, buff_info: Dictionary) -> void:
 	
 	print_debug("removing buffs ids=",indices_to_remove)
 	
-	rpc("remove_buffs_for_peer_id_at_index_array",peer_id,indices_to_remove)
+	rpc("remove_buffs_for_pu_id_at_index_array",pu_id,indices_to_remove)
 	
 	
 	#for index_val in indices_to_remove:
@@ -1952,10 +2002,10 @@ func buffs_removal(peer_id: int, buff_info: Dictionary) -> void:
 
 func get_absorbs_buffs()->Array:
 	var output=[]
-	for peer_id in Globals.connected_players:
-		var ubsb=peer_id_has_buff(peer_id,"Absorb Buffs")
+	for pu_id in Globals.pu_id_player_info.keys():
+		var ubsb=pu_id_has_buff(pu_id,"Absorb Buffs")
 		if ubsb:
-			output.append({"Buffs Names":ubsb.get("Buffs Names",[]),"Peer":peer_id})
+			output.append({"Buffs Names":ubsb.get("Buffs Names",[]),"Peer":pu_id})
 	return output
 
 @rpc("any_peer","reliable","call_local")
@@ -1971,18 +2021,18 @@ func add_buff(cast_array,skill_info:Dictionary):
 				cast_array=[single_absorb["Peer"]]
 	
 
-	for who_to_cast_peer_id in cast_array:
-		effect_on_buff(who_to_cast_peer_id,skill_info["Name"])
+	for who_to_cast_pu_id in cast_array:
+		effect_on_buff(who_to_cast_pu_id,skill_info["Name"])
 		if skill_info.get("Type",""):
 			pass
 		else:
-			if not peer_id_can_get_buff(who_to_cast_peer_id,skill_info):
+			if not pu_id_can_get_buff(who_to_cast_pu_id,skill_info):
 				continue
 		match skill_info["Name"]:
 			"Madness Enhancement":
-				await apply_madness_enhancement(who_to_cast_peer_id,skill_info)
-				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[]
-				#peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs=[
+				await apply_madness_enhancement(who_to_cast_pu_id,skill_info)
+				#peer_id_player_info[who_to_cast_pu_id]["servant_node"].buffs=[]
+				#peer_id_player_info[who_to_cast_pu_id]["servant_node"].buffs=[
 				#	{"Name":"ATK Up X",
 				#		"Type":"Status",
 				#		"Duration":3,
@@ -1992,52 +2042,52 @@ func add_buff(cast_array,skill_info:Dictionary):
 				#		"Duration":3}
 				#	]
 			"NP Charge":
-				charge_np_to_peer_id_by_number(who_to_cast_peer_id,skill_info.get("Power",1),"Skill")
+				charge_np_to_pu_id_by_number(who_to_cast_pu_id,skill_info.get("Power",1),"Skill")
 			"Reduce Skills Cooldown":
-				reduce_skills_cooldowns(who_to_cast_peer_id,"skill",skill_info.get("Power",1))
+				reduce_skills_cooldowns(who_to_cast_pu_id,"skill",skill_info.get("Power",1))
 			"Buff Removal":
-				buffs_removal(who_to_cast_peer_id,skill_info)
+				buffs_removal(who_to_cast_pu_id,skill_info)
 			"Debuff Removal":
-				buffs_removal(who_to_cast_peer_id,skill_info)
+				buffs_removal(who_to_cast_pu_id,skill_info)
 			"NP Discharge":
-				charge_np_to_peer_id_by_number(who_to_cast_peer_id,-skill_info.get("Power",1),"Skill")
+				charge_np_to_pu_id_by_number(who_to_cast_pu_id,-skill_info.get("Power",1),"Skill")
 			"Multiply NP":
-				var current_peer_id_np:int=peer_id_to_np_points[who_to_cast_peer_id]
+				var current_peer_id_np:int=pu_id_to_np_points[who_to_cast_pu_id]
 				var multyply_power=skill_info.get("Power",1)-1
 				var end_np_points:int=ceil(current_peer_id_np*multyply_power)
 				end_np_points=min(end_np_points,12)
-				charge_np_to_peer_id_by_number(who_to_cast_peer_id,end_np_points,"Skill")
+				charge_np_to_pu_id_by_number(who_to_cast_pu_id,end_np_points,"Skill")
 			"Heal":
-				heal_peer_id(who_to_cast_peer_id,skill_info.get("Power",5))
+				heal_pu_id(who_to_cast_pu_id,skill_info.get("Power",5))
 			"HP Drain":
-				heal_peer_id(who_to_cast_peer_id,-skill_info.get("Power",5),"Drain")
+				heal_pu_id(who_to_cast_pu_id,-skill_info.get("Power",5),"Drain")
 			"Additional Move":
-				reduce_additional_moves_for_peer_id(who_to_cast_peer_id,-1)
+				reduce_additional_moves_for_pu_id(who_to_cast_pu_id,-1)
 			"Delayed Effect":
 				skill_info["Turn Casted"]=turns_counter
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+				Globals.pu_id_player_info[who_to_cast_pu_id]["servant_node"].buffs.append(skill_info)
 			"Faceless Moon":
 				skill_info["Dices"]=field.dice_roll_result_list.duplicate(true)
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+				Globals.pu_id_player_info[who_to_cast_pu_id]["servant_node"].buffs.append(skill_info)
 			"Presence Concealment":
-				start_presence_concealment_for_peer_id(who_to_cast_peer_id)
+				start_presence_concealment_for_pu_id(who_to_cast_pu_id)
 				var copy_info=skill_info.duplicate(true)
 				copy_info["Turn Casted"]=turns_counter
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(copy_info)
+				Globals.pu_id_player_info[who_to_cast_pu_id]["servant_node"].buffs.append(copy_info)
 			"Invincibility":#if power==0 then all turns else for N hits
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+				Globals.pu_id_player_info[who_to_cast_pu_id]["servant_node"].buffs.append(skill_info)
 			_:#else
-				peer_id_player_info[who_to_cast_peer_id]["servant_node"].buffs.append(skill_info)
+				Globals.pu_id_player_info[who_to_cast_pu_id]["servant_node"].buffs.append(skill_info)
 	pass
 
 @rpc("any_peer","reliable","call_local")
-func start_presence_concealment_for_peer_id(peer_id:int):
-	peer_id_player_info[peer_id]["servant_node"].visible=false
+func start_presence_concealment_for_pu_id(pu_id:String):
+	Globals.pu_id_player_info[pu_id]["servant_node"].visible=false
 	var cur_kletka_before=field.current_kletka
-	if peer_id==Globals.self_peer_id:
+	if pu_id==Globals.self_pu_id:
 		field.current_kletka=-1
 	field.occupied_kletki.erase(cur_kletka_before)
-	field.peer_id_to_kletka_number[peer_id]=-1
+	field.pu_id_to_kletka_number[pu_id]=-1
 	pass
 
 @rpc("any_peer","reliable","call_local")
@@ -2059,21 +2109,21 @@ func zoom_out_in_camera_before_buff(zoom_out=true):
 		$"../Camera2D".zoom=last_camera_zoom
 
 @rpc("any_peer","reliable","call_local")
-func effect_on_buff(peer_id_buff_given_to,buff_name):
+func effect_on_buff(pu_id_buff_given_to:String,buff_name)->void:
 	for i in range (10):
-		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
+		Globals.pu_id_player_info[pu_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
 		await get_tree().create_timer(0.05).timeout
-	peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).text=buff_name
+	Globals.pu_id_player_info[pu_id_buff_given_to]["servant_node"].get_child(2).text=buff_name
 	
 	for i in range (5):
-		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.2)
+		Globals.pu_id_player_info[pu_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.2)
 		await get_tree().create_timer(0.006).timeout
 	
 	
 	await get_tree().create_timer(0.1).timeout
 	for i in range (10,-1,-1):
-		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
-		peer_id_player_info[peer_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.1)
+		Globals.pu_id_player_info[pu_id_buff_given_to]["servant_node"].get_child(1).modulate=Color(1,1,1,i*0.1)
+		Globals.pu_id_player_info[pu_id_buff_given_to]["servant_node"].get_child(2).modulate=Color(1,1,1,i*0.1)
 		await get_tree().create_timer(0.05).timeout
 	
 	pass
@@ -2082,49 +2132,49 @@ func effect_on_buff(peer_id_buff_given_to,buff_name):
 func remove_buff(cast_array:Array,skill_name:String,remove_passive=false,remove_only_passive_one=false):
 	#remove SINGLE BUFF
 	#if need to remove bath then await buff_removed to sync
-	for who_to_remove_buff_peer_id in cast_array:
+	for who_to_remove_buff_pu_id in cast_array:
 		var i=0
-		for buff in peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs:
+		for buff in Globals.pu_id_player_info[who_to_remove_buff_pu_id]["servant_node"].buffs:
 			if buff["Name"]==skill_name:
 				var buf_type=buff.get("Type","")
 				if buf_type=="Status":
 					continue
 				if buf_type=="Passive":
 					if remove_passive: 
-						peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
+						Globals.pu_id_player_info[who_to_remove_buff_pu_id]["servant_node"].buffs.pop_at(i)
 						buff_removed.emit()
 						return
 				else:
-					peer_id_player_info[who_to_remove_buff_peer_id]["servant_node"].buffs.pop_at(i)
+					Globals.pu_id_player_info[who_to_remove_buff_pu_id]["servant_node"].buffs.pop_at(i)
 					buff_removed.emit()
 					return
 			i+=1
 	buff_removed.emit()
 	
 
-func get_peer_id_maximun_hp(peer_id)->int:
-	var servant_node:Node2D=peer_id_player_info[peer_id]["servant_node"]
+func get_pu_id_maximun_hp(pu_id:String)->int:
+	var servant_node:Node2D=Globals.pu_id_player_info[pu_id]["servant_node"]
 	var default_max_hp:int=servant_node.default_stats["hp"]
 	var additional_hp:int=0
-	for buff:Dictionary in get_peer_id_buffs(peer_id):
+	for buff:Dictionary in get_pu_id_buffs(pu_id):
 		if buff.get("Name","")=="Max HP Plus":
 			additional_hp+=buff.get("Power",1)
 
 	return default_max_hp+additional_hp
 
-func heal_peer_id(peer_id:int,amount:int,type:String="normal"):
-	print(str("\nheal_peer_id=",peer_id," by ",amount))
+func heal_pu_id(pu_id:String,amount:int,type:String="normal"):
+	print(str("\nheal_pu_id=",pu_id," by ",amount))
 	
 	
-	var servant_node_to_heal:Node2D=peer_id_player_info[peer_id]["servant_node"]
+	var servant_node_to_heal:Node2D=Globals.pu_id_player_info[pu_id]["servant_node"]
 	var current_hp:int=servant_node_to_heal.hp
 	var amount_to_heal:int
-	var max_hp:int=get_peer_id_maximun_hp(peer_id)
+	var max_hp:int=get_pu_id_maximun_hp(pu_id)
 	if type=="command_spell":
 		amount_to_heal=ceil(max_hp*0.7)
 	else:#command spell is static 70%
 		amount_to_heal=amount
-		for buff in get_peer_id_buffs(peer_id):
+		for buff in get_pu_id_buffs(pu_id):
 			match buff["Name"]:
 				"HP Recovery Up":
 					amount_to_heal+=buff["Power"]
@@ -2149,41 +2199,41 @@ func heal_peer_id(peer_id:int,amount:int,type:String="normal"):
 	
 	
 
-	rpc("update_hp_on_peer_id",peer_id,servant_node_to_heal.hp)
+	rpc("update_hp_on_pu_id",pu_id,servant_node_to_heal.hp)
 	print(str("hp now is ",servant_node_to_heal.hp,"\n"))
 	
 func _process(_delta):
 	pass
 
 @rpc("any_peer","call_local","reliable")
-func charge_np_to_peer_id_by_number(peer_id,number,source="damage"):
-	print("\n===charge_np_to_peer_id_by_number===")
-	print("peer_id_to_np_points[peer_id]="+str(peer_id_to_np_points[peer_id])+"+"+str(number))
+func charge_np_to_pu_id_by_number(pu_id:String,number:int,source="damage"):
+	print("\n===charge_np_to_pu_id_by_number===")
+	print("pu_id_to_np_points[pu_id]="+str(pu_id_to_np_points[pu_id])+"+"+str(number))
 	var number_to_add=number
-	for skill in peer_id_player_info[peer_id]["servant_node"].buffs:
+	for skill in Globals.pu_id_player_info[pu_id]["servant_node"].buffs:
 		match skill["Name"]:
 			"NP Gain Up" when source=="damage":
 				number_to_add+=skill["Power"]
 			"NP Gain Up X" when source=="damage":
 				number_to_add*=skill["Power"]
 	#number_to_add=max(0,number_to_add)
-	peer_id_to_np_points[peer_id]+=number_to_add
+	pu_id_to_np_points[pu_id]+=number_to_add
 	
-	if peer_id_to_np_points[peer_id]<0:
-		peer_id_to_np_points[peer_id]=0
-	if peer_id_to_np_points[peer_id]>12:
-		peer_id_to_np_points[peer_id]=12
-	#change_phantasm_charge_on_peer_id
-	if peer_id==Globals.self_peer_id:
-		Globals.self_servant_node.phantasm_charge=peer_id_to_np_points[peer_id]
-		$"../GUI/action/np_points_number_label".text=str(peer_id_to_np_points[peer_id])
+	if pu_id_to_np_points[pu_id]<0:
+		pu_id_to_np_points[pu_id]=0
+	if pu_id_to_np_points[pu_id]>12:
+		pu_id_to_np_points[pu_id]=12
+	#change_phantasm_charge_on_pu_id
+	if pu_id==Globals.self_pu_id:
+		Globals.self_servant_node.phantasm_charge=pu_id_to_np_points[pu_id]
+		$"../GUI/action/np_points_number_label".text=str(pu_id_to_np_points[pu_id])
 
 
-func get_peer_id_traits(peer_id)->Array:
-	var peer_node=peer_id_player_info[peer_id]["servant_node"]
-	var default_traits:Array=peer_node.traits
+func get_pu_id_traits(pu_id:String)->Array:
+	var pu_node=Globals.pu_id_player_info[pu_id]["servant_node"]
+	var default_traits:Array=pu_node.traits
 	var output_traits:Array=default_traits.duplicate(true)
-	for buff in get_peer_id_buffs(peer_id):
+	for buff in get_pu_id_buffs(pu_id):
 		if buff.get("Name")=="Trait Set":
 			var buff_trait:String=buff.get("Trait","")
 			if buff_trait:
@@ -2191,11 +2241,11 @@ func get_peer_id_traits(peer_id)->Array:
 
 	return output_traits
 
-func get_peer_id_gender(peer_id)->String:
-	var peer_node=peer_id_player_info[peer_id]["servant_node"]
-	var default_gender:String=peer_node.gender
+func get_pu_id_gender(pu_id:String)->String:
+	var pu_node=Globals.pu_id_player_info[pu_id]["servant_node"]
+	var default_gender:String=pu_node.gender
 	var output_gender:String=default_gender+""
-	for buff in get_peer_id_buffs(peer_id):
+	for buff in get_pu_id_buffs(pu_id):
 		if buff.get("Name")=="Gender Set":
 			var gennder:String=buff.get("Gender","")
 			if gennder:
@@ -2203,11 +2253,11 @@ func get_peer_id_gender(peer_id)->String:
 
 	return output_gender
 
-func get_peer_id_strength(peer_id)->String:
-	var peer_node=peer_id_player_info[peer_id]["servant_node"]
-	var default_strength:String=peer_node.strength
+func get_pu_id_strength(pu_id:String)->String:
+	var pu_node=Globals.pu_id_player_info[pu_id]["servant_node"]
+	var default_strength:String=pu_node.strength
 	var output_strength:String=default_strength+""
-	for buff in get_peer_id_buffs(peer_id):
+	for buff in get_pu_id_buffs(pu_id):
 		if buff.get("Name")=="Strength Set":
 			var gennder:String=buff.get("Strength","")
 			if gennder:
@@ -2216,7 +2266,7 @@ func get_peer_id_strength(peer_id)->String:
 	return output_strength
 
 
-func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictionary,damage_type:String="normal",special:String="regular"):
+func calculate_damage_to_take(attacker_pu_id:String,enemies_dice_results:Dictionary,damage_type:String="normal",special:String="regular"):
 	#damage_type="normal"/"Magical"
 	#special is to half the damage bc evade or defence
 	print("calculating damage to take\n\n")
@@ -2232,20 +2282,20 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	var is_crit=false
 	var crit_removed=false
 	var damage_before_crit:int=0
-	var self_traits=get_peer_id_traits(Globals.self_peer_id)
-	var attacker_traits=get_peer_id_traits(attacker_peer_id)
+	var self_traits=get_pu_id_traits(Globals.self_pu_id)
+	var attacker_traits=get_pu_id_traits(attacker_pu_id)
 	var additional_buffs=[]
 	if damage_type=="Magical":
-		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].magic["Power"]
+		damage_to_take=Globals.pu_id_player_info[attacker_pu_id]["servant_node"].magic["Power"]
 		
 		var cur_kletka_conf=field.kletka_preference[field.current_kletka]
 		if cur_kletka_conf.is_empty():
 			is_field_ignore_magic_defence=false
 		else:
-			if cur_kletka_conf.get("Owner",-1)==attacker_peer_id and cur_kletka_conf.get("Ignore Magical Defence",false):
+			if cur_kletka_conf.get("Owner",-1)==attacker_pu_id and cur_kletka_conf.get("Ignore Magical Defence",false):
 				is_field_ignore_magic_defence=true
 	else:
-		damage_to_take=peer_id_player_info[attacker_peer_id]["servant_node"].attack_power
+		damage_to_take=Globals.pu_id_player_info[attacker_pu_id]["servant_node"].attack_power
 	
 	if damage_type=="Phantasm":
 		if !field.recieved_phantasm_config.is_empty():#for phantasm damage
@@ -2261,18 +2311,18 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 
 	#damage_to_take=get_peer_id_attack_power(attacker_peer_id,damage_type,[],additional_buffs)
 
-	damage_to_take=calculate_peer_id_attack_against_peer_id(attacker_peer_id,Globals.self_peer_id,damage_type)
+	damage_to_take=calculate_pu_id_attack_against_pu_id(attacker_pu_id,Globals.self_pu_id,damage_type)
 	
-	is_crit=check_if_peer_id_got_crit(attacker_peer_id,enemies_dice_results)
+	is_crit=check_if_pu_id_got_crit(attacker_pu_id,enemies_dice_results)
 	
 	if is_crit:
 		damage_before_crit=damage_to_take
-		damage_to_take=calculate_crit_damage(attacker_peer_id,damage_to_take)
+		damage_to_take=calculate_crit_damage(attacker_pu_id,damage_to_take)
 	
 	print("calculating ignore buffs")
 	
 	for buff in buff_ignoring:
-		if peer_id_has_buff(Globals.self_peer_id, buff):
+		if pu_id_has_buff(Globals.self_pu_id, buff):
 			match buff:
 				"Ignore Defence":
 					buff_types_to_ignore.append("Defence")
@@ -2292,7 +2342,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	#calculating self defence
 	print("calculating self defence")
 	#for skill in peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
-	for skill in get_peer_id_buffs(Globals.self_peer_id):
+	for skill in get_pu_id_buffs(Globals.self_pu_id):
 		var skill_type_array
 		if skill.has("Types"):
 			skill_type_array=skill["Types"]
@@ -2359,7 +2409,7 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 			print(str("magical resistange=",Globals.self_servant_node.magic["resistance"]," damage_to_take=",damage_to_take))
 		else:
 			print("field is ignoring magical defence")
-		if peer_id_player_info[attacker_peer_id]["servant_node"].servant_class=="Saber":
+		if Globals.pu_id_player_info[attacker_pu_id]["servant_node"].servant_class=="Saber":
 			damage_to_take=floor(damage_to_take/2)
 			print(str("Saber resistance", "damage_to_take=",damage_to_take))
 		
@@ -2379,8 +2429,8 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 		damage_to_take=0
 	#Globals.self_servant_node.hp-=damage_to_take
 		
-	trigger_buffs_on(Globals.self_peer_id,"Damage Taken",attacker_peer_id)
-	trigger_buffs_on(Globals.self_peer_id,damage_type+" Damage Taken",attacker_peer_id)
+	trigger_buffs_on(Globals.self_pu_id,"Damage Taken",attacker_pu_id)
+	trigger_buffs_on(Globals.self_pu_id,damage_type+" Damage Taken",attacker_pu_id)
 	
 	
 	print(str("damage_to_take=",damage_to_take," type=",damage_type,"\n\n"))
@@ -2388,71 +2438,71 @@ func calculate_damage_to_take(attacker_peer_id:int,enemies_dice_results:Dictiona
 	return damage_to_take
 
 @rpc("any_peer","reliable","call_local")
-func take_damage_to_peer_id(peer_id,damage_amount,can_kill=true):
-	var start_hp=peer_id_player_info[peer_id]["servant_node"].hp
+func take_damage_to_pu_id(pu_id:String,damage_amount:int,can_kill:bool=true)->void:
+	var start_hp=Globals.pu_id_player_info[pu_id]["servant_node"].hp
 	var new_hp=start_hp-damage_amount
 	
 	if not can_kill and new_hp<=0:
 		new_hp=1
 	
-	change_game_stat_for_peer_id(peer_id,"total_damage_taken",damage_amount)
+	change_game_stat_for_pu_id(pu_id,"total_damage_taken",damage_amount)
 	
 	
 	
-	rpc("update_hp_on_peer_id",peer_id,new_hp)
-	if peer_id==Globals.self_peer_id:
+	rpc("update_hp_on_pu_id",pu_id,new_hp)
+	if pu_id==Globals.self_pu_id:
 		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
-	print(str(Globals.peer_id_to_nickname[peer_id]," HP is ",new_hp," now"))
+	print(str(Globals.pu_id_to_nickname[pu_id]," HP is ",new_hp," now"))
 	
 	if new_hp<=0:
 		print("death")
-		trigger_death_to_peer_id(peer_id)
+		trigger_death_to_pu_id(pu_id)
 
 
-func trigger_death_to_peer_id(peer_id):
+func trigger_death_to_pu_id(pu_id:String):
 	#TODO replace loop with this func
 	#if peer_id_has_buff(Globals.self_peer_id, buff):
-	var guts_buff=peer_id_has_buff(peer_id,"Guts")
+	var guts_buff=pu_id_has_buff(pu_id,"Guts")
 	if guts_buff:
 		var hp_to_recover=guts_buff.get("HP To Recover",1)
-		heal_peer_id(peer_id,hp_to_recover)
-		trigger_buffs_on(peer_id,"Guts Used")
-		rpc("remove_buff",[peer_id],"Guts")
+		heal_pu_id(pu_id,hp_to_recover)
+		trigger_buffs_on(pu_id,"Guts Used")
+		rpc("remove_buff",[pu_id],"Guts")
 		return
 	
-	if peer_id_to_command_spells_int[peer_id]>=3:
-		var max_hp=peer_id_player_info[peer_id]["servant_node"].default_stats["hp"]
-		rpc("update_hp_on_peer_id",peer_id,max_hp)
-		reduce_command_spell_on_peer_id(peer_id)
-		reduce_command_spell_on_peer_id(peer_id)
-		reduce_command_spell_on_peer_id(peer_id)
-		trigger_buffs_on(peer_id,"Command Spell Revive")
+	if pu_id_to_command_spells_int[pu_id]>=3:
+		var max_hp=Globals.pu_id_player_info[pu_id]["servant_node"].default_stats["hp"]
+		rpc("update_hp_on_pu_id",pu_id,max_hp)
+		reduce_command_spell_on_pu_id(pu_id)
+		reduce_command_spell_on_pu_id(pu_id)
+		reduce_command_spell_on_pu_id(pu_id)
+		trigger_buffs_on(pu_id,"Command Spell Revive")
 	else:#total death
 		for i in range(9):
-			peer_id_player_info[peer_id]["servant_node"].rotation_degrees+=10
+			Globals.pu_id_player_info[pu_id]["servant_node"].rotation_degrees+=10
 			await get_tree().create_timer(0.1).timeout
-			turns_order_by_peer_id.erase(peer_id)
+			turns_order_by_pu_id.erase(pu_id)
 	
 
 
 @rpc("any_peer","reliable","call_local")
-func update_hp_on_peer_id(peer_id,hp_to_set):
-	if peer_id==Globals.self_peer_id:
+func update_hp_on_pu_id(pu_id:String,hp_to_set:int)->void:
+	if pu_id==Globals.self_pu_id:
 		current_hp_value_label.text=str(hp_to_set)
-	peer_id_player_info[peer_id]["servant_node"].hp=hp_to_set
+	Globals.pu_id_player_info[pu_id]["servant_node"].hp=hp_to_set
 
-func _on_texture_rect_gui_input(event):
+func _on_texture_rect_gui_input(event)->void:
 	if event.is_action_pressed:
 		print(event)
 	pass # Replace with function body.
 
 @rpc("any_peer","reliable","call_local")
-func reduce_additional_moves_for_peer_id(peer_id,amount=1):
-	peer_id_player_info[peer_id]["servant_node"].additional_moves-=amount
+func reduce_additional_moves_for_pu_id(pu_id:String,amount:int=1)->void:
+	Globals.pu_id_player_info[pu_id]["servant_node"].additional_moves-=amount
 
 @rpc("any_peer","reliable","call_local")
-func set_peer_id_cooldown_for_skill_id(peer_id,skill_number,cooldown):
-	peer_id_player_info[peer_id]["servant_node"].skill_cooldowns[skill_number]=cooldown
+func set_pu_id_cooldown_for_skill_id(pu_id:String,skill_number,cooldown)->void:
+	Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns[skill_number]=cooldown
 	
 
 func _on_use_skill_button_pressed():
@@ -2471,21 +2521,21 @@ func _on_use_skill_button_pressed():
 
 			succesfully=await use_skill(Globals.self_servant_node.skills["First Skill"]["Effect"])
 			if succesfully:
-				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,0,
+				rpc("set_pu_id_cooldown_for_skill_id",Globals.self_pu_id,0,
 				Globals.self_servant_node.skills["First Skill"]["Cooldown"])
 		2:
 			#Globals.self_servant_node.second_skill()
 			skill_consume_action= Globals.self_servant_node.skills["Second Skill"].get("Consume Action",true)
 			succesfully=await use_skill(Globals.self_servant_node.skills["Second Skill"]["Effect"])
 			if succesfully:
-				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,1,
+				rpc("set_pu_id_cooldown_for_skill_id",Globals.self_pu_id,1,
 				Globals.self_servant_node.skills["Second Skill"]["Cooldown"])
 		3:
 			#Globals.self_servant_node.third_skill()
 			skill_consume_action= Globals.self_servant_node.skills["Third Skill"].get("Consume Action",true)
 			succesfully=await use_skill(Globals.self_servant_node.skills["Third Skill"]["Effect"])
 			if succesfully:
-				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2,
+				rpc("set_pu_id_cooldown_for_skill_id",Globals.self_pu_id,2,
 				Globals.self_servant_node.skills["Third Skill"]["Cooldown"])
 		4:
 			var class_skill_number= skill_info_tab_container.get_current_tab_control().current_tab+1
@@ -2500,7 +2550,7 @@ func _on_use_skill_button_pressed():
 				#var tt3=tt2.get_current_tab_control()
 				print("eee")
 				
-				rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2+class_skill_number,
+				rpc("set_pu_id_cooldown_for_skill_id",Globals.self_pu_id,2+class_skill_number,
 				Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Cooldown"])
 				succesfully=true#idk
 				change_weapon(weapon_name_to_change_to,class_skill_number)
@@ -2508,37 +2558,37 @@ func _on_use_skill_button_pressed():
 				#Globals.self_servant_node.call("Class Skill "+str(class_skill_number))
 				succesfully=await use_skill(Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Effect"])
 				if succesfully:
-					rpc("set_peer_id_cooldown_for_skill_id",Globals.self_peer_id,2+class_skill_number,
+					rpc("set_pu_id_cooldown_for_skill_id",Globals.self_pu_id,2+class_skill_number,
 					Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["Cooldown"])
 	if skill_consume_action and succesfully:
 		field.reduce_one_action_point()
 	if succesfully:
-		rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"skill_used_this_turn",1)
-		rpc("change_game_stat_for_peer_id",Globals.self_peer_id,"total_skill_used",1)
+		rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"skill_used_this_turn",1)
+		rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"total_skill_used",1)
 	$"../GUI/actions_buttons/Skill".disabled=false
 	field.skill_info_show_button.disabled=false
 	pass # Replace with function body.
 
-func peer_id_has_buff(peer_id,buff_name):
-	for buff in peer_id_player_info[peer_id]["servant_node"].buffs:
+func pu_id_has_buff(pu_id:String,buff_name:String):
+	for buff in Globals.pu_id_player_info[pu_id]["servant_node"].buffs:
 		if buff["Name"].to_lower()==buff_name.to_lower():
 			return buff
 	return false
 
 @rpc("any_peer","call_local","reliable")
-func change_peer_id_servant_stat(peer_id,stat,value)->void:
+func change_pu_id_servant_stat(pu_id:String,stat:String,value:int)->void:
 	match stat:
 		"attack_range":
-			peer_id_player_info[peer_id]["servant_node"].attack_range=value
+			Globals.pu_id_player_info[pu_id]["servant_node"].attack_range=value
 		"attack_power":
-			peer_id_player_info[peer_id]["servant_node"].attack_power=value
+			Globals.pu_id_player_info[pu_id]["servant_node"].attack_power=value
 
 @rpc("any_peer","call_local","reliable")
-func change_peer_id_sprite(peer_id:int,image_path:String)->void:
+func change_pu_id_sprite(pu_id:String,image_path:String)->void:
 	var img = Image.new()
 	img.load(image_path)
 	#player_textureRect.texture=ImageTexture.create_from_image(img)
-	peer_id_player_info[peer_id]["servant_node"].get_child(0).texture=ImageTexture.create_from_image(img)
+	Globals.pu_id_player_info[pu_id]["servant_node"].get_child(0).texture=ImageTexture.create_from_image(img)
 
 func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	var weapons_array=Globals.self_servant_node.skills["Class Skill "+str(class_skill_number)]["weapons"]
@@ -2547,7 +2597,7 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		if typeof(buff_array_to_remove)!=TYPE_ARRAY:
 			buff_array_to_remove=[buff_array_to_remove]
 		for buff in buff_array_to_remove:
-			rpc("remove_buff",[Globals.self_peer_id],buff["Name"],true)
+			rpc("remove_buff",[Globals.self_pu_id],buff["Name"],true)
 	print("weapon_name_to_change_to="+str(weapon_name_to_change_to))
 	
 	Globals.self_servant_node.current_weapon=weapon_name_to_change_to
@@ -2557,18 +2607,18 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	else:
 		folderr="user"
 	
-	rpc("change_peer_id_sprite",Globals.self_peer_id,
-	str(folderr)+"://servants/"+peer_id_player_info[Globals.self_peer_id]["servant_name"]+
+	rpc("change_pu_id_sprite",Globals.self_pu_id,
+	str(folderr)+"://servants/"+Globals.pu_id_player_info[Globals.self_pu_id]["servant_name"]+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
-	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
-	rpc("change_peer_id_servant_stat",Globals.self_peer_id,"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
+	rpc("change_pu_id_servant_stat",Globals.self_pu_id,"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
+	rpc("change_pu_id_servant_stat",Globals.self_pu_id,"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
 	
 	if weapons_array[weapon_name_to_change_to]["Is One Hit Per Turn"]:
-		rpc("remove_buff",[Globals.self_peer_id],"Maximum Hits Per Turn",true,true)
-		rpc("add_buff",[Globals.self_peer_id],{"Name":"Maximum Hits Per Turn","Duration":"Passive", "Power":1})
+		rpc("remove_buff",[Globals.self_pu_id],"Maximum Hits Per Turn",true,true)
+		rpc("add_buff",[Globals.self_pu_id],{"Name":"Maximum Hits Per Turn","Duration":"Passive", "Power":1})
 	else:
-		rpc("remove_buff",[Globals.self_peer_id],"Maximum Hits Per Turn",true,true)
+		rpc("remove_buff",[Globals.self_pu_id],"Maximum Hits Per Turn",true,true)
 	
 	
 	if weapons_array[weapon_name_to_change_to].has("Buff"):
@@ -2576,7 +2626,7 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		if typeof(buff_array_to_add)!=TYPE_ARRAY:
 			buff_array_to_add=[buff_array_to_add]
 		for buff in buff_array_to_add:
-			rpc("add_buff",[Globals.self_peer_id],buff)
+			rpc("add_buff",[Globals.self_pu_id],buff)
 
 
 
@@ -2584,7 +2634,7 @@ func _on_items_pressed()->void:
 	#{ "Heal Potion": { "min_cost": { "Type": "Free", "value": 0 }, "Type": "potion creating", "Effect": [{ "Name": "Heal", "Power": 5 }], "range": 2, "description": "(Зелье лечения: Восполняет 5 очков здоровья, а также снимает все дебаффы себе или другому слуге в радиусе двух клеток)" } }
 	
 	
-	var items_array=peer_id_to_items_owned[Globals.self_peer_id].duplicate(true)
+	var items_array=pu_id_to_items_owned[Globals.self_pu_id].duplicate(true)
 	
 	print("\n\nitems_array="+str(items_array))
 	#var items_descriptions={}
@@ -2631,20 +2681,20 @@ func set_random_command_spell_set()->void:
 	pass
 
 @rpc("any_peer","call_remote","reliable")
-func reduce_command_spell_on_peer_id(peer_id:int,amount:int=1)->void:
+func reduce_command_spell_on_pu_id(pu_id:String,amount:int=1)->void:
 	
-	print("peer_id_to_command_spells_int["+str(peer_id)+"]="+str(peer_id_to_command_spells_int[peer_id]))
-	#trigger_buffs_on(peer_id,"Command Spell Decreased")
+	print("pu_id_to_command_spells_int["+str(pu_id)+"]="+str(pu_id_to_command_spells_int[pu_id]))
+	#trigger_buffs_on(pu_id,"Command Spell Decreased")
 
-	peer_id_to_command_spells_int[peer_id]-=amount
+	pu_id_to_command_spells_int[pu_id]-=amount
 
-	if peer_id==Globals.self_peer_id:
+	if pu_id==Globals.self_pu_id:
 		var add
 		if OS.has_feature("editor"):
 			add="res"
 		else:
 			add="user"
-		var iin=peer_id_to_command_spells_int[peer_id]
+		var iin=pu_id_to_command_spells_int[pu_id]
 		if iin>3:
 			iin=3
 		if iin!=0:
@@ -2653,12 +2703,12 @@ func reduce_command_spell_on_peer_id(peer_id:int,amount:int=1)->void:
 			field.command_spells_button.texture_normal=load(str("res://empty.png"))
 
 @rpc("any_peer","reliable","call_local")
-func flip_peer_id_sprite(peer_id:int)->void:
-	var ff =peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h
-	peer_id_player_info[peer_id]["servant_node"].get_child(0).flip_h = !ff
+func flip_pu_id_sprite(pu_id:String)->void:
+	var ff =Globals.pu_id_player_info[pu_id]["servant_node"].get_child(0).flip_h
+	Globals.pu_id_player_info[pu_id]["servant_node"].get_child(0).flip_h = !ff
 	pass
 
 func _on_flip_sprite_button_pressed():
-	rpc("flip_peer_id_sprite",Globals.self_peer_id)
+	rpc("flip_pu_id_sprite",Globals.self_pu_id)
 	pass # Replace with function body.
 

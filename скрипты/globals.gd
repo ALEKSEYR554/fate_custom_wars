@@ -1,13 +1,115 @@
 extends Node
+#self peer unique id
 
-var host_or_user:String="host"
+var menu_left:bool=false
+
+var self_pu_id: String = ""
+
+var self_nickname: String = "Player"
+
+const PUID_SAVE_PATH = "user://persistent_game_id.dat"
+
+var is_game_started:bool=false
+
+# Информация обо всех игроках. Ключ: persistent_id
+# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node": Node, "servant_node_name":str, "disconnected_more_than_timeout":bool}
+var pu_id_player_info: Dictionary = {}
+
+var peer_to_persistent_id: Dictionary = {}
+
+var peer_id_to_kletka_number={}
+
+
+
+var DEFAULT_PORT = 9999
+const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
+const MAX_RECONNECT_ATTEMPTS: int = 5
+const PLAYER_DISCONNECT_TIMEOUT: float = 30.0
+
+const UUID = preload("res://скрипты/uuid/uuid.gd")
+signal player_list_changed # Сигнал для UI и других систем о том, что список игроков обновился
+signal connection_status_changed(is_connected: bool) # Для клиента, чтобы знать статус соединения
+
+
+signal someone_status_changed(puid:String,disconnected:bool,full_timeout:bool)
+
+signal reconnect_requested
+
+signal disconnection_request
+
+func get_connected_persistent_ids() -> Array:
+	var connected_puids: Array = []
+	for puid in pu_id_player_info:
+		if pu_id_player_info[puid].is_connected:
+			connected_puids.append(puid)
+	return connected_puids
+
+func get_self_peer_id() -> int:
+	if self_pu_id in pu_id_player_info and pu_id_player_info[self_pu_id].is_connected:
+		return pu_id_player_info[self_pu_id].current_peer_id
+	return multiplayer.get_unique_id()
+
+func _ready():
+	self_pu_id=self_pu_id
+	someone_status_changed.connect(status_changed)
+	_load_or_generate_persistent_id()
+	print("My Persistent ID (PUID): ", self_pu_id)
+
+func status_changed(puid:String,status:bool):
+	pass
+	var string_of_timed_out=""
+
+	for pu_id in pu_id_player_info:
+		var connected_status=pu_id_player_info[pu_id]["is_connected"]
+		var time_out=pu_id_player_info[pu_id]["disconnected_more_than_timeout"]
+		if not connected_status:
+			if not time_out:
+				string_of_timed_out+=str("\nwaiting for ", pu_id_player_info[pu_id]["nickname"])
+	var field_node:Node=get_tree().get_root().find_child("game_field")
+	if field_node!=null:
+		field_node.call_deferred("disconnect_alert_show",puid,status,string_of_timed_out)
+		field_node.call_deferred("set_pause",not status)
+
+
+func _generate_new_puid() -> String:
+	return UUID.v4() # Для Godot 4
+
+
+func _load_or_generate_persistent_id():
+	print("_load_or_generate_persistent_id\n\n")
+	var file = FileAccess.open(PUID_SAVE_PATH, FileAccess.READ)
+
+	print(file)
+	if file:
+		self_pu_id = file.get_line().strip_edges()
+		print("self_pu_id=",self_pu_id)
+		file.close()
+		if not self_pu_id.is_empty() and not OS.has_feature("editor"):
+			print("Loaded Persistent ID: ", self_pu_id)
+			return
+
+	# Если файл не существует, пуст, или ID некорректен, генерируем новый
+	self_pu_id = _generate_new_puid()
+	file = FileAccess.open(PUID_SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_line(self_pu_id)
+		file.close()
+		print("Generated and saved new Persistent ID: ", self_pu_id)
+	else:
+		push_error("Failed to save Persistent ID to: " + PUID_SAVE_PATH)
+
+		if self_pu_id.is_empty(): # Если генерация выше тоже дала пустую строку
+			self_pu_id = "temp_puid_" + str(Time.get_ticks_msec())
+
+
+var host_or_user:String="user"
 var connected_players:Array=[]#array of peer_id s
 var self_servant_node:Node2D
 var self_peer_id:int
 var self_field_color:Color
 var nickname:String
 var debug_mode:bool=false
-var peer_id_to_nickname:Dictionary={}
+var pu_id_to_nickname:Dictionary={}
 
 var user_folder="user://"
 # Called when the node enters the scene tree for the first time.

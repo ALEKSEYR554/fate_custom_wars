@@ -51,4 +51,4 @@ theme_override_font_sizes/font_size = 50
 text = "Nick"
 placeholder_text = "YOU NICKNAME"
 
-[connection signal="button_up" from="connect" to="." method="_on_connect_button_up"]
+[connection signal="button_up" from="connect" to="." method="_on_connect_button_button_up"]

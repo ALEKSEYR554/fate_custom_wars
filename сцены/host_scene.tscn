@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://bpwt6601esmp2"]
+[gd_scene load_steps=4 format=3 uid="uid://bpwt6601esmp2"]
 
 [ext_resource type="Script" path="res://скрипты/host_script.gd" id="1_1yc4k"]
+[ext_resource type="Texture2D" uid="uid://dwhs4ux835ftn" path="res://datalost.png" id="2_607de"]
+[ext_resource type="Texture2D" uid="uid://bqouo5se1qgdc" path="res://datafound.png" id="2_uxx1x"]
 
 [node name="Host_scene" type="Control"]
 layout_mode = 3
@@ -12,21 +14,31 @@ grow_vertical = 2
 script = ExtResource("1_1yc4k")
 
 [node name="Button" type="Button" parent="."]
-layout_mode = 0
-offset_left = 492.0
-offset_top = 278.0
-offset_right = 632.0
-offset_bottom = 355.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = -38.5
+offset_right = 70.0
+offset_bottom = 38.5
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_font_sizes/font_size = 50
 text = "HOST"
 
 [node name="SpinBox" type="SpinBox" parent="."]
 layout_mode = 0
 offset_left = 854.0
-offset_top = 154.0
+offset_top = 320.0
 offset_right = 937.063
-offset_bottom = 185.0
-max_value = 4.0
+offset_bottom = 351.0
+min_value = 2.0
+max_value = 6.0
+value = 2.0
+allow_greater = true
 
 [node name="Label" type="Label" parent="SpinBox"]
 layout_mode = 0
@@ -39,21 +51,133 @@ text = "Number
 horizontal_alignment = 1
 
 [node name="game_start_button" type="Button" parent="."]
-layout_mode = 0
-offset_left = 452.0
-offset_top = 394.0
-offset_right = 679.0
-offset_bottom = 481.0
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.38916
+anchor_top = 0.580078
+anchor_right = 0.61084
+anchor_bottom = 0.693359
+grow_horizontal = 2
+grow_vertical = 2
 text = "START"
+metadata/_edit_use_anchors_ = true
 
 [node name="nickname" type="LineEdit" parent="."]
-offset_left = 47.0
-offset_top = 494.0
-offset_right = 452.0
-offset_bottom = 614.0
+layout_mode = 0
+anchor_left = 0.0224609
+anchor_top = 0.742188
+anchor_right = 0.417969
+anchor_bottom = 0.898438
 theme_override_font_sizes/font_size = 50
 text = "Host"
 placeholder_text = "YOU NICKNAME"
+metadata/_edit_use_anchors_ = true
 
-[connection signal="button_up" from="Button" to="." method="_on_button_button_up"]
+[node name="players_container" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -460.0
+offset_right = 460.0
+offset_bottom = 128.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="player_visual_container" type="VBoxContainer" parent="players_container"]
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container"]
+layout_mode = 2
+texture = ExtResource("2_uxx1x")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "It is you"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="player_visual_container2" type="VBoxContainer" parent="players_container"]
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container2"]
+layout_mode = 2
+texture = ExtResource("2_607de")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "None"
+vertical_alignment = 1
+clip_text = true
+
+[node name="player_visual_container3" type="VBoxContainer" parent="players_container"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container3"]
+layout_mode = 2
+texture = ExtResource("2_607de")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container3"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "It is you"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="player_visual_container4" type="VBoxContainer" parent="players_container"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container4"]
+layout_mode = 2
+texture = ExtResource("2_607de")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container4"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "It is you"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="player_visual_container5" type="VBoxContainer" parent="players_container"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container5"]
+layout_mode = 2
+texture = ExtResource("2_607de")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container5"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "It is you"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="player_visual_container6" type="VBoxContainer" parent="players_container"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="players_container/player_visual_container6"]
+layout_mode = 2
+texture = ExtResource("2_607de")
+
+[node name="Label" type="Label" parent="players_container/player_visual_container6"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "It is you"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="button_up" from="Button" to="." method="_on_create_server_button_button_up"]
+[connection signal="value_changed" from="SpinBox" to="." method="_on_spin_box_value_changed"]
 [connection signal="button_up" from="game_start_button" to="." method="_on_game_start_button_button_up"]
