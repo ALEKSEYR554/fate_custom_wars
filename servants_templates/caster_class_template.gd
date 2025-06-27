@@ -119,7 +119,7 @@ var skills={
 	{"Buffs":[
 		{"Name":"Field Creation",
 		"Amount":5,"Config":
-			{"Owner":Globals.self_peer_id,
+			{
 				"Np Up Every N Turn":1,
 				"Ignore Magical Defence":true,
 				"Additional":null}
