@@ -128,29 +128,39 @@ func load_servant(pu_id:String):
 		print("\n\nservant is not found while loading=",pu_id," Globals.pu_id_player_info=",Globals.pu_id_player_info)
 		return
 	
+	var img=null
+
+	for servant in Globals.characters:
+		if servant["Name"]==servant_name:
+			img=servant["image"]
+
+	if img==null:
+		push_error("No sprite Found while loading servant")
+		return
+
 	#var dir = DirAccess.open(folderr+"://servants/")
 	#for i in dir.get_directories():#getting custom characters
 	var player:Node2D=Node2D.new()
 	var player_textureRect:TextureRect = TextureRect.new()
 	var effect_layer:TextureRect = TextureRect.new()
 	var buff_name_label:Label= Label.new()
-	var servant_folder_name:String=folderr+"servants/"+str(servant_name)
+	#var servant_folder_name:String=folderr+"servants/"+str(servant_name)
 	
 	player.set_script(load(Globals.user_folder+"servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
-	print("servant_folder_name=",servant_folder_name)
-	print("folder content=",DirAccess.open(servant_folder_name).get_files())
-	print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
-	print('img.load(servant_folder_name+"/sprite.png")=',load(servant_folder_name+"/sprite.png"))
+	#print("servant_folder_name=",servant_folder_name)
+	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
+	#print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
+	#print('img.load(servant_folder_name+"/sprite.png")=',load(servant_folder_name+"/sprite.png"))
 	
-	var img = Image.new()
-	var er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
+	#var img = Image.new()
+	#var er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
 	
-	if er!=OK:
-		er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
+	#if er!=OK:
+	#	er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
 		
-	if er!=OK:
-		push_error("No sprite Found while loading servant")
-		return
+	#if er!=OK:
+	#	push_error("No sprite Found while loading servant")
+	#	return
 		
 	player_textureRect.texture=ImageTexture.create_from_image(img)
 	effect_layer.texture=load("res://white.png")
