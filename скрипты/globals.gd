@@ -3,6 +3,8 @@ extends Node
 
 var menu_left:bool=false
 
+const MAX_NICKNAME_SIZE:int=15
+
 var self_pu_id: String = ""
 
 var self_nickname: String = "Player"
@@ -14,6 +16,9 @@ var is_game_started:bool=false
 # Информация обо всех игроках. Ключ: persistent_id
 # Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node": Node, "servant_node_name":str, "disconnected_more_than_timeout":bool}
 var pu_id_player_info: Dictionary = {}
+
+#pu_id:{"allies":[pu_id],"neutral":[pu_id]} enemies are calculated separetly
+var pu_id_to_allies: Dictionary = {}
 
 var peer_to_persistent_id: Dictionary = {}
 
@@ -58,6 +63,8 @@ func _ready():
 		#use_folder=OS.get_executable_path().get_base_dir()
 
 		Globals.user_folder=OS.get_executable_path().get_base_dir()
+	if OS.has_feature("editor"):
+		Globals.user_folder="user:/"
 	preload_all_servant_sprites()
 
 

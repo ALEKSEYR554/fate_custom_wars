@@ -71,6 +71,7 @@ anchor_bottom = 0.898438
 theme_override_font_sizes/font_size = 50
 text = "Host"
 placeholder_text = "YOU NICKNAME"
+max_length = 20
 metadata/_edit_use_anchors_ = true
 
 [node name="players_container" type="HBoxContainer" parent="."]

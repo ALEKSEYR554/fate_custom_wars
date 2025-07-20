@@ -1,0 +1,116 @@
+[gd_scene load_steps=2 format=3 uid="uid://0gsi7h6f73xr"]
+
+[sub_resource type="GDScript" id="GDScript_4o6k1"]
+script/source = "@tool
+extends EditorScript
+
+# === ВХОДНЫЕ ДАННЫЕ (остаются прежними) ===
+
+var all_pu_ids: Array = [1, 2, 10, 20, 30, 100, 200, 555]
+
+var partial_pu_id_to_teams: Dictionary = {
+	1: {\"allies\": [2], \"neutral\": [555]},
+	2: {\"allies\": [1], \"neutral\": [555]},
+	10: {\"allies\": [20, 30], \"neutral\": [555]},
+	20: {\"allies\": [10, 30], \"neutral\": [555]},
+	30: {\"allies\": [10, 20], \"neutral\": [555]},
+	100: {\"allies\": [200], \"neutral\": [555]}, # Односторонний союз
+	200: {\"neutral\": [555]},
+	555: {\"neutral\": [1, 2, 10, 20, 30, 100, 200]}
+}
+
+func _run() -> void:
+	print(\"--- ИСХОДНЫЕ ДАННЫЕ ---\")
+	print(\"Все игроки: \", all_pu_ids)
+	print(\"Частичные связи (с нейтральными списками): \", partial_pu_id_to_teams)
+	
+	print(\"\\n--- ЭТАП 1: Генерация полного словаря отношений ---\")
+	var full_data = get_full_relations()
+	print(\"Сгенерированный полный словарь:\")
+	for player_id in full_data:
+		print(\"  Игрок {id}: {data}\".format({\"id\": player_id, \"data\": full_data[player_id]}))
+	
+	print(\"\\n--- ЭТАП 2: Поиск команд (включая одиночек) ---\")
+	var found_teams = get_teams()
+	print(\"Найденные команды:\")
+	print(found_teams)
+	# Ожидаемый результат (порядок может отличаться): [[1, 2], [10, 20, 30], [100], [200], [555]]
+
+
+# === ЭТАП 1: ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ ПОЛНОГО СЛОВАРЯ (не изменилась) ===
+
+func get_full_relations() -> Dictionary:
+	# (Код этой функции остался прежним)
+	var partial_relations=Globals.pu_id_to_allies
+	var all_ids=Globals.get_connected_persistent_ids()
+	var full_relations: Dictionary = {}
+	for player_id in all_ids:
+		var player_allies: Array = []
+		var player_neutrals: Array = []
+		if partial_relations.has(player_id):
+			var data = partial_relations[player_id]
+			if data.has(\"allies\"): player_allies = data[\"allies\"]
+			if data.has(\"neutral\"): player_neutrals = data[\"neutral\"]
+		var player_enemies: Array = []
+		for other_player_id in all_ids:
+			if other_player_id == player_id: continue
+			if player_allies.has(other_player_id): continue
+			if player_neutrals.has(other_player_id): continue
+			player_enemies.push_back(other_player_id)
+		full_relations[player_id] = {
+			\"allies\": player_allies,
+			\"enemies\": player_enemies,
+			\"neutral\": player_neutrals
+		}
+	return full_relations
+
+
+# === ЭТАП 2: ФУНКЦИЯ ДЛЯ ПОИСКА КОМАНД (ИЗМЕНЕННАЯ) ===
+
+func get_teams() -> Array:
+	\"\"\"
+	Находит команды игроков, включая команды из одного человека (одиночек).
+	\"\"\"
+	var data=get_full_relations()
+	var teams: Array = []
+	var processed_players: Dictionary = {}
+	
+	for player_id in data:
+		if processed_players.has(player_id):
+			continue
+		
+		var current_team: Array = []
+		var queue: Array = [player_id]
+		var visited_in_component: Dictionary = { player_id: true }
+		
+		while not queue.is_empty():
+			var current_player = queue.pop_front()
+			current_team.push_back(current_player)
+			
+			if not data.has(current_player) or not data[current_player].has(\"allies\"):
+				continue
+			
+			var player_allies: Array = data[current_player][\"allies\"]
+			
+			for potential_ally in player_allies:
+				if visited_in_component.has(potential_ally):
+					continue
+				
+				var is_mutual = false
+				if data.has(potential_ally):
+					var ally_data = data[potential_ally]
+					if ally_data.has(\"allies\") and ally_data[\"allies\"].has(current_player):
+						is_mutual = true
+				
+				if is_mutual:
+					queue.push_back(potential_ally)
+					visited_in_component[potential_ally] = true
+				
+		for member_id in current_team:
+			processed_players[member_id] = true
+		teams.push_back(current_team)
+	return teams
+"
+
+[node name="Node2D" type="Node2D"]
+script = SubResource("GDScript_4o6k1")

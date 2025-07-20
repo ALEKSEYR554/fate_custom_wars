@@ -23,6 +23,7 @@ var player_disconnect_timers: Dictionary = {} # puid: Timer
 var container_slots: Array[Control] = [] # Ссылки на контролы слотов игроков в UI
 
 func _ready():
+	nickname_edit.max_length=Globals.MAX_NICKNAME_SIZE
 	Globals.host_or_user = "host" # Устанавливаем роль сразу
 	
 	# Инициализируем UI слоты для игроков
@@ -106,7 +107,7 @@ func _on_peer_disconnected(peer_id: int):
 			Globals.pu_id_player_info[puid].is_connected = false
 			Globals.pu_id_player_info[puid].current_peer_id = 0 
 			# Удаляем старую связь peer_id -> puid
-			Globals.peer_to_persistent_id.erase(peer_id) 
+			#Globals.peer_to_persistent_id.erase(peer_id) 
 			Globals.player_list_changed.emit()
 			#rpc("status_of_peer_id_changed",puid,false)
 			# Запускаем таймер на полное удаление, если не переподключится
@@ -163,6 +164,7 @@ func register_player(puid: String, nickname: String):
 		print("New player %s (PUID: %s, PeerID: %s) registered." % [nickname, puid, sender_peer_id])
 
 	Globals.peer_to_persistent_id[sender_peer_id] = puid
+	rpc("sync_peer_ids",Globals.peer_to_persistent_id)
 	
 	# Отправляем всем обновленный список игроков
 	#connect_scene.rpc("sync_full_player_list", Globals.pu_id_player_info.duplicate(true))
@@ -243,7 +245,9 @@ func register_player(puid: String, nickname: String):
 		#not
 		pass
 
-
+@rpc("any_peer", "call_local", "reliable") 
+func sync_peer_ids(peer_ids=Globals.peer_to_persistent_id):
+	Globals.peer_to_persistent_id=peer_ids
 	
 
 

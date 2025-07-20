@@ -15,6 +15,7 @@ var is_intentionally_disconnecting: bool = false # Флаг для выхода 
 var reconnect_timer: Timer
 
 func _ready():
+	nickname_edit.max_length=Globals.MAX_NICKNAME_SIZE
 	Globals.host_or_user = "user"
 
 	multiplayer.connected_to_server.connect(_on_connected_to_server)

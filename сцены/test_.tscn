@@ -1,0 +1,163 @@
+[gd_scene load_steps=2 format=3 uid="uid://xywysvvug1ut"]
+
+[sub_resource type="GDScript" id="GDScript_4o6k1"]
+script/source = "@tool
+extends EditorScript
+
+
+# === ВХОДНЫЕ ДАННЫЕ (остаются прежними) ===
+
+var all_pu_ids: Array = [1, 2, 10, 20, 30, 100, 200, 555]
+
+var partial_pu_id_to_teams: Dictionary = {
+	1: {\"allies\": [2], \"neutral\": [555]},
+	2: {\"allies\": [1], \"neutral\": [555]},
+	10: {\"allies\": [20, 30], \"neutral\": [555]},
+	20: {\"allies\": [10, 30], \"neutral\": [555]},
+	30: {\"allies\": [10, 20], \"neutral\": [555]},
+	100: {\"allies\": [200], \"neutral\": [555]}, # Игрок 100 считает 200 союзником...
+	200: {\"neutral\": [555]},                 # ...а 200 не считает 100 союзником.
+	555: {\"neutral\": [1, 2, 10, 20, 30, 100, 200]}
+}
+
+func _run() -> void:
+	# --- ЭТАП 1: Генерация полного словаря ---
+	var full_data = generate_full_relations(partial_pu_id_to_teams, all_pu_ids)
+	print(\"--- Сгенерированный полный словарь ---\")
+	for player_id in full_data:
+		print(\"  Игрок {id}: {data}\".format({\"id\": player_id, \"data\": full_data[player_id]}))
+	
+	# --- ЭТАП 2: Поиск команд ---
+	var found_teams = find_teams(full_data)
+	print(\"\\n--- Найденные команды (включая одиночек) ---\")
+	print(found_teams)
+	
+	# --- НОВЫЙ ЭТАП: Демонстрация поиска односторонних союзов ---
+	print(\"\\n--- Поиск односторонних союзов ---\")
+	
+	var player_to_check_1 = 100
+	var one_sided_allies_1 = find_one_sided_alliances(player_to_check_1, full_data)
+	print(\"Игрок {id} считает союзниками, но не получает ответа от: {list}\".format({
+		\"id\": player_to_check_1, 
+		\"list\": one_sided_allies_1
+	})) # Ожидаемый результат: [200]
+	
+	var player_to_check_2 = 1
+	var one_sided_allies_2 = find_one_sided_alliances(player_to_check_2, full_data)
+	print(\"Игрок {id} считает союзниками, но не получает ответа от: {list}\".format({
+		\"id\": player_to_check_2,
+		\"list\": one_sided_allies_2
+	})) # Ожидаемый результат: [] (пустой массив)
+	
+	var player_to_check_3 = 555
+	var one_sided_allies_3 = find_one_sided_alliances(player_to_check_3, full_data)
+	print(\"Игрок {id} считает союзниками, но не получает ответа от: {list}\".format({
+		\"id\": player_to_check_3,
+		\"list\": one_sided_allies_3
+	})) # Ожидаемый результат: [] (пустой массив)
+
+
+# === НОВАЯ ФУНКЦИЯ ===
+
+func find_one_sided_alliances(player_id, all_relations: Dictionary) -> Array:
+	\"\"\"
+	Находит всех игроков, которых `player_id` считает союзниками,
+	но которые не считают его союзником в ответ.
+
+	Args:
+		player_id: ID игрока, для которого выполняется проверка.
+		all_relations: Полный словарь всех отношений (выход функции generate_full_relations).
+
+	Returns:
+		Массив ID игроков, состоящих в одностороннем союзе с `player_id`.
+	\"\"\"
+	var one_sided_list: Array = []
+
+	# 1. Проверяем, есть ли у нашего игрока вообще данные и список союзников.
+	if not all_relations.has(player_id) or not all_relations[player_id].has(\"allies\"):
+		return one_sided_list # Возвращаем пустой список, если нет данных.
+
+	# 2. Получаем список тех, кого НАШ игрок считает союзниками.
+	var my_declared_allies: Array = all_relations[player_id][\"allies\"]
+
+	# 3. Перебираем каждого из этого списка.
+	for potential_ally_id in my_declared_allies:
+		# 4. Проверяем обратную связь.
+		var is_mutual = false
+		
+		# Проверяем, есть ли у \"потенциального союзника\" вообще запись...
+		if all_relations.has(potential_ally_id):
+			var their_relations = all_relations[potential_ally_id]
+			# ...и есть ли в его списке союзников наш `player_id`.
+			if their_relations.has(\"allies\") and their_relations[\"allies\"].has(player_id):
+				is_mutual = true
+		
+		# 5. Если после всех проверок союз не оказался взаимным...
+		if not is_mutual:
+			# ...то это односторонний союз. Добавляем в наш результат.
+			one_sided_list.push_back(potential_ally_id)
+			
+	return one_sided_list
+
+
+# --- Остальные функции (generate_full_relations и find_teams) без изменений ---
+
+func generate_full_relations(partial_relations: Dictionary, all_ids: Array) -> Dictionary:
+	# ... код без изменений ...
+	var full_relations: Dictionary = {}
+	for player_id in all_ids:
+		var player_allies: Array = []
+		var player_neutrals: Array = []
+		if partial_relations.has(player_id):
+			var data = partial_relations[player_id]
+			if data.has(\"allies\"): player_allies = data[\"allies\"]
+			if data.has(\"neutral\"): player_neutrals = data[\"neutral\"]
+		var player_enemies: Array = []
+		for other_player_id in all_ids:
+			if other_player_id == player_id: continue
+			if player_allies.has(other_player_id): continue
+			if player_neutrals.has(other_player_id): continue
+			player_enemies.push_back(other_player_id)
+		full_relations[player_id] = {
+			\"allies\": player_allies,
+			\"enemies\": player_enemies,
+			\"neutral\": player_neutrals
+		}
+	return full_relations
+
+func find_teams(data: Dictionary) -> Array:
+	# ... код без изменений ...
+	var teams: Array = []
+	var processed_players: Dictionary = {}
+	for player_id in data:
+		if processed_players.has(player_id):
+			continue
+		var current_team: Array = []
+		var queue: Array = [player_id]
+		var visited_in_component: Dictionary = { player_id: true }
+		while not queue.is_empty():
+			var current_player = queue.pop_front()
+			current_team.push_back(current_player)
+			if not data.has(current_player) or not data[current_player].has(\"allies\"):
+				continue
+			var player_allies: Array = data[current_player][\"allies\"]
+			for potential_ally in player_allies:
+				if visited_in_component.has(potential_ally):
+					continue
+				var is_mutual = false
+				if data.has(potential_ally):
+					var ally_data = data[potential_ally]
+					if ally_data.has(\"allies\") and ally_data[\"allies\"].has(current_player):
+						is_mutual = true
+				if is_mutual:
+					queue.push_back(potential_ally)
+					visited_in_component[potential_ally] = true
+		for member_id in current_team:
+			processed_players[member_id] = true
+		current_team.sort()
+		teams.push_back(current_team)
+	return teams
+"
+
+[node name="Node2D" type="Node2D"]
+script = SubResource("GDScript_4o6k1")

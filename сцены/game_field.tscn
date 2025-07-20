@@ -382,10 +382,14 @@ offset_right = 68.0
 offset_bottom = 336.0
 metadata/_edit_lock_ = true
 
+[node name="teams_button" type="Button" parent="GUI/players_info_buttons_container"]
+layout_mode = 2
+text = "Teams"
+
 [node name="Label" type="Label" parent="GUI/players_info_buttons_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
-text = "Players"
+text = "Players:"
 
 [node name="type_of_damage_choose_buttons_box" type="HBoxContainer" parent="GUI"]
 visible = false
@@ -728,32 +732,6 @@ text = "Turn: "
 metadata/_edit_use_anchors_ = true
 metadata/_edit_lock_ = true
 
-[node name="info_label_panel" type="Panel" parent="GUI"]
-visible = false
-anchors_preset = -1
-anchor_left = 0.253472
-anchor_top = 0.158951
-anchor_right = 0.715278
-anchor_bottom = 0.450617
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-metadata/_edit_use_anchors_ = true
-
-[node name="info_label" type="Label" parent="GUI/info_label_panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 30
-text = "Placeholder info table"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
-
 [node name="disconnect_alert_panel" type="Panel" parent="GUI"]
 visible = false
 anchors_preset = -1
@@ -780,42 +758,6 @@ awaiting reconnection"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
-
-[node name="info_ok_button" type="Button" parent="GUI"]
-visible = false
-anchors_preset = -1
-anchor_left = 0.460938
-anchor_top = 0.50463
-anchor_right = 0.517361
-anchor_bottom = 0.601852
-offset_bottom = -3.05176e-05
-theme_override_font_sizes/font_size = 40
-text = "OK"
-metadata/_edit_use_anchors_ = true
-
-[node name="info_but_choose_1" type="Button" parent="GUI"]
-visible = false
-anchors_preset = -1
-anchor_left = 0.273438
-anchor_top = 0.516975
-anchor_right = 0.471354
-anchor_bottom = 0.614198
-offset_top = 3.05176e-05
-theme_override_font_sizes/font_size = 30
-text = "manipulate"
-metadata/_edit_use_anchors_ = true
-
-[node name="info_but_choose_2" type="Button" parent="GUI"]
-visible = false
-anchors_preset = -1
-anchor_left = 0.547743
-anchor_top = 0.516975
-anchor_right = 0.737847
-anchor_bottom = 0.614198
-offset_top = 3.05176e-05
-theme_override_font_sizes/font_size = 30
-text = "Capture"
-metadata/_edit_use_anchors_ = true
 
 [node name="peer_id_label" type="Label" parent="GUI"]
 anchors_preset = -1
@@ -879,6 +821,133 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Settings"
 
+[node name="teams_margin" type="MarginContainer" parent="GUI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 200
+theme_override_constants/margin_top = 100
+theme_override_constants/margin_right = 215
+theme_override_constants/margin_bottom = 100
+
+[node name="teams_panel_container" type="PanelContainer" parent="GUI/teams_margin"]
+layout_mode = 2
+
+[node name="teams_main_hboxcontainer" type="HBoxContainer" parent="GUI/teams_margin/teams_panel_container"]
+layout_mode = 2
+
+[node name="all_teams_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="all_teams_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox"]
+layout_mode = 2
+text = "All teams"
+horizontal_alignment = 1
+
+[node name="your_teams_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="your_teams_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox"]
+layout_mode = 2
+text = "Your teams"
+horizontal_alignment = 1
+
+[node name="teams_options_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="teams_options_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"]
+layout_mode = 2
+text = "Actions"
+horizontal_alignment = 1
+
+[node name="team_actions_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"]
+layout_mode = 2
+
+[node name="Betray_team_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Betray"
+
+[node name="ally_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Ally"
+
+[node name="neutral_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Neutral"
+
+[node name="info_label_panel" type="Panel" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.253472
+anchor_top = 0.158951
+anchor_right = 0.715278
+anchor_bottom = 0.450617
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="info_label" type="Label" parent="GUI/info_label_panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 30
+text = "Placeholder info table"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="info_ok_button" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.460938
+anchor_top = 0.50463
+anchor_right = 0.517361
+anchor_bottom = 0.601852
+offset_right = 7.22284
+offset_bottom = -3.05176e-05
+theme_override_font_sizes/font_size = 40
+text = "OK"
+metadata/_edit_use_anchors_ = true
+
+[node name="info_but_choose_1" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.273438
+anchor_top = 0.516975
+anchor_right = 0.471354
+anchor_bottom = 0.614198
+offset_top = 3.05176e-05
+theme_override_font_sizes/font_size = 30
+text = "manipulate"
+metadata/_edit_use_anchors_ = true
+
+[node name="info_but_choose_2" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.547743
+anchor_top = 0.516975
+anchor_right = 0.737847
+anchor_bottom = 0.614198
+offset_top = 3.05176e-05
+theme_override_font_sizes/font_size = 30
+text = "Capture"
+metadata/_edit_use_anchors_ = true
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
@@ -935,6 +1004,7 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/right_ange_buttons_container/dices_toggle_button" to="." method="_on_dices_toggle_button_pressed"]
 [connection signal="pressed" from="GUI/right_ange_buttons_container/End_turn" to="." method="_on_end_turn_pressed"]
 [connection signal="pressed" from="GUI/character_selection_container/get_selected_character" to="players_handler" method="get_selected_servant"]
+[connection signal="pressed" from="GUI/players_info_buttons_container/teams_button" to="players_handler" method="_on_teams_button_pressed"]
 [connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/regular_damage_button" to="." method="_on_regular_damage_button_pressed"]
 [connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/magical_damage_button" to="." method="_on_magical_damage_button_pressed"]
 [connection signal="mouse_entered" from="GUI/ChatLog_container" to="Camera2D" method="mouse_entered_gui_element"]
@@ -962,9 +1032,12 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/Button" to="players_handler" method="_on_free_phantasm_pressed"]
 [connection signal="pressed" from="GUI/flip_sprite_button" to="players_handler" method="_on_flip_sprite_button_pressed"]
 [connection signal="pressed" from="GUI/buffs_temp_container/refresh_buffs_button" to="." method="_on_refresh_buffs_button_pressed"]
-[connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="pressed" from="GUI/add_image_button" to="uploaded_images_layer" method="_on_add_image_button_pressed"]
 [connection signal="pressed" from="GUI/menu_vbox_container/disconnect_Button" to="." method="_on_disconnect_button_pressed"]
 [connection signal="pressed" from="GUI/menu_vbox_container/reconnect_button" to="." method="_on_reconnect_button_pressed"]
 [connection signal="pressed" from="GUI/menu_vbox_container/settings_button" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/Betray_team_button" to="players_handler" method="_on_betray_team_button_pressed"]
+[connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/ally_button" to="players_handler" method="_on_ally_button_pressed"]
+[connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/neutral_button" to="players_handler" method="_on_neutral_button_pressed"]
+[connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
