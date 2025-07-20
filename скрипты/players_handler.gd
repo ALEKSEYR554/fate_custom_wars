@@ -34,6 +34,23 @@ extends Node2D
 @onready var use_custom_label:Label = $"../GUI/use_custom_but_label_container/use_custom_label"
 @onready var use_custom_button:Button = $"../GUI/use_custom_but_label_container/use_custom_button"
 @onready var current_players_ready_label:Label = $"../GUI/character_selection_container/Current_players_ready"
+
+
+@onready var teams_margin = $"../GUI/teams_margin"
+@onready var teams_panel_container = $"../GUI/teams_margin/teams_panel_container"
+@onready var teams_main_hboxcontainer = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"
+@onready var all_teams_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox"
+@onready var all_teams_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox/all_teams_label"
+@onready var your_teams_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox"
+@onready var your_teams_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox/your_teams_label"
+@onready var teams_options_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"
+@onready var teams_options_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/teams_options_label"
+@onready var team_actions_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"
+@onready var betray_team_button = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/Betray_team_button"
+@onready var ally_button = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/ally_button"
+
+
+
 #endregion
 
 #region Usable Variables
@@ -41,6 +58,10 @@ var custom_id_to_skill:Dictionary={}
 var turns_order_by_pu_id:Array=[]
 
 var teams_by_pu_id:Array=[]
+
+
+# team_name=>[pu_id,pu_id]
+#var teams:Dictionary={}
 
 var turns_counter:int=1
 var current_player_pu_id_turn:String
@@ -96,6 +117,11 @@ const DAMAGE_TYPE= {PHYSICAL="Physical", MAGICAL="Magical", PHANTASM="Phantasm"}
 const buff_ignoring=["Ignore Defence","Ignore DEF Buffs","Ignore Invincible","Sure Hit","Ignore Evade"]
 #endregion
 
+
+const TEAM_HOLDER = preload("res://сцены/team_holder.tscn")
+
+
+
 func fuck_you():
 	print("fuck you")
 
@@ -138,6 +164,8 @@ func load_servant(pu_id:String):
 	var buff_name_label:Label= Label.new()
 	#var servant_folder_name:String=folderr+"servants/"+str(servant_name)
 	
+
+	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	#print("servant_folder_name=",servant_folder_name)
 	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
@@ -259,7 +287,8 @@ func set_teams_and_turns_order(shiffled_players_array,turn_order):
 	var len_=shiffled_players_array.size()/2
 	teams_by_pu_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
 	print("teams="+str(teams_by_pu_id))
-	
+
+
 	turns_order_by_pu_id=turn_order
 	for pu_id in turns_order_by_pu_id:
 		var servant_button=Button.new()
@@ -277,11 +306,17 @@ func initialise_start_variables(pu_id_list:Array):
 		pu_id_to_np_points[pu_id]=0
 		pu_id_to_command_spells_int[pu_id]=3
 		pu_id_player_game_stat_info[pu_id]=DEFAULT_GAME_STAT.duplicate(true)
+		Globals.pu_id_to_allies[pu_id]={"allies":[],"neutral":[]}
 		Globals.self_field_color = Color(randf(), randf(), randf())
 		
 	start_camera_position=$"../Camera2D".position
 	start_camera_zoom=$"../Camera2D".zoom
-
+	
+	for team in teams_by_pu_id:
+		for player in team:
+			var tmp_team=team.duplicate(true)
+			tmp_team.erase(player)
+			Globals.pu_id_to_allies[player]["allies"].append_array(tmp_team)
 	pass
 
 func start():
@@ -318,9 +353,13 @@ func start():
 	for pu_id in turns_order_by_pu_id: 
 		current_player_pu_id_turn=pu_id
 		var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
+
+		
+		
 		rpc_id(pu_peer_id,"inital_spawn_of_player_forwarder")
 		await next_turn_pass
 		print(pu_id)
+	rpc("sync_relations","",Globals.pu_id_to_allies)
 	turns_loop()
 
 #endregion
@@ -339,13 +378,15 @@ func is_only_one_team_stand()->bool:
 	if get_all_pu_ids().size()==1:#for debug only
 		return false
 	var teams_alive=[]
-	for team in pu_id_alive:
+
+	for team in get_teams():
 		for member in team:
 			if team in teams_alive:
 				break
 			if member in pu_id_alive:
 				teams_alive.append(team)
-	print("teams_alive="+str(teams_alive))
+
+	print("teams_alive="+str(teams_alive), " teams=",get_teams())
 	print(teams_alive.size()==1)
 	return teams_alive.size()==1
 
@@ -372,8 +413,17 @@ func turns_loop() -> void:
 		turns_counter+=1
 		turn_update(turns_counter)
 		rpc("turn_update",turns_counter)
-		
+	
+
+	rpc("alert_end_game")
+
 	$"../GUI/host_buttons/finish_button".visible=true
+
+
+@rpc("authority","call_local","reliable")
+func alert_end_game():
+	field.info_table_show("There is only one team standing!\n You've won!\nAwaiting host's action")
+
 
 @rpc("any_peer","call_local","reliable")
 func update_current_player_turn(cur_player_turn_pu_id:String):
@@ -487,8 +537,12 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 	servant_info_skills_textedit.text="Buffs:\n\t%sSkills:\n\t%s"%[display_buffs,skill_text_to_display]
 
 func get_enemies_teams()->Array:
+
+
+	return get_full_relations()[Globals.self_pu_id]["enemies"]
 	var all_enemies_pu_id=[]
-	for team in teams_by_pu_id:
+	var teams=get_teams()
+	for team in teams:
 		for member in team:
 			if Globals.self_pu_id!=member:
 				all_enemies_pu_id+=team
@@ -1205,7 +1259,11 @@ func change_phantasm_charge_on_pu_id(pu_id,amount):
 		$"../GUI/action/np_points_number_label".text=str(Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge)
 
 func get_allies(pu_id_to_search:String=Globals.self_pu_id):
-	for team in teams_by_pu_id:
+
+
+	return get_full_relations()[Globals.self_pu_id]["allies"]
+	var teams=get_teams()
+	for team in teams:
 		for member in team:
 			if pu_id_to_search==member:
 				return team
@@ -1219,7 +1277,8 @@ func get_all_pu_ids():
 	return Globals.get_connected_persistent_ids()
 
 	var output=[]
-	for team in teams_by_pu_id:
+	var teams=get_teams()
+	for team in teams:
 		for member in team:
 			output.append(member)
 	return output
@@ -2714,3 +2773,421 @@ func _on_flip_sprite_button_pressed():
 	rpc("flip_pu_id_sprite",Globals.self_pu_id)
 	pass # Replace with function body.
 
+var additional_allies={}
+var additional_enemies=[]
+func fill_teams_gui():
+	var counter=1
+	var pu_ids_with_no_team=get_all_pu_ids()
+
+	for child in all_teams_vbox.get_children():
+		if child is VBoxContainer:
+			child.queue_free()
+	
+	for child in your_teams_vbox.get_children():
+		if child is VBoxContainer:
+			child.queue_free()
+	
+	#filling all teams
+	var teams=get_teams()
+	for team in teams:
+		var new_team=TEAM_HOLDER.instantiate()
+		var vbox_add_players_to=new_team.find_child("team_players_holder")
+		var team_label=new_team.find_child("team_name_label")
+		#new_team.name="team_holder"+str(counter)
+		team_label.text="team="+str(counter)
+		for player in team:
+			print("player=",player)
+			
+			var player_button:Button=Button.new()
+			player_button.text=Globals.pu_id_player_info[player]["nickname"]
+			player_button.toggle_mode=true
+			player_button.size_flags_horizontal=4
+			
+			
+			player_button.toggled.connect(player_button_in_teams_pressed.bind(player_button,player))
+			vbox_add_players_to.add_child(player_button)
+			
+			pu_ids_with_no_team.erase(player)
+		counter+=1
+		all_teams_vbox.add_child(new_team,true)
+
+	
+	#filling self teams
+	for team in teams:
+		if Globals.self_pu_id in team:
+			var new_team=TEAM_HOLDER.instantiate()
+			var vbox_add_players_to=new_team.find_child("team_players_holder")
+			var team_label=new_team.find_child("team_name_label")
+			#new_team.name=team_name
+			team_label.text="Team "+str(counter)
+			for player in team:
+				
+				print("player=",player)
+				var player_button:Button=Button.new()
+				player_button.text=Globals.pu_id_player_info[player]["nickname"]
+				player_button.toggle_mode=true
+				player_button.size_flags_horizontal=4
+				
+				
+				player_button.toggled.connect(player_button_in_teams_pressed.bind(player_button,player))
+				vbox_add_players_to.add_child(player_button)
+			your_teams_vbox.add_child(new_team,true)
+			counter+=1
+	
+
+	var additional_teams={
+		"You are neutral to:":get_full_relations()[Globals.self_pu_id]["neutral"],
+		"One-sided allies:":get_one_sided_allies_for_pu_id(Globals.self_pu_id)
+	}
+
+	
+
+	for key in additional_teams:
+		var team=additional_teams[key]
+		var new_team=TEAM_HOLDER.instantiate()
+		var vbox_add_players_to=new_team.find_child("team_players_holder")
+		var team_label=new_team.find_child("team_name_label")
+		#new_team.name=team_name
+		team_label.text=key
+		for player in team:
+			print("player=",player)
+			
+			var player_button:Button=Button.new()
+			player_button.text=Globals.pu_id_player_info[player]["nickname"]
+			player_button.toggle_mode=true
+			player_button.size_flags_horizontal=4
+			
+			
+			player_button.toggled.connect(player_button_in_teams_pressed.bind(player_button,player))
+			vbox_add_players_to.add_child(player_button)
+			
+			pu_ids_with_no_team.erase(player)
+		your_teams_vbox.add_child(new_team,true)
+		
+	
+
+
+
+var last_player_button_pressed:Button=null
+var player_in_teams_choosen_pu_id:String=""
+func player_button_in_teams_pressed(_toggled:bool,button:Button,pu_id:String):
+	
+	if last_player_button_pressed!=null:
+		last_player_button_pressed.button_pressed=false
+	last_player_button_pressed=button
+	player_in_teams_choosen_pu_id=pu_id
+
+
+func get_one_sided_allies_for_pu_id(pu_id) -> Array:
+	var all_relations=get_full_relations()
+	var one_sided_list: Array = []
+
+	if not all_relations.has(pu_id) or not all_relations[pu_id].has("allies"):
+		return one_sided_list
+	
+
+	var my_declared_allies: Array = all_relations[pu_id]["allies"]
+
+	
+	for potential_ally_id in my_declared_allies:
+		
+		var is_mutual = false
+		
+		
+		if all_relations.has(potential_ally_id):
+			var their_relations = all_relations[potential_ally_id]
+			
+			if their_relations.has("allies") and their_relations["allies"].has(pu_id):
+				is_mutual = true
+		
+		
+		if not is_mutual:
+			one_sided_list.push_back(potential_ally_id)
+			
+	return one_sided_list
+
+
+func _on_teams_button_pressed():
+	# button -> size_flags_horizontal=4
+
+	fill_teams_gui()
+	
+
+
+
+	
+	
+	
+	field.hide_all_gui_windows("teams")
+	
+	
+	
+	
+	pass # Replace with function body.
+
+
+func _on_betray_team_button_pressed():
+	var who_to_betray_pu_id=player_in_teams_choosen_pu_id
+
+	if current_player_pu_id_turn!=Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("You can betray only\n during your turn")
+		return
+
+	if who_to_betray_pu_id==Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("This is you")
+		return
+
+	if not (who_to_betray_pu_id in get_allies()):
+		#how can you betray enemy?
+		field.info_table_show("You can't betray your enemy")
+		return
+	
+	field.disable_every_button()
+	var type=await field.choose_between_two(
+		str("Are you sure you want to betray "+Globals.pu_id_player_info[who_to_betray_pu_id]["nickname"]+" "+Globals.pu_id_player_info[who_to_betray_pu_id]["servant_name"]+" ?"),
+		"Yes",
+		"No"
+	)
+	field.disable_every_button(false)
+	
+	if type=="Yes":
+		Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].erase(who_to_betray_pu_id)
+
+		field.disable_every_button()
+		type=await field.choose_between_two(
+			str("Do you want to make it public?"),
+			"Yes",
+			"No"
+		)
+		field.disable_every_button(false)
+		if type=="Yes":
+			field.rpc("systemlog_message",str(Globals.nickname+" betrayed "+Globals.pu_id_player_info[who_to_betray_pu_id]["nickname"]))
+	else:
+		return
+	rpc("sync_relations",Globals.self_pu_id,Globals.pu_id_to_allies.duplicate(true))
+	
+	
+	
+
+	pass # Replace with function body.
+
+func update_teams_for_pu_id(main_pu_id:String,pu_id_changed:String,status:String):
+	match status:
+		"Ally":
+			Globals.pu_id_to_teams[main_pu_id]["allies"].append(pu_id_changed)
+		"Betray":
+			Globals.pu_id_to_teams[main_pu_id]["enemies"].append(pu_id_changed)
+
+signal team_confirm_answer(answer:bool)
+func _on_ally_button_pressed():
+	var who_to_ally_pu_id=player_in_teams_choosen_pu_id
+
+	if current_player_pu_id_turn!=Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("You can ally only\n during your turn")
+		return
+
+	if who_to_ally_pu_id==Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("This is you")
+		return
+	
+
+	if (who_to_ally_pu_id in get_allies()):
+		#how can you betray enemy?
+		field.info_table_show("You're already allies")
+		return
+	
+	var peer_id_to_ally=Globals.pu_id_player_info[who_to_ally_pu_id]["current_peer_id"]
+
+	rpc_id(peer_id_to_ally,"request_alliance")
+	field.disable_every_button()
+	field.info_table_show("Awaiting answer")
+	var answer=await team_confirm_answer
+	field.disable_every_button(false)
+	if answer:
+		additional_allies[who_to_ally_pu_id]="two-sided"
+
+		Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].append(who_to_ally_pu_id)
+
+		field.info_table_show("Succesful alliance")
+	else:
+		field.disable_every_button()
+		var type=await field.choose_between_two(
+			str("Player declined alliance. Do you want to make one-sided alliance?"),
+			"Yes",
+			"No"
+		)
+		field.disable_every_button(false)
+		if type=="Yes":
+			additional_allies[who_to_ally_pu_id]="one-sided"
+
+
+			Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].append(who_to_ally_pu_id)
+			field.info_table_show("You made one-sided alliance with "+Globals.pu_id_player_info[who_to_ally_pu_id]["nickname"]+" "+Globals.pu_id_player_info[who_to_ally_pu_id]["servant_name"] )
+
+			field.disable_every_button()
+			type=await field.choose_between_two(
+				str("Do you want to make it public?"),
+				"Yes",
+				"No"
+			)
+			field.disable_every_button(false)
+			if type=="Yes":
+				field.rpc("systemlog_message",str(Globals.nickname+" allied with "+Globals.pu_id_player_info[who_to_ally_pu_id]["nickname"]))
+		
+		else:
+			return
+	rpc("sync_relations",Globals.self_pu_id,Globals.pu_id_to_allies.duplicate(true))
+	pass # Replace with function body.
+
+@rpc("call_local","any_peer","reliable")
+func request_alliance():
+	var sender_peer_id = multiplayer.get_remote_sender_id()
+	var pu_id_requested_alliance=Globals.peer_to_persistent_id[sender_peer_id]
+
+	var sender_servant_name=Globals.pu_id_player_info[pu_id_requested_alliance]["servant_name"]
+	var sender_nickname=Globals.pu_id_player_info[pu_id_requested_alliance]["nickname"]
+	field.disable_every_button()
+	var type=await field.choose_between_two(
+		str(sender_nickname," proposed an alliance, his character is ",sender_servant_name,".\nWill you accept the alliance?"),
+		"Accept",
+		"Decline"
+	)
+	field.disable_every_button(false)
+	if type=="Accept":
+		additional_allies[pu_id_requested_alliance]="two-sided"
+		Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].append(pu_id_requested_alliance)
+		rpc("sync_relations",Globals.self_pu_id,Globals.pu_id_to_allies.duplicate(true))
+	else:
+		pass
+	pass
+
+	rpc_id(sender_peer_id,"answer_team_request",type)
+
+
+@rpc("call_local","any_peer","reliable")
+func answer_team_request(answer:String):
+	match answer:
+		"Accept":
+			team_confirm_answer.emit(true)
+		"Decline":
+			team_confirm_answer.emit(false)
+
+
+func get_full_relations() -> Dictionary:
+	var partial_relations=Globals.pu_id_to_allies
+	var all_ids=Globals.get_connected_persistent_ids()
+	var full_relations: Dictionary = {}
+	for player_id in all_ids:
+		var player_allies: Array = []
+		var player_neutrals: Array = []
+		if partial_relations.has(player_id):
+			var data = partial_relations[player_id]
+			if data.has("allies"): player_allies = data["allies"]
+			if data.has("neutral"): player_neutrals = data["neutral"]
+		var player_enemies: Array = []
+		for other_player_id in all_ids:
+			if other_player_id == player_id: continue
+			if player_allies.has(other_player_id): continue
+			if player_neutrals.has(other_player_id): continue
+			player_enemies.push_back(other_player_id)
+		full_relations[player_id] = {
+			"allies": player_allies,
+			"enemies": player_enemies,
+			"neutral": player_neutrals
+		}
+	return full_relations
+
+
+func get_teams() -> Array:
+	"""
+	Находит команды игроков, включая команды из одного человека (одиночек).
+	"""
+	var data=get_full_relations()
+	print_debug("get_teams data=",data)
+	var teams: Array = []
+	var processed_players: Dictionary = {}
+	
+	for player_id in data:
+		if processed_players.has(player_id):
+			continue
+		
+		var current_team: Array = []
+		var queue: Array = [player_id]
+		var visited_in_component: Dictionary = { player_id: true }
+		
+		while not queue.is_empty():
+			var current_player = queue.pop_front()
+			current_team.push_back(current_player)
+			
+			if not data.has(current_player) or not data[current_player].has("allies"):
+				continue
+			
+			var player_allies: Array = data[current_player]["allies"]
+			
+			for potential_ally in player_allies:
+				if visited_in_component.has(potential_ally):
+					continue
+				
+				var is_mutual = false
+				if data.has(potential_ally):
+					var ally_data = data[potential_ally]
+					if ally_data.has("allies") and ally_data["allies"].has(current_player):
+						is_mutual = true
+				
+				if is_mutual:
+					queue.push_back(potential_ally)
+					visited_in_component[potential_ally] = true
+				
+		for member_id in current_team:
+			processed_players[member_id] = true
+		teams.push_back(current_team)
+	return teams
+
+
+func _on_neutral_button_pressed():
+
+	var who_to_neutral_pu_id=player_in_teams_choosen_pu_id
+
+	if current_player_pu_id_turn!=Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("You can neutral only\n during your turn")
+		return
+
+	if who_to_neutral_pu_id==Globals.self_pu_id:
+		#how can you betray enemy?
+		field.info_table_show("This is you")
+		return
+
+	field.disable_every_button()
+	var type=await field.choose_between_two(
+		str("Are you sure you want to neutral "+Globals.pu_id_player_info[who_to_neutral_pu_id]["nickname"]+" "+Globals.pu_id_player_info[who_to_neutral_pu_id]["servant_name"]+" ?"),
+		"Yes",
+		"No"
+	)
+	field.disable_every_button(false)
+	
+	if type=="Yes":
+		Globals.pu_id_to_allies[Globals.self_pu_id]["neutral"].append(who_to_neutral_pu_id)
+
+		field.disable_every_button()
+		type=await field.choose_between_two(
+			str("Do you want to make it neutral?"),
+			"Yes",
+			"No"
+		)
+		field.disable_every_button(false)
+		if type=="Yes":
+			field.rpc("systemlog_message",str(Globals.nickname+" is now neutral to "+Globals.pu_id_player_info[who_to_neutral_pu_id]["nickname"]))
+	else:
+		return
+
+@rpc("any_peer","reliable","call_local")
+func sync_relations(pu_id_update_to:String,full_relations:Dictionary):
+	if pu_id_update_to=="":
+		Globals.pu_id_to_allies=full_relations
+	else:
+		Globals.pu_id_to_allies[pu_id_update_to]=full_relations[pu_id_update_to]

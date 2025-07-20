@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bqutpfc1p4lar"]
+
+[node name="team_holder" type="VBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="team_name_label" type="Label" parent="."]
+layout_mode = 2
+text = "tet"
+horizontal_alignment = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 2
+
+[node name="team_players_holder" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2

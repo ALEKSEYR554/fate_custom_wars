@@ -31,6 +31,9 @@ func _ready():
 	else:
 		use_folder=OS.get_executable_path().get_base_dir()
 		Globals.user_folder=OS.get_executable_path().get_base_dir()
+
+	if OS.has_feature("editor"):
+		Globals.user_folder="user:/"
 	
 	var folders_in_user=DirAccess.open(use_folder).get_directories()
 	

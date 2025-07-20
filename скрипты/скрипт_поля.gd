@@ -780,8 +780,10 @@ func disable_every_button(block=true):
 	else:
 		for button in blocked_previous_iteration:
 			button.disabled=false
+		if players_handler.current_player_pu_id_turn==Globals.self_pu_id:
+			end_turn_button.disabled=false
 	$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
-	end_turn_button.disabled=false
+	
 	blocked_previous_iteration=blocked_this_iteration
 	pass
 
@@ -977,6 +979,19 @@ func set_action_status(by_whom_pu_id:String,status,attack_type="Physical",phanta
 	print(str("status=",status," attacked_by_pu_id=",attacked_by_pu_id))
 	match status:
 		"getting_attacked":
+
+			if by_whom_pu_id in players_handler.get_allies():
+				disable_every_button()
+				var type=await choose_between_two(
+					str(Globals.pu_id_player_info[by_whom_pu_id]["nickname"],". is your ally and attacking you\nDo you consider this as betrayal?"),
+					"Yes",
+					"No"
+				)
+				disable_every_button(false)
+				if type=="Yes":
+					players_handler.additional_enemies+=by_whom_pu_id
+
+
 			you_were_attacked_label.text=str("You were attacked with this dice rolls:\n",
 "Attack: ", recieved_dice_roll_result["main_dice"] ,"Crit: ",recieved_dice_roll_result["crit_dice"],
 "\nWhat do you do?")
@@ -1496,7 +1511,7 @@ func field_manipulation(buff_config:Dictionary):
 		push_error("Bad field manipulation config=",buff_config)
 		return
 	for i in range(amount_kletki+1):
-		var type=await choose_between_two("Capture", "Manupulate")
+		var type=await choose_between_two("Choose manipulation type","Capture", "Manipulate")
 		
 		if type=="Capture":
 			var kletki=get_unoccupied_kletki()
@@ -1515,11 +1530,12 @@ func field_manipulation(buff_config:Dictionary):
 	pass
 
 
-func choose_between_two(first:String,second:String)->String:
+func choose_between_two(answer:String,first:String,second:String)->String:
 	var out:String
 	
 	info_but_choose_1.text=first
 	info_but_choose_2.text=second
+	info_label.text=answer
 
 	info_but_choose_1.pressed.connect(info_but_choose.bind(first))
 	info_but_choose_2.pressed.connect(info_but_choose.bind(second))
@@ -1767,6 +1783,7 @@ func _on_make_action_pressed():
 
 
 func _on_end_turn_pressed():
+	print_debug("_on_end_turn_pressed, pu_id=",Globals.self_pu_id)
 	blinking_glow_button=false
 	blink_timer_node.timeout.emit()
 	#current_action_points=3
@@ -1861,6 +1878,27 @@ func hide_all_gui_windows(except_name="all"):
 	if except_name!="servant_info_main_container":
 		players_handler.player_info_button_current_pu_id=""
 	print("hide_all_gui_windows= "+str(except_name))
+	
+	var dictio={"servant_info_main_container":[players_handler.servant_info_main_container],
+	"skill_info_tab_container":[skill_info_tab_container,use_skill_but_label_container],
+	"actions_buttons":[actions_buttons],
+	"use_custom":[players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
+	"command_spells":[command_spell_choices_container],
+	"menu":[menu_vbox_container],
+	"teams":[players_handler.teams_margin]
+	}
+	var did_changed=false
+	for key in dictio:
+		if key==except_name:
+			did_changed=true
+			for item in dictio[key]:
+				item.visible=!item.visible
+		else:
+			for item in dictio[key]:
+				item.visible=false
+	if not did_changed and except_name!="all":
+		push_error("wrong hide_all_gui_windows=",except_name)
+	return
 	match except_name:
 		"all":
 			players_handler.servant_info_main_container.visible=false
@@ -1871,6 +1909,7 @@ func hide_all_gui_windows(except_name="all"):
 			players_handler.custom_choices_tab_container.visible=false
 			use_skill_but_label_container.visible=false
 			command_spell_choices_container.visible=false
+			players_handler.teams_margin.visible=false
 		"servant_info_main_container":
 			players_handler.servant_info_main_container.visible=!players_handler.servant_info_main_container.visible
 			skill_info_tab_container.visible=false
@@ -1880,6 +1919,7 @@ func hide_all_gui_windows(except_name="all"):
 			use_skill_but_label_container.visible=false
 			command_spell_choices_container.visible=false
 			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=false
 		"skill_info_tab_container":
 			skill_info_tab_container.visible=!skill_info_tab_container.visible
 			use_skill_but_label_container.visible=!use_skill_but_label_container.visible
@@ -1889,6 +1929,7 @@ func hide_all_gui_windows(except_name="all"):
 			players_handler.servant_info_main_container.visible=false
 			command_spell_choices_container.visible=false
 			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=false
 		"actions_buttons": 
 			actions_buttons.visible=!actions_buttons.visible
 			skill_info_tab_container.visible=false
@@ -1898,6 +1939,7 @@ func hide_all_gui_windows(except_name="all"):
 			use_skill_but_label_container.visible=false
 			command_spell_choices_container.visible=false
 			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=false
 		"use_custom":
 			players_handler.use_custom_but_label_container.visible=!players_handler.use_custom_but_label_container.visible
 			players_handler.custom_choices_tab_container.visible=!players_handler.custom_choices_tab_container.visible
@@ -1907,6 +1949,7 @@ func hide_all_gui_windows(except_name="all"):
 			actions_buttons.visible=false
 			command_spell_choices_container.visible=false
 			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=false
 		"command_spells":
 			command_spell_choices_container.visible=!command_spell_choices_container.visible
 			players_handler.use_custom_but_label_container.visible=false
@@ -1916,6 +1959,7 @@ func hide_all_gui_windows(except_name="all"):
 			use_skill_but_label_container.visible=false
 			actions_buttons.visible=false
 			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=false
 		"menu":
 			command_spell_choices_container.visible=false
 			players_handler.use_custom_but_label_container.visible=false
@@ -1925,6 +1969,17 @@ func hide_all_gui_windows(except_name="all"):
 			use_skill_but_label_container.visible=false
 			actions_buttons.visible=false
 			menu_vbox_container.visible=!menu_vbox_container.visible
+			players_handler.teams_margin.visible=false
+		"teams":
+			command_spell_choices_container.visible=false
+			players_handler.use_custom_but_label_container.visible=false
+			players_handler.custom_choices_tab_container.visible=false
+			skill_info_tab_container.visible=false
+			players_handler.servant_info_main_container.visible=false
+			use_skill_but_label_container.visible=false
+			actions_buttons.visible=false
+			menu_vbox_container.visible=false
+			players_handler.teams_margin.visible=!players_handler.teams_margin.visible
 
 func _on_self_info_show_button_pressed():
 	hide_all_gui_windows("servant_info_main_container")
