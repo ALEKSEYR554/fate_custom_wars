@@ -203,7 +203,13 @@ func registration_successful(registered_puid: String,refresh_data:Dictionary={})
 
 			players_handler_node.pu_id_to_np_points=refresh_data["pu_id_to_np_points"]
 
-			field_node.occupied_kletki=refresh_data["occupied_kletki"]
+			#field_node.occupied_kletki=refresh_data["occupied_kletki"]
+			field_node.occupied_kletki={}
+			for kletka_id in refresh_data["occupied_kletki"]:
+				for pu_id in Globals.pu_id_player_info:
+					if Globals.pu_id_player_info[pu_id]["servant_node"].name == refresh_data["occupied_kletki"]:
+						field_node.occupied_kletki[kletka_id]=Globals.pu_id_player_info[pu_id]["servant_node"]
+
 			field_node.pu_id_to_kletka_number=refresh_data["pu_id_to_kletka_number"]
 			for kletka_id in refresh_data["kletka_preference"].keys():
 				if not refresh_data["kletka_preference"][kletka_id].is_empty():
