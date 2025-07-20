@@ -882,7 +882,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 				current_action="wait"
 				rpc("systemlog_message",str(Globals.nickname," stamina left:",parry_count_max))
 				await attack_player_on_kletka_id(kletka_id,damage_type)
-				await players_handler.trigger_buffs_on(Globals.self_pur_id,"enemy parried",pu_id_to_attack)
+				await players_handler.trigger_buffs_on(Globals.self_pu_id,"enemy parried",pu_id_to_attack)
 				return
 		"Halfed Damage":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
@@ -999,8 +999,11 @@ func set_action_status(by_whom_pu_id:String,status,attack_type="Physical",phanta
 			var atk_rng=players_handler.get_pu_id_attack_range(Globals.self_pu_id)
 			var attacker_kletka_id=pu_id_to_kletka_number[attacked_by_pu_id]
 			
+			print_debug("parry distance_between_enemie current_kletka=",current_kletka," attacker_kletka_id=",attacker_kletka_id)
+
 			var distance_between_enemie=get_path_in_n_steps(current_kletka,attacker_kletka_id,atk_rng).size()
-			if attack_type=="Phantasm" or distance_between_enemie>atk_rng:
+			print_debug("parry atk_range=",atk_rng," distance_between_enemie=",distance_between_enemie)
+			if attack_type=="Phantasm" or distance_between_enemie==0: #distance_between_enemie>atk_rng:
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=true
 			else: 
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=false
@@ -1073,10 +1076,10 @@ func _on_evade_button_pressed():
 		if typeof(damage_to_take)==TYPE_STRING:
 			if damage_to_take=="evaded":
 				rpc("remove_evade_buff_after_hit_for_pu_id",Globals.self_pu_id)
-				rpc_id(attacked_by_pu_id,"answer_attack","evaded")
+				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 				rpc("systemlog_message",str(Globals.nickname," evaded by buff"))
 		else:
-			rpc_id(attacked_by_pu_id,"answer_attack","damaged")
+			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 			if damage_to_take==0:
 				rpc("remove_invinsibility_after_hit_for_pu_id",Globals.self_pu_id)
 			players_handler.rpc("take_damage_to_pu_id",Globals.self_pu_id,damage_to_take)
