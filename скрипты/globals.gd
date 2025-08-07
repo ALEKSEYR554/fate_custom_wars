@@ -4,6 +4,7 @@ extends Node
 var menu_left:bool=false
 
 const MAX_NICKNAME_SIZE:int=15
+const MAX_UNITS:int=100
 
 var self_pu_id: String = ""
 
@@ -14,8 +15,19 @@ const PUID_SAVE_PATH = "user://persistent_game_id.dat"
 var is_game_started:bool=false
 
 # Информация обо всех игроках. Ключ: persistent_id
-# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node": Node, "servant_node_name":str, "disconnected_more_than_timeout":bool}
+# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node_name":str, "disconnected_more_than_timeout":bool, "units":{0:Node2D}}
 var pu_id_player_info: Dictionary = {}
+
+
+
+## new turn => выбор unit_id которым сейчас играть, если только один то скип этот этап => запись current_unit_id => 
+##  => get_unit_CharInfo_from_unit_id(unit_id)->CharInfo  =>  main_CharInfo
+##
+## get_all_allies_in_range -> Array of CharInfo
+##
+##
+##
+##
 
 #pu_id:{"allies":[pu_id],"neutral":[pu_id]} enemies are calculated separetly
 var pu_id_to_allies: Dictionary = {}
@@ -25,6 +37,8 @@ var peer_to_persistent_id: Dictionary = {}
 var peer_id_to_kletka_number={}
 
 var characters:Array=[]
+
+var uniqq_ids:Array=[]
 
 var DEFAULT_PORT = 9999
 const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
@@ -66,6 +80,16 @@ func _ready():
 	if OS.has_feature("editor"):
 		Globals.user_folder="user:/"
 	preload_all_servant_sprites()
+
+
+func generate_unique_ids()->Array:
+	for i in range(200):
+		var new_id=UUID.v4()
+		if !new_id in uniqq_ids:
+			uniqq_ids.append(new_id)
+		else:
+			i-=1
+	return []
 
 
 func preload_all_servant_sprites():
@@ -132,8 +156,7 @@ func status_changed(puid:String,status:bool):
 
 
 func _generate_new_puid() -> String:
-	return UUID.v4() # Для Godot 4
-
+	return UUID.v4()
 
 func _load_or_generate_persistent_id():
 	print("_load_or_generate_persistent_id\n\n")

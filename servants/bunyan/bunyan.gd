@@ -77,7 +77,20 @@ var skills={
 		{"Name":"ATK Up",
 		"Duration":3,
 		"Power":3},
-	"Cast":"All allies"}
+	"Cast":"All allies"},
+	{
+		"Buffs":
+			{
+				"Name":"Summon",
+				"Duration":3,
+				"Summon Name":"Rama",
+				"Skill Enabled":false,
+				"Move Points":1,
+				"Phantasm Points Farm":false,
+				"Limit":3
+			},
+		"Cast":"Self"
+	}
 ]},
 "Second Skill":{
 	"Type":"Buff Granting",
