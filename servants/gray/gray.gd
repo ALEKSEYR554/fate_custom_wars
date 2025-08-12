@@ -42,7 +42,7 @@ const default_stats={
 	"attribute":"Human",
 	"endurance":"C",
 	"luck":"C",
-	"magic":{"Rank":"C","Power":0,"resistance":3},
+	"magic":{"Rank":"C","Power":0,"Resistance":3},
 	"traits":["Artoria Face",
 	 "Hominidae Servant",
 	 "Humanoid",

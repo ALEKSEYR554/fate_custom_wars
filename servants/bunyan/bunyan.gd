@@ -13,7 +13,7 @@ const default_stats={
 	"agility":"C",
 	"endurance":"A",
 	"luck":"E+",
-	"magic":{"Rank":"E","Power":0,"resistance":1},#magic power / magic resistance,
+	"magic":{"Rank":"E","Power":0,"Resistance":1},#magic power / magic resistance,
 	"traits":[
 		"Child Servant",
 		"Costume-Owning", 

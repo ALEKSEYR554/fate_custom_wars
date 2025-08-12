@@ -42,7 +42,7 @@ const default_stats={
 	"agility":"C",
 	"endurance":"C",
 	"luck":"E",
-	"magic":{"Rank":"A","Power":0,"resistance":5},#check table info
+	"magic":{"Rank":"A","Power":0,"Resistance":5},#check table info
 	"traits":["Divine Spirit", "Divinity", "Humanoid", "Non-Hominidae Servant", "Riding", "Serpent", "Servant", "Seven Knights Servant", "Weak to Enuma Elish"]
 }
 
