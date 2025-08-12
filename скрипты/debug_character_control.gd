@@ -60,32 +60,32 @@ func get_stat_in_number(stat:String)->int:
 			return 1
 
 func get_magic(stat_rank:String,magical_powers:bool)->Dictionary:
-	var out={"Rank":stat_rank,"Power":0,"resistance":7}
+	var out={"Rank":stat_rank,"Power":0,"Resistance":7}
 	match stat_rank.replace("+",""):
 		"EX":
 			out["Power"]=15
-			out["resistance"]=7
+			out["Resistance"]=7
 		"A":
 			out["Power"]=10
-			out["resistance"]=5
+			out["Resistance"]=5
 		"B":
 			out["Power"]=8
-			out["resistance"]=4
+			out["Resistance"]=4
 		"C":
 			out["Power"]=6
-			out["resistance"]=3
+			out["Resistance"]=3
 		"D":
 			out["Power"]=4
-			out["resistance"]=2
+			out["Resistance"]=2
 		"E":
 			out["Power"]=2
-			out["resistance"]=1
+			out["Resistance"]=1
 		"F":
 			out["Power"]=1
-			out["resistance"]=1
+			out["Resistance"]=1
 		_:
 			out["Power"]=1
-			out["resistance"]=1
+			out["Resistance"]=1
 	if not magical_powers:
 		out["Power"]=0
 	return out

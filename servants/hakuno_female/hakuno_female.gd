@@ -43,7 +43,7 @@ const default_stats={
 	"agility":"B-",
 	"endurance":"C",
 	"luck":"B",
-	"magic":{"Rank":"B+","Power":0,"resistance":4},
+	"magic":{"Rank":"B+","Power":0,"Resistance":4},
 	"traits":["Enuma Elish Nullification",
 	"Hominidae Servant", 
 	"Humanoid", 

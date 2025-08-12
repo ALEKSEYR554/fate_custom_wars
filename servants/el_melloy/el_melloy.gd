@@ -40,7 +40,7 @@ const default_stats={
 	"agility":"D",
 	"endurance":"E",
 	"luck":"B+",
-	"magic":{"Rank":"A+","Power":12,"resistance":6},
+	"magic":{"Rank":"A+","Power":12,"Resistance":6},
 	"traits":[
 		"Hominidae Servant",
 		"Humanoid",
