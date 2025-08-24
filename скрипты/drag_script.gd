@@ -82,13 +82,13 @@ func rpc_drag(mouse_pos_local,ofset_local):
 	global_position = mouse_pos_local - ofset_local
 
 @rpc("any_peer","call_local")
-func rpc_resizing(new_size):
+func rpc_resizing(new_size,_resize_start_global_position):
 	new_size.x = max(new_size.x, min_size.x)
 	new_size.y = max(new_size.y, min_size.y)
 
 	# Вычисляем смещение позиции Node2D, чтобы верхний левый угол TextureRect оставался на месте
 	var size_difference = new_size - texture_rect.size
-	global_position = resize_start_global_position + size_difference * Vector2(0.5, 0.5)
+	global_position = _resize_start_global_position + size_difference * Vector2(0.5, 0.5)
 
 	texture_rect.size = new_size
 	_update_resize_handle_position() # Обновляем позицию ручки и кнопок
@@ -103,7 +103,7 @@ func _process(_delta):
 		var mouse_pos = get_global_mouse_position()
 		var delta_mouse = mouse_pos - drag_offset
 		var new_size = resize_start_size + delta_mouse
-		rpc("rpc_resizing",new_size)
+		rpc("rpc_resizing",new_size,resize_start_global_position)
 		
 
 

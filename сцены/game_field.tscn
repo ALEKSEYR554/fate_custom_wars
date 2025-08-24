@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=13 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_c6n5g"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_chyh4"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_0nlqk"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="6_r85gn"]
 [ext_resource type="Script" path="res://скрипты/players_handler.gd" id="7_naqg5"]
+[ext_resource type="PackedScene" uid="uid://cwg832bxjw8eo" path="res://сцены/char_info_choose_scroll_container.tscn" id="7_yposv"]
 [ext_resource type="Script" path="res://скрипты/рейтинг.gd" id="8_8trl2"]
 [ext_resource type="Script" path="res://скрипты/uploade_images.gd" id="9_j25dr"]
 [ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://sun.png" id="11_hbe8m"]
@@ -948,6 +949,31 @@ theme_override_font_sizes/font_size = 30
 text = "Capture"
 metadata/_edit_use_anchors_ = true
 
+[node name="char_info_choose_scroll_container" parent="GUI" instance=ExtResource("7_yposv")]
+visible = false
+anchors_preset = -1
+anchor_left = 0.193848
+anchor_top = 0.197917
+anchor_right = 0.794434
+anchor_bottom = 0.507813
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="char_choose_button" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.460938
+anchor_top = 0.50463
+anchor_right = 0.524415
+anchor_bottom = 0.601852
+offset_bottom = -3.05176e-05
+theme_override_font_sizes/font_size = 40
+text = "OK"
+metadata/_edit_use_anchors_ = true
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
@@ -1040,4 +1066,5 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/ally_button" to="players_handler" method="_on_ally_button_pressed"]
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/neutral_button" to="players_handler" method="_on_neutral_button_pressed"]
 [connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
+[connection signal="pressed" from="GUI/char_choose_button" to="." method="_on_char_choose_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]

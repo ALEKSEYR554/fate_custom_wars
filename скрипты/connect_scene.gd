@@ -200,8 +200,6 @@ func registration_successful(registered_puid: String,refresh_data:Dictionary={})
 							Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_servant_data["hp"]
 
 
-			players_handler_node.unit_uniq_id_to_np_points=refresh_data["unit_uniq_id_to_np_points"]
-
 			#field_node.occupied_kletki=refresh_data["occupied_kletki"]
 			field_node.occupied_kletki={}
 			for kletka_id in refresh_data["occupied_kletki"]:

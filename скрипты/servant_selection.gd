@@ -9,7 +9,6 @@ var current_character_index = 0
 # GUI элементы
 @onready var character_image = $_HBoxContainer_3/_VBoxContainer_5/_TextureRect_6
 @onready var character_text = $_HBoxContainer_3/_VBoxContainer_5/_Label_7
-signal sleep
 
 func open_folder_pressed():
 	OS.shell_open(ProjectSettings.globalize_path("user://"))

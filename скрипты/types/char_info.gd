@@ -28,6 +28,18 @@ func get_uniq_id()->String:
 func get_phantasm_charge_points()->int:
 	return get_node().phantasm_charge
 
+static func from_dictionary(info:Dictionary)->CharInfo:
+	if not (info.has("pu_id") and info.has("unit_id")):
+		push_error("Wrong Dictionary keys for CharInfo=",info)
+	return CharInfo.new(info["pu_id"],info["unit_id"])
+
+func to_dictionary()->Dictionary:
+
+	return {
+		"pu_id":pu_id,
+		"unit_id":unit_id
+	}
+
 func get_servant_name()->String:
 
 	

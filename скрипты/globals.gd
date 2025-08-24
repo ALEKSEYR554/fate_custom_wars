@@ -5,6 +5,7 @@ var menu_left:bool=false
 
 const MAX_NICKNAME_SIZE:int=15
 const MAX_UNITS:int=100
+const MAX_UNITS_FOR_USER_TOTAL:int=400
 
 var self_pu_id: String = ""
 
@@ -78,18 +79,19 @@ func _ready():
 
 		Globals.user_folder=OS.get_executable_path().get_base_dir()
 	if OS.has_feature("editor"):
-		Globals.user_folder="user:/"
+		Globals.user_folder="res:/"
 	preload_all_servant_sprites()
+	generate_unique_ids()
 
 
-func generate_unique_ids()->Array:
-	for i in range(200):
+func generate_unique_ids(amount:int=200)->Array:
+	for i in range(amount):
 		var new_id=UUID.v4()
 		if !new_id in uniqq_ids:
 			uniqq_ids.append(new_id)
 		else:
 			i-=1
-	return []
+	return uniqq_ids
 
 
 func preload_all_servant_sprites():
@@ -130,7 +132,7 @@ func preload_all_servant_sprites():
 		#editor
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man"]:
+		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man","rama"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
 			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
@@ -154,6 +156,12 @@ func status_changed(puid:String,status:bool):
 		field_node.call_deferred("disconnect_alert_show",puid,status,string_of_timed_out)
 		field_node.call_deferred("set_pause",not status)
 
+
+func get_all_peer_ids() -> Array:
+	var out:Array=[]
+	for pu_id in pu_id_player_info.keys():
+		out.append(pu_id_player_info[pu_id]["current_peer_id"])
+	return out
 
 func _generate_new_puid() -> String:
 	return UUID.v4()
@@ -239,6 +247,7 @@ const buffs_types:Dictionary={
 	"Buff Removal":["Instant"],
 	"Madness Enhancement":[],
 	"Presence Concealment":["Instant","Presence Concealment"],
+	"Riding":["Passive"],
 
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],

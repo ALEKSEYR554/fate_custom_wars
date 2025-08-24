@@ -24,7 +24,7 @@ signal choose_two(choose:String)
 #signal info_ok_button_clicked
 
 # kletka: who is there node2d
-#{ 6: el_melloy:<Node2D#62159586689>, 25: bunyan:<Node2D#61807265149>}
+#{ 6: [el_melloy:<Node2D#62159586689>], 25: [bunyan:<Node2D#61807265149>]}
 var occupied_kletki:Dictionary={}
 #kletka_preference[cletka_id]=config
 var kletka_preference:Dictionary={}
@@ -48,12 +48,18 @@ var temp_kletka_capture_config
 @onready var chat_log_main = $GUI/ChatLog_container/ChatLog_main
 
 
+@onready var char_info_choose_scroll_container = $GUI/char_info_choose_scroll_container
+@onready var char_choose_button = $GUI/char_choose_button
+
+
+
+
 var current_action
 var current_action_points
 var paralyzed=false
 #var current_kletka_id
 
-var current_unit_id:int
+var current_unit_id:int=0
 var current_player_name:String
 
 var my_turn=false
@@ -255,14 +261,6 @@ func generate_pole(preset_time):
 	print(cell_positions)
 	const_connected=connected
 
-func get_random_unoccupied_kletka():
-	var rand_kletka
-	for p in range(10):
-		rand_kletka=int(round(randf_range(0,cell_count-1)))
-		if !occupied_kletki.has(rand_kletka):
-			break
-	return rand_kletka
-
 func get_kletki_ids_with_enemies_you_can_reach_in_steps(steps,current_kletka_local=get_current_kletka_id()):
 	#get_current_kletka_id()
 	var output=[]
@@ -335,16 +333,6 @@ func pull_enemy(char_info:CharInfo):
 		
 		choose_glowing_cletka_by_ids_array(path)
 
-
-func generate_characters_on_random_kletkax():
-	for player in players_handler.players_nodes:
-		var rand_kletka=get_random_unoccupied_kletka()
-		#var jopa = ANGRA.instantiate()
-		var cord = cell_positions[rand_kletka]
-		player.position=cord
-		player.set_process(true)
-		occupied_kletki[rand_kletka]=player
-		#players_handler.add_child(player,true)
 
 func generate_cells(preset_time):
 	var i=0
@@ -550,6 +538,7 @@ func add_all_additional_nodes():
 	print("-add_all_additional_nodes----")
 	
 
+
 func get_unoccupied_kletki():
 	var output=[]
 	for i in range(glow_array.size()):
@@ -607,17 +596,16 @@ func glow_cletka_pressed(glow_kletka_selected):
 			self_player_node.position=glow_kletka_selected.position
 			print(self_player_node)
 			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,-1,glowing_kletka_number_selected)
-			rpc("move_player_from_kletka_id1_to_id2",Globals.self_pu_id,-1,glowing_kletka_number_selected)
+			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),-1,glowing_kletka_number_selected)
 			#await movement_finished
 			#get_current_kletka_id()=glowing_kletka_number_selected
 			print("current kletka="+str(get_current_kletka_id()))
-			print(connected[get_current_kletka_id()])
+			#print(connected[get_current_kletka_id()])
 			#make_action_button.disabled=false
 			right_ange_buttons_container.visible=true
 			$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
 			
 			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
-			await add_passive_skills_for_char_info(get_current_self_char_info())
 			players_handler.rpc("pass_next_turn",Globals.self_pu_id)
 			is_game_started=true
 			Globals.is_game_started=true
@@ -640,33 +628,149 @@ func glow_cletka_pressed(glow_kletka_selected):
 					glow_array[i].visible=true
 				pass
 			
-			if players_handler.get_self_servant_node().additional_moves>=1 or get_current_kletka_id()==-1:
-				players_handler.rpc("reduce_additional_moves_for_pu_id",Globals.self_pu_id)
-			else:
-				reduce_one_action_point()
-			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,get_current_kletka_id(),glowing_kletka_number_selected)
-			rpc("move_player_from_kletka_id1_to_id2",Globals.self_pu_id,get_current_kletka_id(),glowing_kletka_number_selected)
-			#get_current_kletka_id()=glowing_kletka_number_selected
+			var mounted=false
+			if check_if_kletka_has_mount(glowing_kletka_number_selected):
+				if check_if_char_info_can_ride_mount_on_kletka_id(get_current_self_char_info().to_dictionary(),glowing_kletka_number_selected):
+					var answer=await choose_between_two("You about to enter a mount.\nAre you sure?","Yes","No")
+					if answer=="Yes":
+						mounted=true
+						
+			if not mounted:
+				if players_handler.get_self_servant_node().additional_moves>=1 or get_current_kletka_id()==-1:
+					players_handler.rpc("reduce_additional_moves_for_char_info",get_current_self_char_info().to_dictionary())
+				else:
+					reduce_one_action_point()
+				#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,get_current_kletka_id(),glowing_kletka_number_selected)
+				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),get_current_kletka_id(),glowing_kletka_number_selected)
+				#get_current_kletka_id()=glowing_kletka_number_selected
 		"attack":
 			attacking_player_on_kletka_id=glowing_kletka_number_selected
 			#SHIT START
 			#attacking_char_info=
 			#attacking_char_info=players_handler.servant_name_to_pu_id[attacking_char_info]
 
-			attacking_char_info=get_char_info_from_node_name(occupied_kletki[glowing_kletka_number_selected].name)
+			#attacking_char_info=get_char_info_from_node_name(occupied_kletki[glowing_kletka_number_selected].name)
 			#SHIT END
 			await attack_player_on_kletka_id(attacking_player_on_kletka_id,damage_type)
-			players_handler.pu_id_player_game_stat_info[Globals.self_pu_id]["attacked_this_turn"]+=1
+			players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["attacked_this_turn"]+=1
 		"choose_allie":
-			print("occupied_kletki="+str(occupied_kletki))
-			players_handler.choosen_allie_return_value=occupied_kletki[glowing_kletka_number_selected]
+			var char_infffo=await get_char_info_on_kletka_id(glowing_kletka_number_selected)
+			players_handler.choosen_allie_return_value= char_infffo.get_node()
 			players_handler.chosen_allie.emit()
 		"emeny pulling":
 			var atk_char_info=attacking_char_info
-			rpc("move_player_from_kletka_id1_to_id2",atk_char_info,char_info_to_kletka_number(atk_char_info),glowing_kletka_number_selected)
+			rpc("move_player_from_kletka_id1_to_id2",atk_char_info.to_dictionary(),char_info_to_kletka_number(atk_char_info),glowing_kletka_number_selected)
 			
 			
 	glow_kletka_pressed_signal.emit(glowing_kletka_number_selected)
+
+@rpc("any_peer","call_local","reliable")
+func check_if_char_info_can_ride_mount_on_kletka_id(char_info_dic:Dictionary,kletka_id:int)->bool:
+	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
+	var can_ride:bool=false
+	
+
+	if occupied_kletki[kletka_id].size()==0:
+		return false
+	
+	if occupied_kletki[kletka_id].size()>=2:
+		#TODO mounts that can hold multiple servants
+		return false
+	var mount_node = occupied_kletki[kletka_id][0]
+
+	if not mount_node.get_meta("Mount",false):
+		return false
+
+
+
+	if mount_node.get_meta("Require_Riding_Skill",false):
+		can_ride=true
+	else:
+		#finding riding skill
+		if "passive_skills" in char_info.get_node():
+			for skill in char_info.get_node().passive_skills:
+				if skill["Name"]=="Riding":
+					can_ride=true
+
+	return can_ride
+
+@rpc("any_peer","call_local","reliable")
+func sit_char_info_on_mount_on_kletka_id(char_info_dic:Dictionary,kletka_id:int)->bool:
+	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
+
+	return false
+
+
+
+func choose_char_info_on_kletka_id(kletka_id:int)->CharInfo:
+
+	var char_infos:Array=[]
+
+	for node in occupied_kletki[kletka_id]:
+		var unit_id=node.get_meta("unit_id")
+		var pu_id=node.get_meta("pu_id")
+		char_infos.append(CharInfo.new(pu_id,unit_id))
+
+	char_info_choose_scroll_container.add_char_infos(char_infos)
+	await sleep(0.1)
+	hide_all_gui_windows("char_choose_on_kletka")
+	
+	var char_info_out = await char_on_kletka_selected
+
+
+	return char_info_out
+
+func sleep(seconds:float):
+	await get_tree().create_timer(seconds).timeout
+
+
+signal char_on_kletka_selected(char_info:CharInfo)
+
+func _on_char_choose_button_pressed():
+	var char_info:CharInfo = char_info_choose_scroll_container.get_char_info_selected()
+	char_on_kletka_selected.emit(char_info)
+	pass
+
+func dismount_char_info(char_info:CharInfo):
+	pass
+
+
+
+func get_char_info_on_kletka_id(kletka_id:int):
+
+	if occupied_kletki[kletka_id].is_empty():
+		push_error("No enemies on kletka id = ",kletka_id, " occupied_kletki=",occupied_kletki)
+
+	if occupied_kletki[kletka_id].size()==1:
+		var node = occupied_kletki[kletka_id][0]
+		var unit_id=node.get_meta("unit_id")
+		var pu_id=node.get_meta("pu_id")
+		return CharInfo.new(pu_id,unit_id)
+	else:
+		return await choose_char_info_on_kletka_id(kletka_id)
+
+
+
+
+
+func check_if_kletka_has_mount(kletka_id:int)->bool:
+	
+	if not occupied_kletki.has(kletka_id):
+		return false
+
+	if occupied_kletki[kletka_id].size()==0:
+		return false
+	
+	if occupied_kletki[kletka_id].size()>=2:
+		#TODO mounts that can hold multiple servants
+		return false
+	var kletka_node = occupied_kletki[kletka_id][0]
+
+	if kletka_node.get_meta("Mount",false):
+		return true
+
+	return false
+
 
 @rpc("any_peer","call_local","reliable")
 func capture_single_kletka_sync(glowing_kletka_number_selected_temp,temp_kletka_capture_config):
@@ -709,18 +813,22 @@ func reduce_one_action_point(amount_to_reduce=-1):
 		make_action_button.disabled=true
 
 
-func get_current_kletka_id(name_to_search:String=current_player_name):
+func get_current_kletka_id(char_info:CharInfo=get_current_self_char_info())->int:
 	#current_player_name=""
+
 	for kletka_id in occupied_kletki:
-		if occupied_kletki[kletka_id].name==name_to_search:
-			return kletka_id
+		for node in occupied_kletki[kletka_id]:
+			if node.get_meta("unit_unique_id")==char_info.get_uniq_id():
+				return kletka_id
 	return -1
 
 
 
 @rpc("any_peer","call_local","reliable")
-func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:int,_glowing_kletka_number_selected:int,is_partial:bool=false,visually_only:bool=false):
+func move_player_from_kletka_id1_to_id2(char_info_dic:Dictionary,current_kletka_local:int,_glowing_kletka_number_selected:int,is_partial:bool=false,visually_only:bool=false):
 	print("_________________movement______________-")
+	var char_info=CharInfo.from_dictionary(char_info_dic)
+
 
 	var pu_id=char_info.pu_id
 	#var unit_id=char_info.unit_id
@@ -766,11 +874,36 @@ func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:
 	if not is_partial or current_kletka_local==-1:
 		if not visually_only:
 			if current_kletka_local!=-1:
-				occupied_kletki.erase(current_kletka_local)
-			occupied_kletki[_glowing_kletka_number_selected]=player_node_to_move
+				remove_char_info_from_kletka_id(char_info,current_kletka_local)
+			
+			if not occupied_kletki.has(_glowing_kletka_number_selected):
+				occupied_kletki[_glowing_kletka_number_selected]=[]
+			
+			if occupied_kletki[_glowing_kletka_number_selected].is_empty():
+				occupied_kletki[_glowing_kletka_number_selected]=[player_node_to_move]
+			else:
+				occupied_kletki[_glowing_kletka_number_selected].append(player_node_to_move)
+			
+			players_handler.rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"total_kletki_moved",1)
+			players_handler.rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"kletki_moved_this_turn",1)
 	#if pu_id==Globals.self_pu_id and not visually_only and not is_partial:
 		#get_current_kletka_id()=glowing_kletka_number_selected
 	
+	for kletka_id in occupied_kletki.keys():
+		if occupied_kletki.is_empty():
+			occupied_kletki.erase(kletka_id)
+	
+
+
+func remove_char_info_from_kletka_id(char_info:CharInfo,kletka_id:int):
+
+
+	occupied_kletki[kletka_id].erase(char_info.get_node())
+	if occupied_kletki[kletka_id].is_empty():
+		occupied_kletki.erase(kletka_id)
+
+
+
 func _on_start_pressed():
 	#for i in get_all_children(self):
 		#print(i)
@@ -840,6 +973,8 @@ var awaiting_responce_from_pu_id:String
 
 func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_point:bool=true,phantasm_config={}):
 	end_turn_button.disabled=true
+	var self_char_info:CharInfo=get_current_self_char_info()
+
 	if attack_type=="Physical" or attack_type=="Magical":
 		if attack_responce_string!="parried":
 			type_of_damage_choose_buttons_box.visible=false
@@ -849,7 +984,6 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			if are_you_sure_result=="no":
 				type_of_damage_choose_buttons_box.visible=true
 				return
-			var self_char_info=get_current_self_char_info()
 			parry_count_max=players_handler.get_char_info_agility(self_char_info)
 			parry_count_max=players_handler.get_agility_in_numbers(parry_count_max)
 		else: 
@@ -861,7 +995,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 		are_you_sure_main_container.visible=false
 		
 
-	var dice_plus_buff=players_handler.pu_id_has_buff(Globals.self_pu_id,"Dice +")
+	var dice_plus_buff=players_handler.char_info_has_buff(get_current_self_char_info(),"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]=="Attack":
@@ -869,11 +1003,19 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 
 	#var pu_id_to_attack = players_handler.servant_name_to_pu_id[occupied_kletki[kletka_id].name]
 
-	var pu_id_to_attack = occupied_kletki[kletka_id].get_meta("Owner pu_id")
-	var enem_unit_id = occupied_kletki[kletka_id].get_meta("unit_id")
-	var enemy_char_info = players_handler.get_charInfo_from_pu_id_unit_id(pu_id_to_attack,enem_unit_id)
+	var enemy_char_info:CharInfo =await get_char_info_on_kletka_id(kletka_id)
+
+
+	var pu_id_to_attack = enemy_char_info.pu_id
+	var enem_unit_id = enemy_char_info.unit_id
+
+
+	attacking_char_info= enemy_char_info
+
+	
 
 	var peer_id_to_attack=Globals.pu_id_player_info[pu_id_to_attack].current_peer_id
+
 
 	if not Globals.pu_id_player_info[pu_id_to_attack]["is_connected"]:
 		return
@@ -881,20 +1023,23 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 
 	awaiting_responce_from_pu_id=pu_id_to_attack
 
-	var self_char_info=get_current_self_char_info()
+	
 	rpc_id(peer_id_to_attack,"receice_dice_roll_results",dice_roll_result_list)
 	
 	if attack_responce_string!="parried":
-		rpc_id(peer_id_to_attack,"set_action_status",self_char_info,"getting_attacked",attack_type,phantasm_config)
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),attack_type,phantasm_config)
 	else:#ignore this
-		rpc_id(peer_id_to_attack,"set_action_status",self_char_info,"getting_attacked",attack_type,phantasm_config)
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),attack_type,enemy_char_info.to_dictionary(),phantasm_config)
 	
-	disable_every_button()
+	
 	
 	if attack_type=="Physical" and players_handler.get_self_servant_node().attack_range<=2:
-		rpc("move_player_from_kletka_id1_to_id2",self_char_info,get_current_kletka_id(),kletka_id,true)
-		
-	alert_label_text(true,"You've attacked an enemie, waiting for it's responce")
+		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),get_current_kletka_id(),kletka_id,true)
+	
+	if pu_id_to_attack != Globals.self_pu_id:
+		disable_every_button()	
+
+		alert_label_text(true,"You've attacked an enemie, waiting for it's responce")
 	
 	var hitted=false
 	
@@ -919,24 +1064,24 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			hitted=true
 			current_action="wait"
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"attacked_this_turn",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
 			
 			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 			await players_handler.trigger_buffs_on(self_char_info,"enemy halfed damage",enemy_char_info)
 		"damaged":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			hitted=true
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"attacked_this_turn",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
 			current_action="wait"
 			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 		"defending":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			hitted=true
 			current_action="wait"
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"attacked_this_turn",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
 			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 			await players_handler.trigger_buffs_on(self_char_info,"enemy defended",enemy_char_info)
 		"evaded":
@@ -946,13 +1091,16 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 
 	if hitted:
 		#TODO check if summon can charge owner servant
-		players_handler.charge_np_to_char_info_by_number(self_char_info,1)
+		players_handler.rpc("charge_np_to_char_info_by_number",self_char_info.to_dictionary(),1)
 	roll_dice_optional_label.visible=false
 	if attack_type=="Physical" and players_handler.get_char_info_attack_range(self_char_info)<=2: 
-		rpc("move_player_from_kletka_id1_to_id2",self_char_info,kletka_id,get_current_kletka_id(),true)
+		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),kletka_id,get_current_kletka_id(),true)
 	if attack_type!="Phantasm" or not consume_action_point:
-		#TODO aditional attack check 
-		reduce_one_action_point()
+		if players_handler.get_self_servant_node().additional_attack>=1:
+			players_handler.rpc("reduce_additional_attacks_for_char_info",self_char_info.to_dictionary())
+		else:
+			reduce_one_action_point()
+
 	dice_holder_hbox.visible=false
 	roll_dice_control_container.visible=false
 	disable_every_button(false)
@@ -964,9 +1112,15 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 
 func get_char_info_from_node_name(unit_name:String)->CharInfo:
 	
-	var kletka_id=get_current_kletka_id(unit_name)
+	var serv_nod#=players_handler.get_self_servant_node(unit_name)
+	for kletka_id in occupied_kletki:
+		for node in occupied_kletki[kletka_id]:
+			if node.name==unit_name:
+				serv_nod=node
+				break
 
-	var serv_nod=players_handler.get_self_servant_node(unit_name)
+
+	
 	var pu_id=serv_nod.get_meta("owner_pu_id","")
 	var unit_id=serv_nod.get_meta("unit_id")
 
@@ -988,7 +1142,7 @@ func roll_a_dice():
 	
 	randomize()
 
-	var set_dices=players_handler.pu_id_has_buff(get_current_self_char_info(),"Faceless Moon")
+	var set_dices=players_handler.char_info_has_buff(get_current_self_char_info(),"Faceless Moon")
 	if set_dices:
 		dice_roll_result_list=set_dices.get("Dices",{})
 	
@@ -1023,13 +1177,26 @@ func _roll_dices_button_pressed():
 	rolled_a_dice.emit()
 	pass
 
-@rpc("any_peer","call_remote","reliable")
-func set_action_status(by_whom_char_info:CharInfo,status,attack_type="Physical",phantasm_config={}):
+var char_info_attacked:CharInfo
+
+@rpc("any_peer","call_local","reliable")
+func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacked_dic:Dictionary,attack_type="Physical",phantasm_config={}):
+	char_info_attacked=CharInfo.from_dictionary(char_info_attacked_dic)
+	
+	await get_tree().create_timer(0.2).timeout
+	
+	var by_whom_char_info:CharInfo=CharInfo.from_dictionary(by_whom_char_info_dic)
 	self_action_status=status
 	attacked_by_char_info=by_whom_char_info
 
 	var self_char_info=get_current_self_char_info()
 
+	var self_unit_hit=false
+	
+
+	if by_whom_char_info.pu_id == self_char_info.pu_id:
+		self_unit_hit = true
+		
 	
 
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
@@ -1041,7 +1208,7 @@ func set_action_status(by_whom_char_info:CharInfo,status,attack_type="Physical",
 	match status:
 		"getting_attacked":
 
-			if by_whom_char_info in players_handler.get_allies():
+			if by_whom_char_info in players_handler.get_allies() and not self_unit_hit:
 				disable_every_button()
 				var type=await choose_between_two(
 					str(Globals.pu_id_player_info[by_whom_char_info.pu_id]["nickname"],". is your ally and attacking you\nDo you consider this as betrayal?"),
@@ -1051,11 +1218,18 @@ func set_action_status(by_whom_char_info:CharInfo,status,attack_type="Physical",
 				disable_every_button(false)
 				if type=="Yes":
 					players_handler.additional_enemies+=by_whom_char_info.pu_id
+			
+
+			var node_attacked=char_info_attacked.get_node()
+
+			var can_evade=node_attacked.get_meta("Can_Evade",true)
+			var can_defence=node_attacked.get_meta("Can_Defence",true)
+			var can_parry=node_attacked.get_meta("Can_Parry",true)
 
 
 			you_were_attacked_label.text=str("You were attacked with this dice rolls:\n",
-"Attack: ", recieved_dice_roll_result["main_dice"] ,"Crit: ",recieved_dice_roll_result["crit_dice"],
-"\nWhat do you do?")
+			"Attack: ", recieved_dice_roll_result["main_dice"] ,"Crit: ",recieved_dice_roll_result["crit_dice"],
+			"\nWhat do you do?")
 
 			var atk_range=players_handler.get_char_info_attack_range(by_whom_char_info)
 
@@ -1069,6 +1243,26 @@ func set_action_status(by_whom_char_info:CharInfo,status,attack_type="Physical",
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=true
 			else: 
 				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=false
+			
+			$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled   = not can_parry
+			$GUI/You_were_attacked_container/HBoxContainer/Evade_button.disabled   = not can_evade
+			$GUI/You_were_attacked_container/HBoxContainer/Defence_button.disabled = not can_defence
+
+			var all_actions_blocked=$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled and \
+			$GUI/You_were_attacked_container/HBoxContainer/Evade_button.disabled and \
+			$GUI/You_were_attacked_container/HBoxContainer/Defence_button.disabled
+
+			if all_actions_blocked:
+				var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
+				rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+				if damage_to_take==0:
+					rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
+				print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take)
+				players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take)
+				players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+				rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
+				return
+
 			you_were_attacked_container.visible=true
 		"parrying":
 			_on_parry_button_pressed()
@@ -1107,7 +1301,7 @@ func _on_evade_button_pressed():
 	
 	await await_dice_roll()
 
-	var dice_plus_buff=players_handler.pu_id_has_buff(get_current_self_char_info(),"Dice +")
+	var dice_plus_buff=players_handler.char_info_has_buff(char_info_attacked,"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]=="Evade":
@@ -1125,7 +1319,7 @@ func _on_evade_button_pressed():
 
 	if dice_roll_result_list["main_dice"]>recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
 		rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-		rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," evaded by throwing ",dice_roll_result_list["main_dice"]))
+		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by throwing ",dice_roll_result_list["main_dice"]))
 	elif dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
 		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type,"Halfed Damage")
 		
@@ -1136,25 +1330,27 @@ func _on_evade_button_pressed():
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
 			if damage_to_take==0:
-				rpc("remove_invinsibility_after_hit_for_pu_id",Globals.self_pu_id)
-			rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," halfed damage by throwing ",dice_roll_result_list["main_dice"]))
-			players_handler.rpc("take_damage_to_char_info",get_current_self_char_info(),damage_to_take)
-			players_handler.rpc("change_game_stat_for_pu_id",attacked_by_char_info,"total_damage_dealt",damage_to_take)
+				rpc("remove_invinsibility_after_hit_for_pu_id",char_info_attacked)
+			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," halfed damage by throwing ",dice_roll_result_list["main_dice"]))
+			print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take)
+			players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take)
+			players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
 	else: 
 		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
 		
 		if typeof(damage_to_take)==TYPE_STRING:
 			if damage_to_take=="evaded":
-				rpc("remove_evade_buff_after_hit_for_char_info",get_current_self_char_info())
+				rpc("remove_evade_buff_after_hit_for_char_info",char_info_attacked.to_dictionary())
 				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-				rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," evaded by buff"))
+				rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 			if damage_to_take==0:
-				rpc("remove_invinsibility_after_hit_for_char_info",get_current_self_char_info())
-			players_handler.rpc("take_damage_to_char_info",get_current_self_char_info(),damage_to_take)
-			players_handler.rpc("change_game_stat_for_pu_id",attacked_by_char_info,"total_damage_dealt",damage_to_take)
-			rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," got damaged thowing ",dice_roll_result_list["main_dice"]))
+				rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
+			print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take)
+			players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take)
+			players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
 
 
@@ -1163,7 +1359,7 @@ func _on_evade_button_pressed():
 
 
 	if counter_attack:
-		var atk_rng=players_handler.get_char_info_attack_range(get_current_self_char_info())
+		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
 		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
 		
 		var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_rng).size()
@@ -1174,14 +1370,16 @@ func _on_evade_button_pressed():
 			are_you_sure_result=await are_you_sure_signal
 			if are_you_sure_result=="no":
 				return
-			systemlog_message(str(get_char_info_nick(get_current_self_char_info())," counter attacking"))
+			systemlog_message(str(get_char_info_nick(char_info_attacked)," counter attacking"))
 			
-			await attack_player_on_kletka_id(attacker_kletka_id,false)
+			await attack_player_on_kletka_id(attacker_kletka_id,"Physical",false)
 
 
 @rpc("any_peer","call_local","reliable")
-func remove_invinsibility_after_hit_for_char_info(char_info:CharInfo):
+func remove_invinsibility_after_hit_for_char_info(char_info_dic:Dictionary):
 	#var pu_id_buffs=Globals.pu_id_player_info[pu_id]["servant_node"].buffs
+	var char_info=CharInfo.from_dictionary(char_info_dic)
+
 	var char_info_buffs=char_info.get_node().buffs
 	for i in range(char_info_buffs.size()):
 		var buff=char_info_buffs[i]
@@ -1195,7 +1393,9 @@ func remove_invinsibility_after_hit_for_char_info(char_info:CharInfo):
 
 
 @rpc("any_peer","call_local","reliable")
-func remove_evade_buff_after_hit_for_char_info(char_info:CharInfo):
+func remove_evade_buff_after_hit_for_char_info(char_info_dic:Dictionary):
+	var char_info=CharInfo.from_dictionary(char_info_dic)
+
 	var char_info_buffs=char_info.get_node().buffs
 	for i in range(char_info_buffs.size()):
 		var buff=char_info_buffs[i]
@@ -1219,7 +1419,7 @@ func _on_defence_button_pressed():
 	
 	await await_dice_roll()
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	var dice_plus_buff=players_handler.char_info_has_buff(get_current_self_char_info(),"Dice +")
+	var dice_plus_buff=players_handler.char_info_has_buff(char_info_attacked,"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]=="Defence":
@@ -1231,20 +1431,21 @@ func _on_defence_button_pressed():
 		
 	if typeof(damage_to_take)==TYPE_STRING:
 		if damage_to_take=="evaded":
-			rpc("remove_evade_buff_after_hit_for_char_info",get_current_self_char_info())
+			rpc("remove_evade_buff_after_hit_for_char_info",char_info_attacked.to_dictionary())
 			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-			rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," evaded by buff"))
+			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
 	else:
 		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 		if damage_to_take==0:
-			rpc("remove_invinsibility_after_hit_for_char_info",get_char_info_nick(get_current_self_char_info()))
-		players_handler.rpc("take_damage_to_char_info",get_current_self_char_info(),damage_to_take)
-		players_handler.rpc("change_game_stat_for_pu_id",attacked_by_char_info,"total_damage_dealt",damage_to_take)
-		rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," got damaged thowing ",dice_roll_result_list["main_dice"]))
+			rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
+		print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take)
+		players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take)
+		players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	
 	
 	
-	rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," defending by throwing ",dice_roll_result_list["defence_dice"]))
+	rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," defending by throwing ",dice_roll_result_list["defence_dice"]))
 	
 	dice_holder_hbox.visible=false
 
@@ -1261,7 +1462,7 @@ func _on_parry_button_pressed():
 		
 	await await_dice_roll()
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	var dice_plus_buff=players_handler.char_info_has_buff(get_current_self_char_info(),"Dice +")
+	var dice_plus_buff=players_handler.char_info_has_buff(char_info_attacked,"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]=="Parry":
@@ -1273,28 +1474,29 @@ func _on_parry_button_pressed():
 	if dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]+1 or dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]-1 or dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]:
 		print("parried")
 		rpc_id(attacked_by_peer_id,"answer_attack","parried")
-		rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," parried"))
+		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," parried"))
 		return
 	print("dont parried")
-	rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," got hit"))
+	rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got hit"))
 	
 	var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
 	
 	if typeof(damage_to_take)==TYPE_STRING:
 		if damage_to_take=="evaded":
-			rpc("remove_evade_buff_after_hit_for_char_info",Globals.self_pu_id)
+			rpc("remove_evade_buff_after_hit_for_char_info",char_info_attacked.to_dictionary())
 			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-			rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," evaded by buff"))
+			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
 	else:
 		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 		if damage_to_take==0:
-			rpc("remove_invinsibility_after_hit_for_char_info",get_char_info_nick(get_current_self_char_info()))
-		players_handler.rpc("take_damage_to_char_info",get_current_self_char_info(),damage_to_take)
-		players_handler.rpc("change_game_stat_for_pu_id",attacked_by_char_info,"total_damage_dealt",damage_to_take)
+			rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
+		print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take)
+		players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take)
+		players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
 		
 		
 		
-		rpc("systemlog_message",str(get_char_info_nick(get_current_self_char_info())," got damaged thowing ",dice_roll_result_list["main_dice"]))
+		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
 	dice_holder_hbox.visible=false
 
 
@@ -1303,12 +1505,12 @@ func _on_phantasm_evation_button_pressed():
 	#TODO
 	pass # Replace with function body.
 
-@rpc('any_peer',"call_remote","reliable")
+@rpc('any_peer',"call_local","reliable")
 func answer_attack(status):
 	attack_responce_string=status
 	attack_response.emit("OK")
 
-@rpc("any_peer","call_remote","reliable")
+@rpc("any_peer","call_local","reliable")
 func receice_dice_roll_results(recieved_dice_roll_result_temp):
 	recieved_dice_roll_result=recieved_dice_roll_result_temp
 	#a
@@ -1381,17 +1583,17 @@ func _on_attack_pressed(counter_attack:bool=false):
 
 	var player_has_magic_attack=players_handler.get_char_info_attack_power(get_current_self_char_info())
 
+	var addit_attacks=players_handler.get_self_servant_node().additional_attack>=1
 	
 	
 	if player_has_magic_attack:
 		magical_damage_button.disabled=false
-	if current_action_points>=1 or counter_attack:
+	if current_action_points>=1 or counter_attack or addit_attacks:
 		type_of_damage_choose_buttons_box.visible=true
 		actions_buttons.visible=false
 		current_action="attack"
 		pass
-		#for i in occupied_kletki.keys():
-		#pass
+
 
 
 func _on_regular_damage_button_pressed():
@@ -1404,8 +1606,6 @@ func _on_regular_damage_button_pressed():
 	print(kk)
 	damage_type="Physical"
 	choose_glowing_cletka_by_ids_array(kk)
-	for i in kk:
-		print(occupied_kletki[i])
 	type_of_damage_choose_buttons_box.visible=false
 
 func _on_magical_damage_button_pressed():
@@ -1416,8 +1616,7 @@ func _on_magical_damage_button_pressed():
 		return
 	damage_type="Magical"
 	choose_glowing_cletka_by_ids_array(kk)
-	for i in kk:
-		print(occupied_kletki[i])
+
 	type_of_damage_choose_buttons_box.visible=false
 
 func deal_damage():
@@ -1433,26 +1632,75 @@ func update_field_icon()->void:
 			push_error("UNKNOWN TIME REQUEST URGENT HELP, YOU BROKE TIMELINE")
 	return
 
+var unit_ids_already_played_this_turn:Array=[]
 
-func add_passive_skills_for_char_info(char_info:CharInfo):
+func choose_unit_to_play():
+	var kletki_with_non_played_units:Array=[]
+	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
+			if not unit_id in unit_ids_already_played_this_turn:
+				kletki_with_non_played_units.append(
+					players_handler.get_char_info_kletka_number(
+						CharInfo.new(Globals.self_pu_id,unit_id)
+					)
+				)
+	current_action="wait"
+	info_table_show("Choose unit to play")
+	await info_ok_button.pressed
+	choose_glowing_cletka_by_ids_array(kletki_with_non_played_units)
+	var choosen_kletka_id=await glow_kletka_pressed_signal
+	
 
-	if not "passive_skills" in get_current_self_char_info().get_node():
-		print("no passive skills found for char_info="+str(char_info))
-		return
-	var passive_buffs=get_current_self_char_info().get_node().passive_skills
-	for buff in passive_buffs:
-		#func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
-		#players_handler.rpc("remove_buff",[pu_id],buff["Name"],true,true)
-		#await players_handler.buff_removed
-		var buff_copy=buff.duplicate(true)
-		buff_copy["Type"]="Status"
-		players_handler.rpc("add_buff",[char_info],buff)
+	
+	var tmp=await get_char_info_on_kletka_id(choosen_kletka_id)
 
+	var node_choosen=tmp.get_node()
+	var unit_id_choosen=node_choosen.get_meta("unit_id")
+
+	current_unit_id=unit_id_choosen
+
+
+	if unit_id_choosen==0:
+		current_action_points_label.text=str(3)
+		current_action_points=3
+	else:
+		current_action_points_label.text=str(0)
+		current_action_points=0
+
+		players_handler.rpc(
+			"reduce_additional_moves_for_char_info",
+			get_current_self_char_info().to_dictionary(),
+			-node_choosen.get_meta("Move Points", 1)
+			)
+		players_handler.rpc(
+			"reduce_additional_attacks_for_char_info",
+			get_current_self_char_info().to_dictionary(),
+			-node_choosen.get_meta("Attack Points", 1)
+			)
+	
+	$GUI/action/np_points_number_label.text=str(node_choosen.phantasm_charge)
+	$GUI/current_hp_container/current_hp_value_label.text=str(node_choosen.hp)
+	$GUI/peer_id_label.text=str(node_choosen.name)
+		
+
+
+	
 
 
 
 @rpc("authority","call_local","reliable")
 func start_turn():
+	#choosing char_info to play
+	unit_ids_already_played_this_turn=[]
+
+	if Globals.pu_id_player_info[Globals.self_pu_id]['units'].size()>=2:
+		
+		await choose_unit_to_play()
+		
+
+
+
+
+
 	print("It is my turn:",Globals.self_pu_id," char info:",get_current_self_char_info())
 	my_turn=true
 	
@@ -1462,24 +1710,27 @@ func start_turn():
 	end_turn_button.disabled=false
 	paralyzed=false
 	
-	print(players_handler.pu_id_player_game_stat_info)
-	#players_handler.pu_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
+	print(players_handler.unit_uniq_id_player_game_stat_info)
 
-	players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"attacked_this_turn",0,true)
-	players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"skill_used_this_turn",0,true)
-	players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"kletki_moved_this_turn",0,true)
+	var self_char_info=get_current_self_char_info()
+	#players_handler.unit_uniq_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
+
+	players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",0,true)
+	players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"skill_used_this_turn",0,true)
+	players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"kletki_moved_this_turn",0,true)
 
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
-		if players_handler.char_info_has_buff(get_current_self_char_info(),"Paralysis") or \
-		players_handler.char_info_has_buff(get_current_self_char_info(),"Stun"):
+		if players_handler.char_info_has_buff(self_char_info,"Paralysis") or \
+		players_handler.char_info_has_buff(self_char_info,"Stun"):
 			paralyzed=true
 			disable_every_button()
 			info_table_show("You're paralyzed\n")
+			await info_ok_button.pressed
 			end_turn_button.disabled=false
 			command_spells_button.disabled=false
-		if players_handler.char_info_has_buff(get_current_self_char_info(),"Presence Concealment"):
-			var buff_info=players_handler.char_info_has_buff(get_current_self_char_info(),"Presence Concealment")
+		if players_handler.char_info_has_buff(self_char_info,"Presence Concealment"):
+			var buff_info=players_handler.char_info_has_buff(self_char_info,"Presence Concealment")
 			var turns_passed=players_handler.turns_counter-buff_info["Turn Casted"]
 			var minimum_turns=buff_info["Minimum Turns"]
 			var maximum_turns=buff_info["Maximum Turns"]
@@ -1491,16 +1742,21 @@ func start_turn():
 			else:#waiting for minumum turns
 				disable_every_button()
 				info_table_show("Вы в сокрытии присутствия и не можете ходить еще\n"+str(abs(turns_passed-minimum_turns))+" ходов")
+				await info_ok_button.pressed
 	
 	
 	
-	players_handler.reduce_skills_cooldowns(get_current_self_char_info())
-	players_handler.rpc("reduce_skills_cooldowns",get_current_self_char_info())
-	
-	players_handler.reduce_buffs_cooldowns(get_current_self_char_info())
-	players_handler.rpc("reduce_buffs_cooldowns",get_current_self_char_info())
-	players_handler.trigger_buffs_on(get_current_self_char_info(),"Turn Started")
-	players_handler.check_if_hp_is_bigger_than_max_hp_for_char_info(get_current_self_char_info())
+	players_handler.reduce_all_cooldowns(self_char_info)
+
+
+
+	#players_handler.reduce_skills_cooldowns(self_char_info)
+	#players_handler.rpc("reduce_skills_cooldowns",self_char_info)
+	#
+	#players_handler.reduce_buffs_cooldowns(self_char_info)
+	#players_handler.rpc("reduce_buffs_cooldowns",self_char_info)
+	players_handler.trigger_buffs_on(self_char_info,"Turn Started")
+	players_handler.check_if_hp_is_bigger_than_max_hp_for_char_info(self_char_info)
 	#removing and adding skill in case it got remove by something
 	
 
@@ -1519,8 +1775,8 @@ func release_from_Presence_Concealment(stun:bool):
 		var kletka_to_initial_spawn=get_unoccupied_kletki()
 		choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
 		await glow_kletka_pressed_signal
-		rpc("show_char_info_servant_node",get_current_self_char_info(),true)
-		players_handler.rpc("add_buff",[get_current_self_char_info()],{"Name":"Paralysis",
+		rpc("show_char_info_servant_node",get_current_self_char_info().to_dictionary(),true)
+		players_handler.rpc("add_buff",[get_current_self_char_info().to_dictionary()],{"Name":"Paralysis",
 				"Duration":1,
 				"Power":1
 				})
@@ -1532,13 +1788,14 @@ func release_from_Presence_Concealment(stun:bool):
 		var kletka_to_initial_spawn=get_unoccupied_kletki()
 		choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
 		await glow_kletka_pressed_signal
-		rpc("show_char_info_servant_node",get_current_self_char_info(),true)
-	players_handler.rpc("remove_buff",[get_current_self_char_info()],"Presence Concealment",true)
+		rpc("show_char_info_servant_node",get_current_self_char_info().to_dictionary(),true)
+	players_handler.rpc("remove_buff",[get_current_self_char_info().to_dictionary()],"Presence Concealment",true)
 
 
 
 @rpc("any_peer","reliable","call_local")
-func show_char_info_servant_node(char_info:CharInfo,visible_loc:bool):
+func show_char_info_servant_node(char_info_dic:Dictionary,visible_loc:bool):
+	var char_info=CharInfo.from_dictionary(char_info_dic)
 	#Globals.pu_id_player_info[pu_id]["servant_node"].visible=visible_loc
 	char_info.get_node().visible=visible_loc
 
@@ -1548,22 +1805,30 @@ func _on_cancel_pressed():
 
 
 func _on_move_pressed():
-	print(current_action_points)
-	if current_action_points>=1:
+	print("current_action_points=",current_action_points," additional_moves=",players_handler.get_self_servant_node().additional_moves)
+	if current_action_points>=1 or players_handler.get_self_servant_node().additional_moves>=1:
 		current_action="move"
 		_on_make_action_pressed()
 		var move_ck=[]
 		print("get_current_kletka_id()="+str(get_current_kletka_id())+" connected[get_current_kletka_id()]="+str(connected[get_current_kletka_id()]))
+		var skip=false
 		for i in connected[get_current_kletka_id()]:
+			skip=false
 			if occupied_kletki.has(i):
+				for node in occupied_kletki[i]:
+					if node.get_meta("Mount",false):
+						pass
+					else:
+						skip=true
+			if skip:
 				continue
 			if kletka_preference[i].has("Blocked"):
 				continue
 			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
 		pass
 		choose_glowing_cletka_by_ids_array(move_ck)
-		players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"total_kletki_moved",1)
-		players_handler.rpc("change_game_stat_for_pu_id",Globals.self_pu_id,"kletki_moved_this_turn",1)
+		var self_char_info=get_current_self_char_info()
+		
 
 
 func field_manipulation(buff_config:Dictionary):
@@ -1638,7 +1903,7 @@ func info_but_choose(choose_local:String):
 	choose_two.emit(choose_local)
 
 
-func capture_field_kletki(amount,config_of_kletka):
+func capture_field_kletki(amount,config_of_kletka,owner_char_info:CharInfo):
 	
 	print("capture_field_kletki, pu_id="+str(Globals.self_pu_id))
 	print("amount=="+str(amount))
@@ -1656,8 +1921,13 @@ func capture_field_kletki(amount,config_of_kletka):
 	temp_kletka_capture_config.merge({"turn_casted":players_handler.turns_counter})
 	
 	
-	var owner_char_info=temp_kletka_capture_config["Owner"]
+	#var owner_char_info=temp_kletka_capture_config["Owner"]
 	var owner_uniq_id=owner_char_info.get_uniq_id()
+	temp_kletka_capture_config["Owner"]=owner_uniq_id
+
+
+
+	print("owner_uniq_id=",owner_uniq_id)
 	#var owner_char_info=players_handler.get_charInfo_from_pu_id_unit_id(own_pu,own_uni_id)
 
 
@@ -1738,12 +2008,12 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 			pass#no available kletki nearly impossible
 		else:
 			for kletka in kletki_to_dash_array:
-				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),temp_kletka_id,kletka,false,true)
+				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),temp_kletka_id,kletka,false,true)
 				await get_tree().create_timer(0.5).timeout
 				temp_kletka_id=kletka
 			await get_tree().create_timer(2).timeout
 			print("get_current_kletka_id()=",get_current_kletka_id()," kletka_to_dash=",kletka_to_dash)
-			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),get_current_kletka_id(),kletka_to_dash)
+			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),get_current_kletka_id(),kletka_to_dash)
 
 
 	await await_dice_roll()
@@ -1752,8 +2022,12 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 	for kletka in already_clicked:
 		if kletka in occupied_kletki.keys():
 			# = players_handler.servant_name_to_pu_id[occupied_kletki[kletka].name]
-			var char_info_to_attack = get_char_info_from_node_name(occupied_kletki[kletka].name)
-			if char_info_to_attack==get_current_self_char_info():
+			var uniq_ids_on_kletka=[]
+			for node in occupied_kletki[kletka]:
+				uniq_ids_on_kletka.append(node.get_meta("uniq_id"))
+
+			# if self char uniq id is on this kletka
+			if players_handler.intersect(uniq_ids_on_kletka,[get_current_self_char_info().get_uniq_id()]):
 				rpc("line_attack_add_remove_kletka_number",kletka,"remove")
 				await get_tree().create_timer(1).timeout
 				continue
@@ -1818,21 +2092,32 @@ func _on_make_action_pressed():
 	blinking_glow_button=false
 	glow_cletki_node.visible=false
 	
-	
+	var cur_node=get_current_self_char_info().get_node()
+	var skills_enabledd=true
+	var attack_enabledd=true
+	var phantasm_enabledd=true
+	if cur_node.get_meta("Summon_Check",false):
+		skills_enabledd = cur_node.get_meta("Skills_Enabled",false)
+		attack_enabledd = cur_node.get_meta("Can_Attack", true)
+		phantasm_enabledd = cur_node.get_meta("Can_Use_Phantasm", false)
+
+
+
 	
 	print(str("players_handler.unit_unique_id_to_items_owned=",players_handler.unit_unique_id_to_items_owned))
-	if players_handler.unit_unique_id_to_items_owned[get_current_self_char_info()].is_empty():
+
+	if players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()].is_empty():
 		items_button.visible=false
 	else:
 		#{ "Name": &"Heal Potion", "Effect": [{ "Name": "Heal", "Power": 5 }] }
-		print("players_handler.unit_unique_id_to_items_owned[get_current_self_char_info()]="+str(players_handler.unit_unique_id_to_items_owned[get_current_self_char_info()]))
+		print("players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]="+str(players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]))
 	var max_hit= players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Hits Per Turn")
 	
-	var maximum_skills=players_handler.pu_id_has_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
+	var maximum_skills=players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
 
 
 	if maximum_skills:
-		var used_skills_this_turn=players_handler.pu_id_player_game_stat_info[Globals.self_pu_id]["skill_used_this_turn"]
+		var used_skills_this_turn=players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["skill_used_this_turn"]
 		if used_skills_this_turn>=maximum_skills["Power"]:
 			$GUI/actions_buttons/Skill.disabled=true
 			print("max skills reached")
@@ -1842,13 +2127,15 @@ func _on_make_action_pressed():
 	else:
 		$GUI/actions_buttons/Skill.disabled=false
 
+	
+
 
 	print("\nmax_hit="+str(max_hit or false))
 	if max_hit:
 		
 		print("\n\nmax hit is true")
 		print(max_hit)
-		var attacked_this_turn=players_handler.pu_id_player_game_stat_info[Globals.self_pu_id]["attacked_this_turn"]
+		var attacked_this_turn=players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["attacked_this_turn"]
 		print("attacked_this_turn="+str(attacked_this_turn))
 		
 		if attacked_this_turn>=max_hit["Power"]:
@@ -1859,6 +2146,19 @@ func _on_make_action_pressed():
 			print("max hit not reached")
 	else:
 		$GUI/actions_buttons/Attack.disabled=false
+	
+
+	if not skills_enabledd:
+		$GUI/actions_buttons/Skill.disabled=true
+		print("summon can't use skills")
+	
+	if not attack_enabledd:
+		$GUI/actions_buttons/Attack.disabled=true
+		print("summon can't attack")
+	
+	if not phantasm_enabledd:
+		$GUI/actions_buttons/Phantasm.disabled=true
+		print("summon can't use phantasm")
 		
 	
 	hide_all_gui_windows("actions_buttons")
@@ -1873,11 +2173,24 @@ func _on_end_turn_pressed():
 	#current_action_points=3
 	#current_action_points_label.text=str(current_action_points)
 	disable_every_button(false)#if paralysis
-	make_action_button.disabled=true
-	end_turn_button.disabled=true
+	
 	print(players_handler.trigger_buffs_on)
 	await players_handler.trigger_buffs_on(get_current_self_char_info(),"End Turn")
 	await players_handler.reduce_all_cooldowns(get_current_self_char_info(), "End Turn")
+	unit_ids_already_played_this_turn.append(current_unit_id)
+
+	print("Unit siez=",Globals.pu_id_player_info[Globals.self_pu_id]['units'].size(), "unit_ids_already_played_this_turn=",unit_ids_already_played_this_turn.size())
+
+	if Globals.pu_id_player_info[Globals.self_pu_id]['units'].size()!=unit_ids_already_played_this_turn.size():
+		var answer=await choose_between_two("You have unplayed units. Do you want to skip their turn?","Choose unit","Pass turn")
+		if answer=="Choose unit":
+			await choose_unit_to_play()
+			return
+
+
+
+	make_action_button.disabled=true
+	end_turn_button.disabled=true
 	players_handler.rpc("pass_next_turn",Globals.self_pu_id)
 	
 	pass # Replace with function body.
@@ -1969,7 +2282,8 @@ func hide_all_gui_windows(except_name="all"):
 	"use_custom":[players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
 	"command_spells":[command_spell_choices_container],
 	"menu":[menu_vbox_container],
-	"teams":[players_handler.teams_margin]
+	"teams":[players_handler.teams_margin],
+	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button]
 	}
 	var did_changed=false
 	for key in dictio:
@@ -1984,6 +2298,8 @@ func hide_all_gui_windows(except_name="all"):
 		push_error("wrong hide_all_gui_windows=",except_name)
 
 func _on_self_info_show_button_pressed():
+	players_handler.servant_info_from_pu_id(Globals.self_pu_id)
+	players_handler.player_info_button_current_pu_id=Globals.self_pu_id
 	hide_all_gui_windows("servant_info_main_container")
 	#players_handler.servant_info_main_container.visible= !players_handler.servant_info_main_container.visible
 	
@@ -2016,7 +2332,7 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 	var maximum_skills=players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
 
 	if maximum_skills:
-		var used_skills_this_turn=players_handler.pu_id_player_game_stat_info[Globals.self_pu_id]["skill_used_this_turn"]
+		var used_skills_this_turn=players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["skill_used_this_turn"]
 		print("used_skills_this_turn=",used_skills_this_turn," =maximum_skills['Power']=",maximum_skills["Power"])
 		if used_skills_this_turn>=maximum_skills["Power"]:
 			skills_available=false
@@ -2099,7 +2415,7 @@ func _on_command_spell_np_charge_button_pressed():
 		char_info_to_cast_to=await players_handler.choose_allie()
 		char_info_to_cast_to=char_info_to_cast_to[0]
 
-	players_handler.rpc("change_phantasm_charge_on_char_info",char_info_to_cast_to,6)
+	players_handler.rpc("charge_np_to_char_info_by_number",char_info_to_cast_to.to_dictionary(),6,"command_spell")
 	
 	players_handler.reduce_command_spell_on_pu_id(Globals.self_pu_id)
 	pass # Replace with function body.
@@ -2112,7 +2428,7 @@ func _on_command_spell_add_moves_button_pressed():
 		char_info_to_cast_to=await players_handler.choose_allie()
 		char_info_to_cast_to=char_info_to_cast_to[0]
 	#Globals.self_servant_node.additional_moves+=3
-	players_handler.rpc("reduce_additional_moves_for_char_info",char_info_to_cast_to,-3)
+	players_handler.rpc("reduce_additional_moves_for_char_info",char_info_to_cast_to.to_dictionary(),-3)
 	players_handler.reduce_command_spell_on_pu_id(Globals.self_pu_id)
 	pass # Replace with function body.
 
@@ -2120,7 +2436,7 @@ func _on_command_spell_add_moves_button_pressed():
 func get_players_array_sorted_by_points():
 	var points=[]
 	var pu_id_to_points={}
-	var stat_dic=players_handler.pu_id_player_game_stat_info
+	var stat_dic=players_handler.unit_uniq_id_player_game_stat_info
 	for pu_id in Globals.pu_id_player_info.keys():
 		pu_id_to_points[pu_id]=0
 		for stat in stat_dic[pu_id].keys():
@@ -2198,8 +2514,9 @@ func char_info_to_kletka_number(char_info:CharInfo)->int:
 	var node_name=char_info.get_node().name
 
 	for kletka_id in occupied_kletki:
-		if occupied_kletki[kletka_id].name==node_name:
-			return kletka_id
+		for node in occupied_kletki[kletka_id]:
+			if node.name==node_name:
+				return kletka_id
 	
 	push_error("no kletka found for char_info=",char_info)
 
@@ -2228,78 +2545,3 @@ func _on_reconnect_button_pressed():
 	Globals.reconnect_requested.emit()
 	pass # Replace with function body.
 
-signal refresh_data_get(refresh_data:Dictionary)
-
-@rpc("any_peer","reliable","call_local")
-func request_data_from_host_to_refresh():
-	var sender_peer_id = multiplayer.get_remote_sender_id()
-	var refresh_data:Dictionary={}
-	refresh_data["pu_id_player_info"]=Globals.pu_id_player_info.duplicate(true)
-	refresh_data["servant_data"]={}
-	for pu_id in Globals.pu_id_player_info:
-		var pu_serv_node=Globals.pu_id_player_info[pu_id]["servant_node"]
-		if pu_serv_node!=null:
-			refresh_data["servant_data"]={
-				"buffs": pu_serv_node.buffs.duplicate(true),
-				"skill_cooldowns": pu_serv_node.skill_cooldowns.duplicate(true),
-				"additional_moves": pu_serv_node.additional_moves,
-				"additional_attack": pu_serv_node.additional_attack,
-				"phantasm_charge": pu_serv_node.phantasm_charge,
-				"hp": pu_serv_node.hp
-			}
-	
-	
-	
-	refresh_data["peer_to_persistent_id"]=Globals.peer_to_persistent_id.duplicate(true)
-	refresh_data["is_game_started"]=is_game_started.duplicate(true)
-	refresh_data["unit_uniq_id_to_np_points"]=players_handler.unit_uniq_id_to_np_points.duplicate(true)
-
-	refresh_data["occupied_kletki"]=occupied_kletki.duplicate(true)
-	refresh_data["kletka_preference"]=kletka_preference.duplicate(true)
-	refresh_data["pole_generated_seed"]=pole_generated_seed.duplicate(true)
-
-
-	rpc_id(sender_peer_id,"get_data_nedded_for_refresh",refresh_data)
-	pass
-
-
-@rpc("authority","reliable","call_local")
-func get_data_nedded_for_refresh(refresh_data:Dictionary):
-	refresh_data_get.emit(refresh_data)
-	pass
-
-func refresh_everything_from_host():
-	rpc_id(1,"request_data_from_host_to_refresh")
-	var refresh_data:Dictionary=await refresh_data_get
-	is_game_started=refresh_data["is_game_started"]
-	if is_game_started:
-		pass
-		for pu_id in refresh_data["pu_id_player_info"].keys():
-			var pu_id_data:Dictionary=refresh_data["pu_id_player_info"][pu_id]
-			Globals.pu_id_player_info={}
-			Globals.pu_id_player_info[pu_id]=pu_id_data.duplicate(true)
-			if pu_id_data["servant_name"]!=null:
-
-				players_handler.load_servant(pu_id)
-				Globals.pu_id_player_info[pu_id]["servant_node"].buffs=pu_id_data["servant_node"].buffs.duplicate(true)
-				Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns=pu_id_data["servant_node"].skill_cooldowns.duplicate(true)
-				Globals.pu_id_player_info[pu_id]["servant_node"].additional_moves=pu_id_data["servant_node"].additional_moves
-				Globals.pu_id_player_info[pu_id]["servant_node"].additional_attack=pu_id_data["servant_node"].additional_attack
-				Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=pu_id_data["servant_node"].phantasm_charge
-				Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_data["servant_node"].hp
-
-	else:
-		Globals.pu_id_player_info=refresh_data["pu_id_player_info"]
-	
-	Globals.peer_to_persistent_id=refresh_data["peer_to_persistent_id"]
-
-	players_handler.unit_uniq_id_to_np_points=refresh_data["unit_uniq_id_to_np_points"]
-
-	occupied_kletki=refresh_data["occupied_kletki"]
-	for kletka_id in refresh_data["kletka_preference"].keys():
-		capture_single_kletka_sync(kletka_id,refresh_data["kletka_preference"][kletka_id])
-	kletka_preference=refresh_data["kletka_preference"]
-
-	pole_generated_seed=refresh_data["pole_generated_seed"]
-	reset_pole(pole_generated_seed)
-	pass
