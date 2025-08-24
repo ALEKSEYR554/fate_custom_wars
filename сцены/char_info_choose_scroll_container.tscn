@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwg832bxjw8eo"]
+
+[ext_resource type="Script" path="res://скрипты/char_info_choose_scroll_container.gd" id="1_8fsi2"]
+[ext_resource type="Texture2D" uid="uid://dsxq6hgseykdj" path="res://1.png" id="2_2thqx"]
+
+[node name="char_info_choose_scroll_container" type="ScrollContainer"]
+offset_right = 615.0
+offset_bottom = 238.0
+vertical_scroll_mode = 0
+script = ExtResource("1_8fsi2")
+
+[node name="char_info_holder_HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="char_info_vbox_example" type="VBoxContainer" parent="char_info_holder_HBoxContainer"]
+process_mode = 4
+visible = false
+modulate = Color(0.5, 0.5, 0.5, 1)
+layout_mode = 2
+
+[node name="char_info_name_label" type="Label" parent="char_info_holder_HBoxContainer/char_info_vbox_example"]
+layout_mode = 2
+text = "321311231231231"
+
+[node name="char_info_TextureButton" type="TextureButton" parent="char_info_holder_HBoxContainer/char_info_vbox_example"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+texture_normal = ExtResource("2_2thqx")
+ignore_texture_size = true
+stretch_mode = 0

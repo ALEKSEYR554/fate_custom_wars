@@ -75,7 +75,8 @@ func _on_create_server_button_button_up():
 		"disconnected_more_than_timeout":false,
 		"servant_node_name":null,
 		"servant_name": null,
-		"servant_node": null
+		"servant_node": null,
+		"units": {}
 	}
 	Globals.peer_to_persistent_id[multiplayer.get_unique_id()] = host_puid
 	
@@ -159,7 +160,8 @@ func register_player(puid: String, nickname: String):
 			"servant_name": null,
 			"servant_node_name":null,
 			"disconnected_more_than_timeout":false,
-			"servant_node": null
+			"servant_node": null,
+			"units": {}
 		}
 		print("New player %s (PUID: %s, PeerID: %s) registered." % [nickname, puid, sender_peer_id])
 
@@ -195,8 +197,6 @@ func register_player(puid: String, nickname: String):
 					}
 			
 			
-			refresh_data["unit_uniq_id_to_np_points"]=field_node.players_handler.unit_uniq_id_to_np_points.duplicate(true)
-
 			refresh_data["occupied_kletki"]={}
 			for kletka_id in field_node.occupied_kletki:
 				refresh_data["occupied_kletki"][kletka_id]=field_node.occupied_kletki[kletka_id].name
