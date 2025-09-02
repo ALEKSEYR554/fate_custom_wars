@@ -160,6 +160,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 35
 text = "Phantasm"
 
+[node name="Unmount" type="Button" parent="GUI/actions_buttons"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Unmount"
+
 [node name="Items" type="Button" parent="GUI/actions_buttons"]
 visible = false
 layout_mode = 2
@@ -1018,6 +1024,7 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/actions_buttons/Move" to="." method="_on_move_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Skill" to="." method="_on_skill_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Phantasm" to="players_handler" method="_on_phantasm_pressed"]
+[connection signal="pressed" from="GUI/actions_buttons/Unmount" to="." method="_on_unmount_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Items" to="players_handler" method="_on_items_pressed"]
 [connection signal="pressed" from="GUI/actions_buttons/Cancel" to="." method="_on_cancel_pressed"]
 [connection signal="tab_changed" from="GUI/custom_choices_tab_container" to="players_handler" method="_on_custom_choices_tab_container_tab_changed"]

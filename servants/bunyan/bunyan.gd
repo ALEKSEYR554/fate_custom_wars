@@ -77,31 +77,7 @@ var skills={
 		{"Name":"ATK Up",
 		"Duration":3,
 		"Power":3},
-	"Cast":"All allies"},
-	{
-		"Buffs":
-			{
-				"Name":"Summon",#
-				"Duration":3,#
-				"Summon Name":"rama",#
-				"Skills Enabled":false,#
-				"One Time Skills":false,#
-				"Can Use Phantasm":false,#
-				"Disappear After Summoner Death":true,#?
-				"Mount":false,
-				"Require Riding Skill":false,
-				"Can Attack":true,#
-				"Can Evade":true,#
-				"Can Defence":true,#
-				"Can Parry":true,#
-				"Move Points":1,#
-				"Attack Points":1,#
-				"Phantasm Points Farm":false,#
-				"Limit":3,#
-				"Servant Data Location":"Main"#
-			},
-		"Cast":"Self"
-	}
+	"Cast":"All allies"}
 ]},
 "Second Skill":{
 	"Type":"Buff Granting",
