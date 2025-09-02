@@ -94,6 +94,16 @@ func generate_unique_ids(amount:int=200)->Array:
 	return uniqq_ids
 
 
+func get_all_servants_subfolders_name(path:String=""):
+	var dir = DirAccess.open(Globals.user_folder+"/servants/"+path)
+	var output=[]
+	for folder in dir.get_directories():
+		output.append(path+folder)
+		output.append_array(get_all_servants_subfolders_name(str(path+folder+"/")))
+	return output
+
+
+
 func preload_all_servant_sprites():
 	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
 	#$FileDialog.root_subfolder = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
@@ -101,9 +111,13 @@ func preload_all_servant_sprites():
 		print("servant selection type Compiled")
 		var count=1
 		characters =[]
-		var dir = DirAccess.open(Globals.user_folder+"/servants/")
+		#var dir = DirAccess.open(Globals.user_folder+"/servants/")
 		print(OS.get_user_data_dir())
-		for folder in dir.get_directories():
+
+		#getting summons folders
+		var all_folder_with_sprites_to_load=get_all_servants_subfolders_name()
+
+		for folder in all_folder_with_sprites_to_load:
 			print("appending characters\n")
 			#var img = Image.new()
 			var path=Globals.user_folder+"/servants/"+str(folder)+"/sprite.png"
@@ -132,12 +146,14 @@ func preload_all_servant_sprites():
 		#editor
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man","rama"]:
+		for folder in ["bunyan","bunyan/horse","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man","rama"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
 			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
 			print(img)
 			#img=ImageTexture.create_from_image(img)
+			
+			#TODO different descriptions
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})
 	pass
 

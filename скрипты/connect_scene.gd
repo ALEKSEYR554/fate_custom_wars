@@ -88,12 +88,16 @@ func _on_connect_button_button_up():
 	print("Attempting to connect to %s:%s with PUID: %s" % [ip, port, Globals.self_pu_id])
 	
 	# Сбрасываем попытки подключения перед новым подключением вручную
-	connection_attempts = 10
+	connection_attempts = 99
 	is_intentionally_disconnecting = false 
 	
 	var error = peer.create_client(ip, port)
 	if error != OK:
 		OS.alert("Failed to create client. Error: " + str(error), "Client Error")
+		connect_button.disabled = false
+		nickname_edit.editable=true
+		port_entry.editable=true
+		IP_entry.editable=true
 		return
 
 	multiplayer.multiplayer_peer = peer
@@ -102,6 +106,7 @@ func _on_connect_button_button_up():
 	port_entry.editable=false
 	IP_entry.editable=false
 	if is_instance_valid(back_button): back_button.queue_free()
+	connection_attempts = 10
 
 func _on_connected_to_server():
 	print("Connection established with server! Peer ID: %s. Registering..." % multiplayer.get_unique_id())
@@ -272,6 +277,10 @@ func _attempt_reconnect():
 	else:
 		print("Max reconnection attempts reached. Giving up.")
 		OS.alert("Could not reconnect to the server after multiple attempts.", "Reconnection Failed")
+		connect_button.disabled = false
+		nickname_edit.editable=true
+		port_entry.editable=true
+		IP_entry.editable=true
 		connection_attempts = 0 # Сброс для будущих ручных попыток
 		# Здесь можно вернуть игрока в главное меню или показать сообщение об ошибке
 		# main_menu.visible = true (или аналогичная логика для возврата в UI)

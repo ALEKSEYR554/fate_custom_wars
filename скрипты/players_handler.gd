@@ -183,10 +183,12 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	var effect_layer:TextureRect = TextureRect.new()
 	var buff_name_label:Label= Label.new()
 	#var servant_folder_name:String=folderr+"servants/"+str(servant_name)
-	
+	var servant_path=servant_name
+
+	var servant_name_just_name=servant_path.get_file().get_basename()
 
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
-	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
+	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
 	#print("servant_folder_name=",servant_folder_name)
 	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
 	#print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
@@ -274,11 +276,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 				idd=i
 
 
-				
-
-
-
-				#var duration:int = summon_buff_info.get("Duration",-1)
+				var duration:int = summon_buff_info.get("Duration",-1)
 				#var skills_enabled:bool = summon_buff_info.get("Skills Enabled",false)
 				#var one_time_skills:bool = summon_buff_info.get("One Time Skills",false)
 				#var can_use_phantasm:bool = summon_buff_info.get("Can Use Phantasm",false)
@@ -303,7 +301,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 
 
-				player.set_meta("Duration", summon_buff_info.get("Duration", -1))
+				#player.set_meta("Duration", summon_buff_info.get("Duration", -1))
 				player.set_meta("Skills_Enabled", summon_buff_info.get("Skills Enabled", false))
 				player.set_meta("One_Time_Skills", summon_buff_info.get("One Time Skills", false))
 				player.set_meta("Can_Use_Phantasm", summon_buff_info.get("Can Use Phantasm", false))
@@ -317,11 +315,39 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 				player.set_meta("Move_Points", summon_buff_info.get("Move Points", 1))
 				player.set_meta("Attack_Points", summon_buff_info.get("Attack Points", 1))
 				player.set_meta("Phantasm_Points_Farm", summon_buff_info.get("Phantasm Points Farm", false))
+
+
+				player.set_meta("Can_Be_Played", summon_buff_info.get("Can Be Played", true))
+
+
 				
 				player.set_meta("Summoner_char_infodic", summon_buff_info.get("Summoner_char_infodic"))
 
+
+				if duration>0:
+					player.buffs.append({
+						"Name":"Death After Turns",
+						"Types":["Status"],
+						"Type":"Status",
+						"Trigger":"Delayed Effect",
+						"Effect After Turns":duration,
+						"Effect On Trigger":[
+							{"Buffs":[
+								{
+									"Name":"Guaranteed Death",
+									"Power":3
+								}],
+							"Cast":"self"},
+						]
+					})
+
 				player.set_meta("Skill_Uniq_Summon_Id",unique_id_trait)
 				player.set_meta("Summon_Check",true)
+
+				if summon_buff_info.get("Starting Buffs", [])!=[]:
+					player.buffs.append(summon_buff_info.get("Starting Buffs"))
+				
+				player.traits.append("Summonable")
 
 
 				Globals.pu_id_player_info[pu_id]["units"][i]=player
@@ -2427,6 +2453,9 @@ func add_buff(cast_array,skill_info:Dictionary):
 				var copy_info=skill_info.duplicate(true)
 				copy_info["Turn Casted"]=turns_counter
 				who_to_cast_char_info.get_node().buffs.append(copy_info)
+			"Guaranteed Death":
+				who_to_cast_char_info.get_node().buffs=[]
+				trigger_death_to_char_info(who_to_cast_char_info)
 			"Invincibility":#if power==0 then all turns else for N hits
 				who_to_cast_char_info.get_node().buffs.append(skill_info)
 			_:#else
@@ -2959,8 +2988,12 @@ func trigger_death_to_char_info(char_info_died:CharInfo):
 		rpc("remove_buff",[char_info_died.to_dictionary()],"Guts")
 		return
 	
-	if pu_id_to_command_spells_int[char_info_died.pu_id]>=3:
-		var max_hp=char_info_died.get_node().default_stats["hp"]
+	var node_died = char_info_died.get_node()
+
+	var summoned = node_died.get_meta("Summon_Check",false)
+
+	if pu_id_to_command_spells_int[char_info_died.pu_id]>=3 and not summoned:
+		var max_hp=node_died.default_stats["hp"]
 		rpc("update_hp_on_char_info",char_info_died.to_dictionary(),max_hp)
 		reduce_command_spell_on_pu_id(char_info_died.pu_id)
 		reduce_command_spell_on_pu_id(char_info_died.pu_id)
@@ -2968,12 +3001,24 @@ func trigger_death_to_char_info(char_info_died:CharInfo):
 		trigger_buffs_on(char_info_died,"Command Spell Revive")
 	else:#total death
 		for i in range(9):
-			char_info_died.get_node().rotation_degrees+=10
+			node_died.rotation_degrees+=10
 			char_info_died.set_meta("total_dead",true)
 			await get_tree().create_timer(0.1).timeout
 			if check_if_all_pu_id_units_dead(char_info_died.pu_id):
 				turns_order_by_pu_id.erase(char_info_died.pu_id)
 		
+		#unmounting if mount
+		if node_died.get_meta("Mount",false):
+			var mount_char_info=char_info_died
+			var currently_on_mount:Array = mount_char_info.get_node().get_meta("Mounted_by_uniq_ids_array",[])
+			for uniq_id in currently_on_mount:
+				var char_info_to_dismount=field.get_char_info_from_uniq_id(uniq_id)
+				currently_on_mount.erase(char_info_to_dismount.get_uniq_id())
+				mount_char_info.get_node().set_meta("Mounted_by_uniq_ids_array",currently_on_mount)
+
+				var current_mounts:Array = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array",[])
+				current_mounts.erase(mount_char_info.get_uniq_id())
+				char_info_to_dismount.get_node().set_meta("Mounts_uniq_id_array",current_mounts)
 
 		for char_info_single in get_all_char_infos():
 			var summoner=char_info_single.get_node().get_meta("Summoner_char_infodic",{})
@@ -2981,6 +3026,7 @@ func trigger_death_to_char_info(char_info_died:CharInfo):
 				var summoner_char_info=CharInfo.from_dictionary(summoner)
 				if summoner_char_info.get_uniq_id() == char_info_died.get_uniq_id():
 					trigger_death_to_char_info(char_info_single)
+		field.remove_char_info_from_kletka_id(char_info_died,field.get_current_kletka_id(char_info_died))
 
 	
 func check_if_all_pu_id_units_dead(pu_id:String)->bool:

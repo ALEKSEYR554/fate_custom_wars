@@ -40,6 +40,7 @@ offset_bottom = 225.0
 theme_override_font_sizes/font_size = 70
 text = "9999"
 placeholder_text = "PORT"
+max_length = 4
 
 [node name="nickname" type="LineEdit" parent="."]
 layout_mode = 0
