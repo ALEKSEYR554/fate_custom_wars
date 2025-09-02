@@ -4,6 +4,8 @@ extends Node
 var menu_left:bool=false
 
 const MAX_NICKNAME_SIZE:int=15
+const MAX_UNITS:int=100
+const MAX_UNITS_FOR_USER_TOTAL:int=400
 
 var self_pu_id: String = ""
 
@@ -14,8 +16,19 @@ const PUID_SAVE_PATH = "user://persistent_game_id.dat"
 var is_game_started:bool=false
 
 # Информация обо всех игроках. Ключ: persistent_id
-# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node": Node, "servant_node_name":str, "disconnected_more_than_timeout":bool}
+# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node_name":str, "disconnected_more_than_timeout":bool, "units":{0:Node2D}}
 var pu_id_player_info: Dictionary = {}
+
+
+
+## new turn => выбор unit_id которым сейчас играть, если только один то скип этот этап => запись current_unit_id => 
+##  => get_unit_CharInfo_from_unit_id(unit_id)->CharInfo  =>  main_CharInfo
+##
+## get_all_allies_in_range -> Array of CharInfo
+##
+##
+##
+##
 
 #pu_id:{"allies":[pu_id],"neutral":[pu_id]} enemies are calculated separetly
 var pu_id_to_allies: Dictionary = {}
@@ -25,6 +38,8 @@ var peer_to_persistent_id: Dictionary = {}
 var peer_id_to_kletka_number={}
 
 var characters:Array=[]
+
+var uniqq_ids:Array=[]
 
 var DEFAULT_PORT = 9999
 const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
@@ -64,8 +79,29 @@ func _ready():
 
 		Globals.user_folder=OS.get_executable_path().get_base_dir()
 	if OS.has_feature("editor"):
-		Globals.user_folder="user:/"
+		Globals.user_folder="res:/"
 	preload_all_servant_sprites()
+	generate_unique_ids()
+
+
+func generate_unique_ids(amount:int=200)->Array:
+	for i in range(amount):
+		var new_id=UUID.v4()
+		if !new_id in uniqq_ids:
+			uniqq_ids.append(new_id)
+		else:
+			i-=1
+	return uniqq_ids
+
+
+func get_all_servants_subfolders_name(path:String=""):
+	var dir = DirAccess.open(Globals.user_folder+"/servants/"+path)
+	var output=[]
+	for folder in dir.get_directories():
+		output.append(path+folder)
+		output.append_array(get_all_servants_subfolders_name(str(path+folder+"/")))
+	return output
+
 
 
 func preload_all_servant_sprites():
@@ -75,9 +111,13 @@ func preload_all_servant_sprites():
 		print("servant selection type Compiled")
 		var count=1
 		characters =[]
-		var dir = DirAccess.open(Globals.user_folder+"/servants/")
+		#var dir = DirAccess.open(Globals.user_folder+"/servants/")
 		print(OS.get_user_data_dir())
-		for folder in dir.get_directories():
+
+		#getting summons folders
+		var all_folder_with_sprites_to_load=get_all_servants_subfolders_name()
+
+		for folder in all_folder_with_sprites_to_load:
 			print("appending characters\n")
 			#var img = Image.new()
 			var path=Globals.user_folder+"/servants/"+str(folder)+"/sprite.png"
@@ -106,12 +146,14 @@ func preload_all_servant_sprites():
 		#editor
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man"]:
+		for folder in ["bunyan","bunyan/horse","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man","rama"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
 			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
 			print(img)
 			#img=ImageTexture.create_from_image(img)
+			
+			#TODO different descriptions
 			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})
 	pass
 
@@ -131,9 +173,14 @@ func status_changed(puid:String,status:bool):
 		field_node.call_deferred("set_pause",not status)
 
 
-func _generate_new_puid() -> String:
-	return UUID.v4() # Для Godot 4
+func get_all_peer_ids() -> Array:
+	var out:Array=[]
+	for pu_id in pu_id_player_info.keys():
+		out.append(pu_id_player_info[pu_id]["current_peer_id"])
+	return out
 
+func _generate_new_puid() -> String:
+	return UUID.v4()
 
 func _load_or_generate_persistent_id():
 	print("_load_or_generate_persistent_id\n\n")
@@ -216,6 +263,7 @@ const buffs_types:Dictionary={
 	"Buff Removal":["Instant"],
 	"Madness Enhancement":[],
 	"Presence Concealment":["Instant","Presence Concealment"],
+	"Riding":["Passive"],
 
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],

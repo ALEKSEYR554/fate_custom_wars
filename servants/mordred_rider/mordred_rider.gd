@@ -40,7 +40,7 @@ const default_stats={
 	"agility":"A+",
 	"endurance":"B",
 	"luck":"A",
-	"magic":{"Rank":"B","Power":0,"resistance":5},#check table info
+	"magic":{"Rank":"B","Power":0,"Resistance":5},#check table info
 	"traits":["Artoria Face",
         "Dragon", 
         "Hominidae Servant", 

@@ -42,7 +42,7 @@ const default_stats={
 	"agility":"C",
 	"endurance":"C",
 	"luck":"EX",
-	"magic":{"Rank":"A+","Power":0,"resistance":7},
+	"magic":{"Rank":"A+","Power":0,"Resistance":7},
 	"traits":[
 		"Costume-Owning",
 		"Divine Spirit", 

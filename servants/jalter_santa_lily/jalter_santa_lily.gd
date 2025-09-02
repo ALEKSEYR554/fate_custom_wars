@@ -39,7 +39,7 @@ const default_stats={
 	"agility":"A",
 	"endurance":"D",
 	"luck":"B",
-	"magic":{"Rank":"B","Power":0,"resistance":4},#check table info
+	"magic":{"Rank":"B","Power":0,"Resistance":4},#check table info
 	"traits":["Artoria Face", "Child Servant", "Hominidae Servant", "Humanoid", "Servant", "Seven Knights Servant", "Weak to Enuma Elish"]
 }
 

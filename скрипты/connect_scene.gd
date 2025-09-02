@@ -88,12 +88,16 @@ func _on_connect_button_button_up():
 	print("Attempting to connect to %s:%s with PUID: %s" % [ip, port, Globals.self_pu_id])
 	
 	# Сбрасываем попытки подключения перед новым подключением вручную
-	connection_attempts = 10
+	connection_attempts = 99
 	is_intentionally_disconnecting = false 
 	
 	var error = peer.create_client(ip, port)
 	if error != OK:
 		OS.alert("Failed to create client. Error: " + str(error), "Client Error")
+		connect_button.disabled = false
+		nickname_edit.editable=true
+		port_entry.editable=true
+		IP_entry.editable=true
 		return
 
 	multiplayer.multiplayer_peer = peer
@@ -102,6 +106,7 @@ func _on_connect_button_button_up():
 	port_entry.editable=false
 	IP_entry.editable=false
 	if is_instance_valid(back_button): back_button.queue_free()
+	connection_attempts = 10
 
 func _on_connected_to_server():
 	print("Connection established with server! Peer ID: %s. Registering..." % multiplayer.get_unique_id())
@@ -199,9 +204,6 @@ func registration_successful(registered_puid: String,refresh_data:Dictionary={})
 							Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=pu_id_servant_data["phantasm_charge"]
 							Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_servant_data["hp"]
 
-			field_node.pu_id_to_kletka_number=refresh_data["pu_id_to_kletka_number"]
-
-			players_handler_node.pu_id_to_np_points=refresh_data["pu_id_to_np_points"]
 
 			#field_node.occupied_kletki=refresh_data["occupied_kletki"]
 			field_node.occupied_kletki={}
@@ -210,12 +212,10 @@ func registration_successful(registered_puid: String,refresh_data:Dictionary={})
 					if Globals.pu_id_player_info[pu_id]["servant_node"].name == refresh_data["occupied_kletki"]:
 						field_node.occupied_kletki[kletka_id]=Globals.pu_id_player_info[pu_id]["servant_node"]
 
-			field_node.pu_id_to_kletka_number=refresh_data["pu_id_to_kletka_number"]
 			for kletka_id in refresh_data["kletka_preference"].keys():
 				if not refresh_data["kletka_preference"][kletka_id].is_empty():
 					field_node.capture_single_kletka_sync(kletka_id,refresh_data["kletka_preference"][kletka_id])
 			field_node.kletka_preference=refresh_data["kletka_preference"]
-			#kletka_owned_by_pu_id=refresh_data["kletka_owned_by_pu_id"]
 			if not field_node.is_pole_generated:
 				field_node.pole_generated_seed=refresh_data["pole_generated_seed"]
 				field_node.reset_pole(field_node.pole_generated_seed)
@@ -277,6 +277,10 @@ func _attempt_reconnect():
 	else:
 		print("Max reconnection attempts reached. Giving up.")
 		OS.alert("Could not reconnect to the server after multiple attempts.", "Reconnection Failed")
+		connect_button.disabled = false
+		nickname_edit.editable=true
+		port_entry.editable=true
+		IP_entry.editable=true
 		connection_attempts = 0 # Сброс для будущих ручных попыток
 		# Здесь можно вернуть игрока в главное меню или показать сообщение об ошибке
 		# main_menu.visible = true (или аналогичная логика для возврата в UI)

@@ -44,7 +44,7 @@ const default_stats={
 	"agility":"B",
 	"endurance":"C",
 	"luck":"B",
-	"magic":{"Rank":"E","Power":0,"resistance":1},#check table info
+	"magic":{"Rank":"E","Power":0,"Resistance":1},#check table info
 	"traits":["Animal Characteristics Servant", "Divinity", "Hominidae Servant", "Humanoid", "Living Human", "Pseudo-Servant", "Servant", "Seven Knights Servant", "Weak to Enuma Elish", "Wild Beast"]
 }
 
