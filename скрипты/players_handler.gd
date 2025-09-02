@@ -318,7 +318,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 
 				player.set_meta("Can_Be_Played", summon_buff_info.get("Can Be Played", true))
-				player.set_meta("Servant", summon_buff_info.get("Servant", true))
+				player.set_meta("Servant", summon_buff_info.get("Servant", false))
 
 
 				
