@@ -1811,23 +1811,27 @@ func choose_unit_to_play()->bool:
 
 	current_unit_id=unit_id_choosen
 
-
+	print("unit_id_choosen=",unit_id_choosen)
 	if unit_id_choosen==0:
 		current_action_points_label.text=str(3)
 		current_action_points=3
 	else:
-		current_action_points_label.text=str(0)
-		current_action_points=0
+		if node_choosen.get_meta("Servant",false):
+			current_action_points_label.text=str(3)
+			current_action_points=3
+		else:
+			current_action_points_label.text=str(0)
+			current_action_points=0
 
 		players_handler.rpc(
 			"reduce_additional_moves_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.get_meta("Move_Points", 1)
+			-node_choosen.get_meta("Move_Points", 0)
 			)
 		players_handler.rpc(
 			"reduce_additional_attacks_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.get_meta("Attack_Points", 1)
+			-node_choosen.get_meta("Attack_Points", 0)
 			)
 	
 	$GUI/action/np_points_number_label.text=str(node_choosen.phantasm_charge)
@@ -1866,15 +1870,14 @@ func get_additional_actions_for_char_info_from_mount(char_info_dic:Dictionary):
 func calculate_maximum_playable_units():
 	var kletki_with_non_played_units:Array=[]
 	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
-		if not unit_id in unit_ids_already_played_this_turn:
-			var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
-			if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
-				not char_info_temp.get_node().get_meta("total_dead",false):
-				kletki_with_non_played_units.append(
-					players_handler.get_char_info_kletka_number(
-						char_info_temp
-					)
+		var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
+		if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
+			not char_info_temp.get_node().get_meta("total_dead",false):
+			kletki_with_non_played_units.append(
+				players_handler.get_char_info_kletka_number(
+					char_info_temp
 				)
+			)
 	maximum_playable_units=kletki_with_non_played_units.size()
 	pass
 
@@ -1892,7 +1895,8 @@ func start_turn():
 		#players_handler.reduce_all_cooldowns(self_char_info)
 		#already there
 		
-
+	
+	
 
 
 
@@ -1900,8 +1904,8 @@ func start_turn():
 	print("It is my turn:",Globals.self_pu_id," char info:",get_current_self_char_info())
 	my_turn=true
 	
-	current_action_points=3
-	current_action_points_label.text=str(current_action_points)
+	#current_action_points=3
+	#current_action_points_label.text=str(current_action_points)
 	make_action_button.disabled=false
 	end_turn_button.disabled=false
 	paralyzed=false
@@ -1909,6 +1913,15 @@ func start_turn():
 	print(players_handler.unit_uniq_id_player_game_stat_info)
 
 	var self_char_info=get_current_self_char_info()
+
+	var skills_enabledd=true
+	if self_char_info.get_node().get_meta("Summon_Check",false):
+		skills_enabledd = self_char_info.get_node().get_meta("Skills_Enabled",false)
+
+
+	$GUI/right_ange_buttons_container/Skill_info_show_button.disabled=not skills_enabledd
+
+
 	#players_handler.unit_uniq_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
 
 	players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",0,true)
@@ -2371,10 +2384,10 @@ func _on_end_turn_pressed():
 	await players_handler.trigger_buffs_on(get_current_self_char_info(),"End Turn")
 	await players_handler.reduce_all_cooldowns(get_current_self_char_info(), "End Turn")
 	unit_ids_already_played_this_turn.append(current_unit_id)
-
-	print("maximum_playable_units=",maximum_playable_units, "unit_ids_already_played_this_turn=",unit_ids_already_played_this_turn.size())
 	
 	calculate_maximum_playable_units()
+	print("maximum_playable_units=",maximum_playable_units, "unit_ids_already_played_this_turn=",unit_ids_already_played_this_turn.size())
+	
 
 	if maximum_playable_units!=unit_ids_already_played_this_turn.size():
 		var answer=await choose_between_two("You have unplayed units. Do you want to skip their turn?","Choose unit","Pass turn")

@@ -318,6 +318,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 
 				player.set_meta("Can_Be_Played", summon_buff_info.get("Can Be Played", true))
+				player.set_meta("Servant", summon_buff_info.get("Servant", true))
 
 
 				
@@ -351,6 +352,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 
 				Globals.pu_id_player_info[pu_id]["units"][i]=player
+				player.set_meta("unit_id",i)
 				break
 	
 	if pu_id==Globals.self_pu_id and not is_summon:
@@ -370,7 +372,7 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 	player.set_meta("unit_unique_id",get_id_from_hostt)
 
-	player.set_meta("unit_id",idd)
+	
 
 
 
