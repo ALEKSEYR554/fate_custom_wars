@@ -14,7 +14,7 @@ const default_stats={
 	"agility":"B",
 	"endurance":"B",
 	"luck":"C",
-	"magic":{"Rank":"A+","Power":0,"resistance":6},#check table info
+	"magic":{"Rank":"A+","Power":0,"Resistance":6},#check table info
 	"traits":["Arthur", "Artoria Face", "Dragon", "Enuma Elish Nullification", "Hominidae Servant", "Humanoid", "King", "Round Table Knight", "Servant", "Seven Knights Servant", "Spaceflight-able Servant"]
 }
 

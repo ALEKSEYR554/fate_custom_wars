@@ -6,10 +6,12 @@ extends Control
 
 # Текущий индекс персонажа
 var current_character_index = 0
+
+var characters_without_summons:Array=[]
+
 # GUI элементы
 @onready var character_image = $_HBoxContainer_3/_VBoxContainer_5/_TextureRect_6
 @onready var character_text = $_HBoxContainer_3/_VBoxContainer_5/_Label_7
-signal sleep
 
 func open_folder_pressed():
 	OS.shell_open(ProjectSettings.globalize_path("user://"))
@@ -38,20 +40,29 @@ func _ready():
 	#		img.load("res://servants/"+str(folder)+"/sprite.png")
 	#		characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})
 	#		
+
+	print("\nGlobals.characters=",Globals.characters)
+	for character in Globals.characters:
+		if character["Name"].contains('/'):
+			continue
+		characters_without_summons.append(character)
+
+
+
 	_update_character_display()
 
 func _update_character_display():
-	var character = Globals.characters[current_character_index]
+	var character = characters_without_summons[current_character_index]
 	character_image.texture = ImageTexture.create_from_image(character["image"])#load(character["image"])
 	character_text.text = character["Text"]
 
 func get_current_servant():
-	return Globals.characters[current_character_index]["Name"]
+	return characters_without_summons[current_character_index]["Name"]
 
 func _on_left_button_pressed():
-	current_character_index = (current_character_index - 1 + Globals.characters.size()) % Globals.characters.size()
+	current_character_index = (current_character_index - 1 + characters_without_summons.size()) % characters_without_summons.size()
 	_update_character_display()
 
 func _on_right_button_pressed():
-	current_character_index = (current_character_index + 1) % Globals.characters.size()
+	current_character_index = (current_character_index + 1) % characters_without_summons.size()
 	_update_character_display()
