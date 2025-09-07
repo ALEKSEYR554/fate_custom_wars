@@ -15,7 +15,7 @@ run/main_scene="res://сцены/main_menu.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="fate_custom_wars"
 config/features=PackedStringArray("4.2", "GL Compatibility")
-config/icon="res://1.png"
+config/icon="res://images/1.png"
 
 [autoload]
 

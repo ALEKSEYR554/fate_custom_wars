@@ -236,8 +236,8 @@ Increases Strength by 5 points,""",
 						],
 						"Cast":"all allies",
 						"Cast Condition":{
-							"Condition":"Buff",
-							"Buff":"Blessing of Kur"
+							"Condition":"All",
+							"Buff":["Blessing of Kur"]
 						}
 					}
                 ]
@@ -263,8 +263,8 @@ Increases Strength by 5 points,""",
 						],
 						"Cast":"all allies",
 						"Cast Condition":{
-							"Condition":"Buff",
-							"Buff":"Blessing of Kur"
+							"Condition":"All",
+							"Buff":["Blessing of Kur"]
 						}
 					}
                 ]

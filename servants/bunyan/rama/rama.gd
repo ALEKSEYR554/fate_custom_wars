@@ -205,8 +205,8 @@ Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demon
 							],
 							"Cast":"Phantasm Attacked",
 							"Cast Condition":{
-								"Condition":"Trait",
-								"Trait":"Demonic"
+								"Condition":"All",
+								"Trait":["Demonic"]
 							}
 						}
 					]
@@ -231,8 +231,8 @@ Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demon
 						],
 						"Cast":"Phantasm Attacked",
 						"Cast Condition":{
-							"Condition":"Trait",
-							"Trait":"Demonic"
+							"Condition":"All",
+							"Trait":["Demonic"]
 						}
 						}
 						]
