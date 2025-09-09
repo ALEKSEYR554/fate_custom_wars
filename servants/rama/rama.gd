@@ -61,23 +61,6 @@ var additional_attack=0
 var current_weapon="Scythe"#if character doen't have weapon then dont touch it
 var phantasm_charge=0
 var strength
-func _ready():
-	servant_class=default_stats["servant_class"]
-	ideology=default_stats["ideology"]
-	attack_range=default_stats["attack_range"]
-	attack_power=default_stats["attack_power"]
-	agility=default_stats["agility"]
-	endurance=default_stats["endurance"]
-	hp=default_stats["hp"]
-	magic=default_stats["magic"]
-	luck=default_stats["luck"]
-	traits=default_stats["traits"]
-	gender=default_stats["gender"]
-	strength=default_stats["strength"]
-	for i in skills.size():
-		skill_cooldowns.append(0)
-	pass # Replace with function body.
-
 
 
 var passive_skills=[
@@ -205,8 +188,8 @@ Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demon
 							],
 							"Cast":"Phantasm Attacked",
 							"Cast Condition":{
-								"Condition":"Trait",
-								"Trait":"Demonic"
+								"Condition":"All",
+								"Trait":["Demonic"]
 							}
 						}
 					]
@@ -231,8 +214,8 @@ Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demon
 						],
 						"Cast":"Phantasm Attacked",
 						"Cast Condition":{
-							"Condition":"Trait",
-							"Trait":"Demonic"
+							"Condition":"All",
+							"Trait":["Demonic"]
 						}
 						}
 						]
