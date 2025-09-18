@@ -7,3 +7,4 @@ android/
 *.tmp
 *.*.import
 new_script.gd
+сцены/test.tscn

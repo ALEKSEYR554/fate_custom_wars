@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cx3m1fecta1u4"]
 
 [ext_resource type="Script" path="res://скрипты/debug_character_control.gd" id="1_7e0en"]
-[ext_resource type="Texture2D" uid="uid://5q7rs7jvtu8o" path="res://refresh.svg" id="2_2e6ob"]
+[ext_resource type="Texture2D" uid="uid://5q7rs7jvtu8o" path="res://images/refresh.svg" id="2_2e6ob"]
 
 [node name="debug_character_control" type="Control"]
 top_level = true

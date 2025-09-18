@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cwg832bxjw8eo"]
 
 [ext_resource type="Script" path="res://скрипты/char_info_choose_scroll_container.gd" id="1_8fsi2"]
-[ext_resource type="Texture2D" uid="uid://dsxq6hgseykdj" path="res://1.png" id="2_2thqx"]
+[ext_resource type="Texture2D" uid="uid://dsxq6hgseykdj" path="res://images/1.png" id="2_2thqx"]
 
 [node name="char_info_choose_scroll_container" type="ScrollContainer"]
 offset_right = 615.0

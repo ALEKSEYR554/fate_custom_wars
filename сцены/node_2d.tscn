@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b6ih8ttai8hd8"]
 
-[ext_resource type="Texture2D" uid="uid://cigwuxg175yst" path="res://save_game.png" id="1_hjbs4"]
+[ext_resource type="Texture2D" uid="uid://cigwuxg175yst" path="res://images/save_game.png" id="1_hjbs4"]
 
 [node name="Node2D" type="Node2D"]
 position = Vector2(-487, -1009)
