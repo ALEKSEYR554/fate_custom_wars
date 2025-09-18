@@ -146,7 +146,7 @@ func preload_all_servant_sprites():
 		#editor
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","bunyan/horse","el_melloy","gray","hakuno_female","summer_bb","tamamo","ereshkigal_lancer","jaguar_man","rama"]:
+		for folder in ["bunyan","bunyan/horse","el_melloy","gray","hakuno_female","summer_bb","tamamo","jalter_santa_lily","jaguar_man","queen_medb","queen_medb/warrior","queen_medb/druid"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
 			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
@@ -374,6 +374,10 @@ const buffs_types:Dictionary={
 	"NP Gain Each Turn":["Buff Positive Effect", "Buff Np Per Turn"],
 	"Buff Removal Resist":["Buff Positive Effect"],
 	"Paralysis":["Buff Negative Effect","Buff Paralysis", "Buff Immobilize"],
-	"Sure Hit":["Buff Positive Effect","Buff Sure Hit","Buff Increase Damage"]
+	"Sure Hit":["Buff Positive Effect","Buff Sure Hit","Buff Increase Damage"],
 	
+	"Charm":["Buff Negative Effect","Buff Mental Effect", "Buff Charm","Buff Charm Female", "Buff Immobilize"],
+	"Attack Restrict Against Player":["Buff Negative Effect"],
+	"Dice Reroll":["Buff Positive Effect"]
+
 }
