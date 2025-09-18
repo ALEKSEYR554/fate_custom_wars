@@ -1,11 +1,11 @@
 extends Node2D
 
 var rating_data = [
-	{"rank": 1, "image": "res://icon.svg"}, # **Замените ПУТИ к изображениям!**
-	{"rank": 2, "image": "res://icon.svg"},
-	{"rank": 3, "image": "res://icon.svg"},
-	{"rank": 4, "image": "res://icon.svg"},
-	{"rank": 5, "image": "res://icon.svg"}
+	{"rank": 1, "image": "res://images/icon.svg"}, # **Замените ПУТИ к изображениям!**
+	{"rank": 2, "image": "res://images/icon.svg"},
+	{"rank": 3, "image": "res://images/icon.svg"},
+	{"rank": 4, "image": "res://images/icon.svg"},
+	{"rank": 5, "image": "res://images/icon.svg"}
 ]
 
 var vertical_spacing = 250
