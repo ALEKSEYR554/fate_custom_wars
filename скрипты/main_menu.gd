@@ -1,11 +1,5 @@
 extends Node
 
-#\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-# https://github.com/PacktPublishing/The-Essential-Guide-to-Creating-Multiplayer-Games-with-Godot-4.0
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 @onready var main_menu = $"."
 @onready var settings_screen = $Settings_screen
 @onready var logo = $logo
@@ -64,6 +58,7 @@ func _on_host_button_up():
 	host_scene.visible=true
 	back_button.visible=true
 	logo.visible=false
+	Globals.host_or_user = "host"
 	DisplayServer.window_set_title("gogod_debug= HOST")
 	pass # Replace with function body.
 
@@ -77,6 +72,7 @@ func _on_connect_button_up():
 	connect_scene.visible=true
 	back_button.visible=true
 	logo.visible=false
+	Globals.host_or_user = "user"
 	pass # Replace with function body.
 
 @rpc
@@ -121,5 +117,6 @@ func _on_settings_pressed():
 
 func _on_check_button_toggled(toggled_on):
 	Globals.debug_mode=toggled_on
-	Globals.self_pu_id=Globals._generate_new_puid()
+	if Globals.host_or_user == "user":
+		Globals.self_pu_id=Globals._generate_new_puid()
 	pass # Replace with function body.
