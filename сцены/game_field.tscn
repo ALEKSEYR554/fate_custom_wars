@@ -1,17 +1,17 @@
 [gd_scene load_steps=13 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" path="res://скрипты/скрипт_поля.gd" id="1_c6n5g"]
-[ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://empty.png" id="2_chyh4"]
+[ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://images/empty.png" id="2_otu4h"]
 [ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://сцены/char_select.tscn" id="3_2errx"]
 [ext_resource type="PackedScene" uid="uid://cx3m1fecta1u4" path="res://сцены/debug_character_control.tscn" id="3_qwtyr"]
 [ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://сцены/dice_control.tscn" id="4_bol8j"]
-[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://jopa.png" id="5_0nlqk"]
+[ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://images/jopa.png" id="6_cb82a"]
 [ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="6_r85gn"]
 [ext_resource type="Script" path="res://скрипты/players_handler.gd" id="7_naqg5"]
 [ext_resource type="PackedScene" uid="uid://cwg832bxjw8eo" path="res://сцены/char_info_choose_scroll_container.tscn" id="7_yposv"]
 [ext_resource type="Script" path="res://скрипты/рейтинг.gd" id="8_8trl2"]
 [ext_resource type="Script" path="res://скрипты/uploade_images.gd" id="9_j25dr"]
-[ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://sun.png" id="11_hbe8m"]
+[ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://images/sun.png" id="12_cqnar"]
 
 [node name="game_field" type="Node2D"]
 process_mode = 1
@@ -46,7 +46,7 @@ anchor_left = 0.710938
 anchor_top = 0.00617284
 anchor_right = 0.815972
 anchor_bottom = 0.186728
-texture_normal = ExtResource("2_chyh4")
+texture_normal = ExtResource("2_otu4h")
 ignore_texture_size = true
 stretch_mode = 5
 metadata/_edit_use_anchors_ = true
@@ -656,7 +656,7 @@ layout_mode = 2
 [node name="servant_info_picture" type="TextureRect" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
-texture = ExtResource("5_0nlqk")
+texture = ExtResource("6_cb82a")
 expand_mode = 2
 
 [node name="servant_info_stats_textedit" type="TextEdit" parent="GUI/Servant_info_main_container/servant_info_picture_and_stats_container"]
@@ -688,7 +688,8 @@ text = "Skills:"
 editable = false
 wrap_mode = 1
 
-[node name="Button" type="Button" parent="GUI"]
+[node name="free_phantasm_button" type="Button" parent="GUI"]
+visible = false
 offset_left = 128.0
 offset_top = 545.0
 offset_right = 264.0
@@ -980,6 +981,28 @@ theme_override_font_sizes/font_size = 40
 text = "OK"
 metadata/_edit_use_anchors_ = true
 
+[node name="cheats_show_button" type="Button" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.117188
+anchor_top = 0.0651042
+anchor_right = 0.137695
+anchor_bottom = 0.105469
+text = "X"
+metadata/_edit_use_anchors_ = true
+
+[node name="advanced_logs_textedit" type="TextEdit" parent="GUI"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.149
+anchor_top = 0.136
+anchor_right = 0.812
+anchor_bottom = 0.89
+grow_horizontal = 2
+grow_vertical = 2
+editable = false
+wrap_mode = 1
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)
 zoom = Vector2(0.33, 0.33)
@@ -1009,7 +1032,7 @@ use_native_dialog = true
 
 [node name="day_or_night_sprite2d" type="Sprite2D" parent="."]
 position = Vector2(986, -111)
-texture = ExtResource("11_hbe8m")
+texture = ExtResource("12_cqnar")
 
 [connection signal="pressed" from="GUI/host_buttons/start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="GUI/host_buttons/reset" to="." method="_on_reset_pressed"]
@@ -1062,7 +1085,7 @@ texture = ExtResource("11_hbe8m")
 [connection signal="toggled" from="GUI/Servant_info_main_container/show_buffs_advanced_way_button" to="." method="_on_show_buffs_advanced_way_button_toggled"]
 [connection signal="mouse_entered" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_entered_gui_element"]
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container/servant_info_skills_textedit" to="Camera2D" method="mouse_exited_gui_element"]
-[connection signal="pressed" from="GUI/Button" to="players_handler" method="_on_free_phantasm_pressed"]
+[connection signal="pressed" from="GUI/free_phantasm_button" to="players_handler" method="_on_free_phantasm_pressed"]
 [connection signal="pressed" from="GUI/flip_sprite_button" to="players_handler" method="_on_flip_sprite_button_pressed"]
 [connection signal="pressed" from="GUI/buffs_temp_container/refresh_buffs_button" to="." method="_on_refresh_buffs_button_pressed"]
 [connection signal="pressed" from="GUI/add_image_button" to="uploaded_images_layer" method="_on_add_image_button_pressed"]
@@ -1074,4 +1097,5 @@ texture = ExtResource("11_hbe8m")
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/neutral_button" to="players_handler" method="_on_neutral_button_pressed"]
 [connection signal="pressed" from="GUI/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="pressed" from="GUI/char_choose_button" to="." method="_on_char_choose_button_pressed"]
+[connection signal="pressed" from="GUI/cheats_show_button" to="." method="_on_cheats_show_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
