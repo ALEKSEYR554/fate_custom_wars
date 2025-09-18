@@ -1,5 +1,6 @@
 extends Control
 @onready var players_handler = $"../../players_handler"
+@onready var field = $"../.."
 
 const ranks = [
 	"EX",
@@ -9,6 +10,10 @@ const ranks = [
 	"D+++", "D++", "D+", "D","D-",
 	"E+++",  "E++", "E+", "E", "E-"
 ]
+
+var uniq_id_to_char_info={
+
+}
 @onready var class_label_option_button = $PanelContainer/VBoxContainer/main_container/Stats_contaner/Class_hContaier6/Class_label_OptionButton
 
 @onready var strength_label_option_button = $PanelContainer/VBoxContainer/main_container/Stats_contaner/Strenght_hContaier/Strength_label_OptionButton
@@ -109,7 +114,11 @@ func _ready():
 		class_label_option_button.add_item(servant_class)
 	
 	for pu_id in Globals.pu_id_to_nickname.keys():
-		peer_id_to_name_label.text+=str("Id=",pu_id," nick=",Globals.pu_id_to_nickname[pu_id],"\n")
+		for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
+			var nodd=Globals.pu_id_player_info[pu_id]["units"][unit_id]
+			var uniq_id=nodd.get_meta("unit_unique_id")
+			uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.get_meta("CharInfoDic"))
+			peer_id_to_name_label.text+=str("Id=",uniq_id," name=",nodd.name,"\n")
 	
 	
 	class_label_option_button.select(randi_range(0,Globals.CLASS_NAMES.size()-1))
@@ -150,18 +159,23 @@ func _on_refresh_button_pressed(choose:bool=false):
 		peer_id_to_name_label.text=""
 		peer_id_option_button.clear()
 		for pu_id in Globals.pu_id_to_nickname.keys():
-			peer_id_to_name_label.text+=str("Id=",pu_id," nick=",Globals.pu_id_to_nickname[pu_id],"\n")
-			peer_id_option_button.add_item(str(pu_id))
+			for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
+				var nodd=Globals.pu_id_player_info[pu_id]["units"][unit_id]
+				var uniq_id=nodd.get_meta("unit_unique_id")
+				uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.get_meta("CharInfoDic"))
+				peer_id_to_name_label.text+=str("Id=",uniq_id," name=",nodd.name,"\n")
+			
+				peer_id_option_button.add_item(str(uniq_id))
 	if peer_id_option_button.get_selected()==-1:
 		print('peer_id_option_button.get_selected()==-1')
 		return
 	var peer_id_text=peer_id_option_button.get_item_text(peer_id_option_button.get_selected())
 	if not peer_id_text.is_empty():
-		print("pu_id=",peer_id_text)
-		if not peer_id_text in Globals.pu_id_to_nickname.keys():
-			print('not pu_id_text.to_int() in Globals.pu_id_to_nickname.keys()')
-			return
-		var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
+		print("uniq_idd=",peer_id_text)
+		
+		#print("pu id = ",uniq_id_to_char_info[peer_id_text].get_meta("pu_id"))
+		var servant_node=uniq_id_to_char_info[peer_id_text].get_node()
+		#var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
 		var stats:Dictionary={}
 
 		var buffs_str=str(servant_node.buffs)
@@ -208,10 +222,8 @@ func _on_apply_button_pressed():
 	var peer_id_text=peer_id_option_button.get_item_text(peer_id_option_button.get_selected())
 	if peer_id_text:
 		print("peer_id=",peer_id_text)
-		if not peer_id_text.to_int() in Globals.pu_id_to_nickname.keys():
-			print('not peer_id_text.to_int() in Globals.pu_id_to_nickname.keys()')
-			return
-		var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
+
+		var servant_node=uniq_id_to_char_info[peer_id_text].get_node()
 		var stats:Dictionary={}
 
 		#var buffs_str=str(skills_raw_text_edit.text)
@@ -235,14 +247,15 @@ func _on_apply_button_pressed():
 		#servant_node.luck=stats.luck
 		#servant_node.servant_class=stats.servant_class
 		#servant_node.buffs=get_buffs_array()
-		rpc("set_pu_id_stats_and_buffs",peer_id_text,stats,get_buffs_array(),get_magic(stats.magic,magical_attack_check_box.toggle_mode))
+		rpc("set_char_info_stats_and_buffs",uniq_id_to_char_info[peer_id_text].to_dictionary(),stats,get_buffs_array(),get_magic(stats.magic,magical_attack_check_box.toggle_mode))
 
 
 	pass # Replace with function body.
 
 @rpc("authority","call_local","reliable")
-func set_pu_id_stats_and_buffs(pu_id:String,stats:Dictionary,buffs:Array,magic:Dictionary):
-	var servant_node=Globals.pu_id_player_info[pu_id]["servant_node"]
+func set_char_info_stats_and_buffs(char_info_dic:Dictionary,stats:Dictionary,buffs:Array,magic:Dictionary):
+	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
+	var servant_node=char_info.get_node()
 	servant_node.strength=stats.strength
 	servant_node.agility=stats.agility
 	servant_node.endurance=stats.endurance
@@ -284,6 +297,6 @@ func _on_use_skill_button_pressed():
 
 
 func _on_dmg_refresh_button_pressed():
-	dmg_label.text=str("Ph:",players_handler.calculate_pu_id_attack_against_pu_id(Globals.self_pu_id,-1,"Physical"),
-	" Mg:",players_handler.calculate_pu_id_attack_against_pu_id(Globals.self_pu_id,-1,"Magical"))
+	#dmg_label.text=str("Ph:",players_handler.calculate_char_info_attack_against_char_info(field.get_current_self_char_info(),-1,"Physical"),
+	#" Mg:",players_handler.calculate_char_info_attack_against_char_info(field.get_current_self_char_info(),-1,"Magical"))
 	pass # Replace with function body.
