@@ -8,3 +8,5 @@ android/
 *.*.import
 new_script.gd
 сцены/test.tscn
+скрипты/test_script.gd
+скрипты/folders_test.gd
