@@ -1,11 +1,13 @@
 extends Resource
 class_name CharInfo
 
+
 var pu_id:String
 #var node:Node2D 
 var unit_id:int
 var servant_name:String
 
+var dice_rolls_history:Array=[]
 func _init(_pu_id:String, _unit_id:int):
 	pu_id = _pu_id
 	unit_id = _unit_id
@@ -39,6 +41,9 @@ func to_dictionary()->Dictionary:
 		"pu_id":pu_id,
 		"unit_id":unit_id
 	}
+
+func get_latest_dice_roll()->Dictionary:
+	return dice_rolls_history[-1]
 
 func get_servant_name()->String:
 
