@@ -16,7 +16,7 @@ var reconnect_timer: Timer
 
 func _ready():
 	nickname_edit.max_length=Globals.MAX_NICKNAME_SIZE
-	Globals.host_or_user = "user"
+	#Globals.host_or_user = "user"
 
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
@@ -66,7 +66,7 @@ func disconnect_from_server(is_quitting_game: bool = false):
 
 
 func _on_connect_button_button_up():
-	Globals.host_or_user = "user"
+	#Globals.host_or_user = "user"
 	if nickname_edit.text.is_empty():
 		nickname_edit.grab_focus()
 		OS.alert("Please enter a nickname.", "Nickname Required")
@@ -159,66 +159,71 @@ func registration_successful(registered_puid: String,refresh_data:Dictionary={})
 			var players_handler_node:Node=field_node.find_child("players_handler",false,false)
 			
 			var last_pu_id_player_info=Globals.pu_id_player_info.duplicate(true)
+
+			if not field_node.is_pole_generated:
+				field_node.pole_generated_seed=refresh_data["pole_generated_seed"]
+				field_node.reset_pole(field_node.pole_generated_seed)
 			
 			Globals.pu_id_player_info={}
 			for pu_id in refresh_data["pu_id_player_info"].keys():
-				var current_servant_node=last_pu_id_player_info[pu_id]["servant_node"]
+
 				var pu_id_data:Dictionary=refresh_data["pu_id_player_info"][pu_id]
-				
 				Globals.pu_id_player_info[pu_id]=pu_id_data.duplicate(true)
-				if current_servant_node!=null:
-					print("\ncurrent_servant_node!=null")
-					if refresh_data.get("servant_data",{}) != {}:
-						var pu_id_servant_data=refresh_data.get("servant_data",{}).get(pu_id,"")
+				var pu_id_servant_data={}
+				if refresh_data.get("servant_data",{}) != {}:
+					print_debug('refresh_data.get("servant_data",{}) != {}')
+					pu_id_servant_data=refresh_data.get("servant_data",{}).get(pu_id,{})
+				
+				for unit_id in refresh_data["pu_id_player_info"][pu_id]["units"].keys():
+					var current_servant_node=null
+					if not Globals.pu_id_player_info.is_empty():
+						if last_pu_id_player_info.get(pu_id,{}).get("units",{}).get(unit_id,null):
+							current_servant_node=last_pu_id_player_info[pu_id]["units"][unit_id]
+					
+
+					var servant_long_name=refresh_data["servant_data"][pu_id][unit_id]["meta"].get("servant_name")
+					var servant_uniq_id=refresh_data["servant_data"][pu_id][unit_id]["meta"].get("unit_unique_id")
+
+					if current_servant_node!=null:
+						print("\ncurrent_servant_node!=null")
 						if not pu_id_servant_data.is_empty():
+							var unit_id_servant_data=pu_id_servant_data.get(unit_id,{})
+							if not unit_id_servant_data.is_empty():
 
-							if Globals.pu_id_player_info[pu_id].get("servant_node")!=null:
-								Globals.pu_id_player_info[pu_id]["servant_node"]=current_servant_node
-							else:
-								players_handler_node.load_servant(pu_id)
+								if last_pu_id_player_info.get(pu_id,{}).get("units",{}).get(unit_id,null):
+									Globals.pu_id_player_info[pu_id]["units"][unit_id]=current_servant_node
+								else:
+									players_handler_node.load_servant(pu_id,servant_long_name,servant_uniq_id,unit_id!=0)
 
-
-							Globals.pu_id_player_info[pu_id]["servant_node"].buffs=pu_id_servant_data["buffs"].duplicate(true)
-							Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns=pu_id_servant_data["skill_cooldowns"].duplicate(true)
-							Globals.pu_id_player_info[pu_id]["servant_node"].additional_moves=pu_id_servant_data["additional_moves"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].additional_attack=pu_id_servant_data["additional_attack"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=pu_id_servant_data["phantasm_charge"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_servant_data["hp"]
-				else:
-					print("\ncurrent_servant_node==null loading servant after register")
-					if Globals.pu_id_player_info[pu_id].get("servant_node")!=null:
-						Globals.pu_id_player_info[pu_id]["servant_node"]=current_servant_node
 					else:
-						players_handler_node.load_servant(pu_id)
-					if refresh_data.get("servant_data",{}) != {}:
-						print_debug('refresh_data.get("servant_data",{}) != {}')
-						var pu_id_servant_data=refresh_data.get("servant_data",{}).get(pu_id,"")
-						if not pu_id_servant_data.is_empty():
-							if Globals.pu_id_player_info[pu_id].get("servant_node")!=null:
-								continue
-							
-							Globals.pu_id_player_info[pu_id]["servant_node"].buffs=pu_id_servant_data["buffs"].duplicate(true)
-							Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns=pu_id_servant_data["skill_cooldowns"].duplicate(true)
-							Globals.pu_id_player_info[pu_id]["servant_node"].additional_moves=pu_id_servant_data["additional_moves"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].additional_attack=pu_id_servant_data["additional_attack"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=pu_id_servant_data["phantasm_charge"]
-							Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_servant_data["hp"]
+						print("\ncurrent_servant_node==null loading servant after register")
+						players_handler_node.load_servant(pu_id,servant_long_name,servant_uniq_id,unit_id!=0)
+					if pu_id_servant_data.get("units",{}).get(unit_id,{}):
+						Globals.pu_id_player_info[pu_id]["servant_node"].buffs=pu_id_servant_data["buffs"].duplicate(true)
+						Globals.pu_id_player_info[pu_id]["servant_node"].skill_cooldowns=pu_id_servant_data["skill_cooldowns"].duplicate(true)
+						Globals.pu_id_player_info[pu_id]["servant_node"].additional_moves=pu_id_servant_data["additional_moves"]
+						Globals.pu_id_player_info[pu_id]["servant_node"].additional_attack=pu_id_servant_data["additional_attack"]
+						Globals.pu_id_player_info[pu_id]["servant_node"].phantasm_charge=pu_id_servant_data["phantasm_charge"]
+						Globals.pu_id_player_info[pu_id]["servant_node"].hp=pu_id_servant_data["hp"]
 
 
 			#field_node.occupied_kletki=refresh_data["occupied_kletki"]
 			field_node.occupied_kletki={}
 			for kletka_id in refresh_data["occupied_kletki"]:
-				for pu_id in Globals.pu_id_player_info:
-					if Globals.pu_id_player_info[pu_id]["servant_node"].name == refresh_data["occupied_kletki"]:
-						field_node.occupied_kletki[kletka_id]=Globals.pu_id_player_info[pu_id]["servant_node"]
+				field_node.occupied_kletki[kletka_id]=[]
+				for node_name_on_kletka in refresh_data["occupied_kletki"][kletka_id]:
+					for pu_id in Globals.pu_id_player_info.keys():
+						for unit_id in Globals.pu_id_player_info[pu_id].get("units",{}).keys():
+							if Globals.pu_id_player_info[pu_id]["units"][unit_id].name == node_name_on_kletka:
+								field_node.occupied_kletki[kletka_id].append(Globals.pu_id_player_info[pu_id]["units"][unit_id])
+
+								Globals.pu_id_player_info[pu_id]["units"][unit_id].position=field_node.cell_positions[kletka_id]
 
 			for kletka_id in refresh_data["kletka_preference"].keys():
 				if not refresh_data["kletka_preference"][kletka_id].is_empty():
 					field_node.capture_single_kletka_sync(kletka_id,refresh_data["kletka_preference"][kletka_id])
 			field_node.kletka_preference=refresh_data["kletka_preference"]
-			if not field_node.is_pole_generated:
-				field_node.pole_generated_seed=refresh_data["pole_generated_seed"]
-				field_node.reset_pole(field_node.pole_generated_seed)
+			
 
 		else:
 			print("Registrating when game not started, just copying refresh data")
