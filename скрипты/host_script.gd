@@ -1,7 +1,7 @@
 extends Node
 
-const DATAFOUND = preload("res://datafound.png")
-const DATALOST = preload("res://datalost.png")
+const DATAFOUND = preload("res://images/datafound.png")
+const DATALOST = preload("res://images/datalost.png")
 
 @onready var back_button = $"../Back_button"
 @onready var create_server_button = $Button # Переименовал для ясности
@@ -24,7 +24,7 @@ var container_slots: Array[Control] = [] # Ссылки на контролы с
 
 func _ready():
 	nickname_edit.max_length=Globals.MAX_NICKNAME_SIZE
-	Globals.host_or_user = "host" # Устанавливаем роль сразу
+	#Globals.host_or_user = "host" # Устанавливаем роль сразу
 	
 	# Инициализируем UI слоты для игроков
 	# Предполагаем, что у вас есть 7 слотов в players_container
@@ -46,7 +46,7 @@ func _ready():
 
 
 func _on_create_server_button_button_up():
-	Globals.host_or_user = "host"
+	#Globals.host_or_user = "host"
 	
 	Globals.DEFAULT_PORT=randi_range(2000,9000)
 	
@@ -181,32 +181,48 @@ func register_player(puid: String, nickname: String):
 	var refresh_data:Dictionary={}
 	if Globals.is_game_started:
 		var field_node:Node=get_tree().root.find_child("game_field",false,false)
+		var players_handler_node:Node=field_node.find_child("players_handler",false,false)
 		if field_node!=null:
 			
 			refresh_data["servant_data"]={}
-			for pu_id in Globals.pu_id_player_info:
-				var pu_serv_node=Globals.pu_id_player_info[pu_id]["servant_node"]
-				if pu_serv_node:
-					refresh_data["servant_data"][pu_id]={
-						"buffs": pu_serv_node.buffs.duplicate(true),
-						"skill_cooldowns": pu_serv_node.skill_cooldowns.duplicate(true),
-						"additional_moves": pu_serv_node.additional_moves,
-						"additional_attack": pu_serv_node.additional_attack,
-						"phantasm_charge": pu_serv_node.phantasm_charge,
-						"hp": pu_serv_node.hp
-					}
+			for pu_id in Globals.pu_id_player_info.keys():
+				refresh_data["servant_data"][pu_id]={}
+				for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
+					var pu_serv_node=Globals.pu_id_player_info[pu_id]["units"][unit_id]
+					if pu_serv_node:
+						refresh_data["servant_data"][pu_id][unit_id]={
+							"buffs": pu_serv_node.buffs.duplicate(true),
+							"skill_cooldowns": pu_serv_node.skill_cooldowns.duplicate(true),
+							"additional_moves": pu_serv_node.additional_moves,
+							"additional_attack": pu_serv_node.additional_attack,
+							"phantasm_charge": pu_serv_node.phantasm_charge,
+							"hp": pu_serv_node.hp
+						}
+					refresh_data["servant_data"][pu_id][unit_id]["meta"]={}
+					for meta_name in pu_serv_node.get_meta_list():
+						refresh_data["servant_data"][pu_id][unit_id]["meta"][meta_name]=pu_serv_node.get_meta(meta_name)
+
 			
 			
 			refresh_data["occupied_kletki"]={}
 			for kletka_id in field_node.occupied_kletki:
-				refresh_data["occupied_kletki"][kletka_id]=field_node.occupied_kletki[kletka_id].name
+				refresh_data["occupied_kletki"][kletka_id]=[]
+				for node_on_kletka in field_node.occupied_kletki[kletka_id]:
+					refresh_data["occupied_kletki"][kletka_id].append(node_on_kletka.name)
 
 
 			refresh_data["kletka_preference"]=field_node.kletka_preference.duplicate(true)
 			refresh_data["pole_generated_seed"]=field_node.pole_generated_seed
+			refresh_data["field_status"]=field_node.field_status
+			refresh_data["unit_uniq_id_player_game_stat_info"]=players_handler_node.unit_uniq_id_player_game_stat_info
+		refresh_data["pu_id_to_inventory_array"]=players_handler_node.pu_id_to_inventory_array
 		refresh_data["pu_id_player_info"]=Globals.pu_id_player_info.duplicate(true)
 		refresh_data["is_game_started"]=Globals.is_game_started
 		refresh_data["peer_to_persistent_id"]=Globals.peer_to_persistent_id.duplicate(true)
+		refresh_data["pu_id_to_allies"]=Globals.pu_id_to_allies.duplicate(true)
+		refresh_data["connected_players"]=Globals.connected_players
+		
+		
 		
 		
 		connect_scene.rpc_id(sender_peer_id, "registration_successful", puid, refresh_data)
