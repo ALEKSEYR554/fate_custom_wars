@@ -226,7 +226,7 @@ func _ready():
 	
 	Globals.someone_status_changed.connect(disconnect_alert_show)
 	
-	character_selection_container.visible=true
+	
 	#$GUI/peer_id_label/android_debug_label.text=str(char_select.characters)
 	
 	day_or_night_sprite_2d.position=Vector2(scene_bounds.x/2,-400)
@@ -240,6 +240,10 @@ func _ready():
 	#mouse_entered_gui_element()
 
 	#mouse_exited_gui_element()
+	disable_every_button(true)
+	end_turn_button.disabled=true
+
+	character_selection_container.visible=true
 	for child:Node in get_all_children($GUI):
 		#if "Control" in str(child.get_class()):
 		if child.is_class("Control"):
@@ -620,8 +624,11 @@ func glow_cletka_pressed(glow_kletka_selected):
 			$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
 			
 			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
+			disable_every_button(false)
+			end_turn_button.disabled=true
 			await sleep(0.1)
 			players_handler.rpc("pass_next_turn",Globals.self_pu_id)
+			
 			is_game_started=true
 			Globals.is_game_started=true
 		"field capture":
