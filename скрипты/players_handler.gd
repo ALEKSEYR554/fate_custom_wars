@@ -821,7 +821,7 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 	
 	var info=Globals.pu_id_player_info[pu_id]["units"][0]
 	#servant_info_main_container.visible= true#!servant_info_main_container.visible
-	servant_info_stats_textedit.text="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s\nStrenght:%s\nEndurance:%s\nLuck:%s\nMagic:%s\n
+	servant_info_stats_textedit.text="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s\nStrength:%s\nEndurance:%s\nLuck:%s\nMagic:%s\n
 	"%[info.name,info.hp,info.servant_class,info.ideology,info.agility,str(info.strength,"(",info.attack_power,")")
 	,info.endurance,info.luck,info.magic]
 	var buffs:Array=info.buffs
@@ -853,8 +853,8 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 		var unit_node=Globals.pu_id_player_info[pu_id]["units"][unit_id]
 
 		buffs=unit_node.buffs
-		display_buffs="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s\nStrenght:%s\nEndurance:%s\nLuck:%s\nMagic:%s\n
-	"%[unit_node.name,unit_node.hp,unit_node.servant_class,unit_node.ideology,unit_node.agility,str(info.strength,"(",info.attack_power,")"),
+		display_buffs="Name:%s\nHP:%s\nClass:%s\nIdeology:%s\nAgility:%s\nStrength:%s\nEndurance:%s\nLuck:%s\nMagic:%s\n
+		"%[unit_node.name,unit_node.hp,unit_node.servant_class,unit_node.ideology,unit_node.agility,str(info.strength,"(",info.attack_power,")"),
 		unit_node.endurance,unit_node.luck,unit_node.magic]
 		if advanced:
 			for buff in buffs:
