@@ -240,6 +240,9 @@ func _ready():
 	#mouse_entered_gui_element()
 
 	#mouse_exited_gui_element()
+	if OS.has_feature("editor"):
+		$GUI/free_phantasm_button.visible=true
+
 	disable_every_button(true)
 	end_turn_button.disabled=true
 
@@ -256,8 +259,7 @@ func _ready():
 		#host_buttons.visible=true
 	#gui.z_index=99
 	players_handler.fuck_you()
-	if OS.has_feature("editor"):
-		$GUI/free_phantasm_button.visible=true
+	
 	
 	#print(get_all_children(self))
 
@@ -654,8 +656,11 @@ func glow_cletka_pressed(glow_kletka_selected):
 			if check_if_kletka_has_mount(glowing_kletka_number_selected):
 				print("kletka has mount")
 				if check_if_char_info_can_ride_mount_on_kletka_id(get_current_self_char_info().to_dictionary(),glowing_kletka_number_selected):
-					var answer=await choose_between_two("You about to enter a mount.\nAre you sure?","Yes","No")
-					if answer=="Yes":
+					var answer=await choose_between_two(
+						tr("ENTER_MOUNT_QUESTION"),
+						tr("ENTER_MOUNT_QUESTION_AGREEMENT"),
+						tr("ENTER_MOUNT_QUESTION_DISAGREEMENT"))
+					if answer==tr("ENTER_MOUNT_QUESTION_AGREEMENT"):
 						mounted=true
 				else:
 					print("player cant ride this mount")
@@ -814,11 +819,15 @@ func dismount_char_info(char_info_dic:Dictionary):
 
 
 func _on_unmount_pressed():
-	var answer=await choose_between_two("Are you sure you want to unmount?","Yes","No")
+	var answer=await choose_between_two(
+		tr("UNMOUNT_QUESTION"),
+		tr("UNMOUNT_QUESTION_AGREEMENT"),
+		tr("UNMOUNT_QUESTION_DISAGREEMENT")
+		)
 
 	
 
-	if answer=="Yes":
+	if answer==tr("UNMOUNT_QUESTION_AGREEMENT"):
 		print("dismounting")
 		#checking if available kletki exists
 		$GUI/actions_buttons/Cancel.disabled=true
@@ -836,7 +845,7 @@ func _on_unmount_pressed():
 			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
 
 		if move_ck.size()<=0:
-			info_table_show("No valid cells to dismount found\naborting")
+			info_table_show(tr("UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND"))
 			await info_ok_button.pressed
 			return
 
@@ -1096,9 +1105,12 @@ func await_dice_including_rerolls(type:String,rerolls:int=-20)->Dictionary:
 	if rerolls<=0:
 		return result
 	if can_reroll_dice_for_type(type):
-		var answ=await choose_between_two("Do you want to reroll?","Yes","No")
+		var answ=await choose_between_two(
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION"),
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT"),
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION_DISAGREEMENT"))
 		print("rerolls=",rerolls)
-		if answ == "Yes":
+		if answ == tr("DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT"):
 			result=await await_dice_including_rerolls(type,rerolls-1)
 			return result
 		else:
@@ -1178,7 +1190,14 @@ func increase_dice_result_to_action_name_with_buffs(type:String):
 			if dice_plus_buff["Action"]==type:
 				dice_roll_result_list["main_dice"]+=dice_plus_buff.get("Power",1)
 				dice_roll_result_list["main_dice"]=min(dice_roll_result_list["main_dice"],6)
-				players_handler.rpc("add_to_advanced_logs",str("User has buff increasing dice roll for type=",type," new roll=",dice_roll_result_list))
+				players_handler.rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_USER_HAS_REROLL_DICE_BUFF",
+					{
+						"type":type,
+						"dice_roll_result_list":dice_roll_result_list
+					}
+				)
+					
 	pass
 
 
@@ -1189,12 +1208,24 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 	var self_char_info:CharInfo=get_current_self_char_info()
 	var enemy_char_info:CharInfo =await get_char_info_on_kletka_id(kletka_id)
 
-	players_handler.rpc("add_to_advanced_logs",str(self_char_info.get_node().name," is attempting to attack ",enemy_char_info.get_node().name))
+	players_handler.rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_ATTACK_ATTEMPT",
+		{
+			"Attacker_name":self_char_info.get_node().name,
+			"Taker_name":enemy_char_info.get_node().name
+		}
+		)
 
 	if not players_handler.can_char_info_attack_char_info(self_char_info,enemy_char_info):
-		info_table_show("You cant attack this player due to debuff!")
+		info_table_show(tr("PLAYER_CANT_ATTACK_CERTAN_DUE_TO_DEBUFF"))
 
-		players_handler.rpc("add_to_advanced_logs",str(self_char_info.get_node().name," can not attack ",enemy_char_info.get_node().name,", due to debuff!"))
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF",
+			{
+				"Attacker_name":self_char_info.get_node().name,
+				"Taker_name":enemy_char_info.get_node().name
+			}
+		)
 
 		await info_ok_button.pressed
 		return "ERROR"
@@ -1204,19 +1235,24 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 		if attack_responce_string!="parried":
 			type_of_damage_choose_buttons_box.visible=false
 			#are_you_sure_main_container.visible=true
-			fill_are_you_sure_screen("Attack")
+			fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"))
 			var are_you_sure_result=await are_you_sure_signal
-			if are_you_sure_result=="no":
-				players_handler.rpc("add_to_advanced_logs",str("user stopped attacking"))
+			if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE")
 				type_of_damage_choose_buttons_box.visible=true
 				return
 			parry_count_max=players_handler.get_char_info_agility_rank(self_char_info)
 			parry_count_max=players_handler.get_agility_in_numbers(parry_count_max)
 		else: 
-			roll_dice_optional_label.text="Enemy parried, reroll"
+			roll_dice_optional_label.text=tr("ENEMY_PARRIED_ATTACK_REROLLING")
 			roll_dice_optional_label.visible=true
 		await await_dice_including_rerolls("Attack")
-		players_handler.rpc("add_to_advanced_logs",str("Attacker rolls=",dice_roll_result_list))
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_SHOWING_ATTACKER_ROLL",
+			{"attacker_roll":dice_roll_result_list}
+		)
+			
 		roll_dice_control_container.visible=false
 		you_were_attacked_container.visible=false
 		are_you_sure_main_container.visible=false
@@ -1264,8 +1300,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 	
 	if pu_id_to_attack != Globals.self_pu_id:
 		disable_every_button()	
-
-		alert_label_text(true,"You've attacked an enemie, waiting for it's responce")
+		alert_label_text(true,tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
 	
 	var hitted=false
 	
@@ -1280,7 +1315,10 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 
 	match attack_responce_string:
 		"parried":
-			players_handler.rpc("add_to_advanced_logs",str("Damage taker evaded parry_count_max=",parry_count_max))
+			players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_PARRIED",
+				{"parry_count_max":parry_count_max}
+			)
 			parry_count_max-=1
 			if parry_count_max!=0:
 				current_action="wait"
@@ -1289,10 +1327,10 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 				await players_handler.trigger_buffs_on(self_char_info,"enemy parried",enemy_char_info)
 				return
 			else:
-				players_handler.rpc("add_to_advanced_logs",str("Attacker run out of stamina, FULL PARRY"))
+				players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY")
 		"Halfed Damage":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs",str("Taker halfed damage"))
+			players_handler.rpc("add_to_advanced_logs",			"ADVANCED_LOG_TAKER_HALFED_DAMAGE")
 			hitted=true
 			current_action="wait"
 			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
@@ -1302,7 +1340,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			await players_handler.trigger_buffs_on(self_char_info,"enemy halfed damage",enemy_char_info)
 		"damaged":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs",str("Direct hit"))
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_DIRECT_HIT")
 			hitted=true
 			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
 			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
@@ -1310,7 +1348,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 		"defending":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs",str("Taker defended"))
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_DEFENDED")
 			hitted=true
 			current_action="wait"
 			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
@@ -1318,14 +1356,14 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 			await players_handler.trigger_buffs_on(self_char_info,"enemy defended",enemy_char_info)
 		"evaded":
-			players_handler.rpc("add_to_advanced_logs",str("Taker evaded"))
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_EVADED")
 			current_action="wait"
 			await players_handler.trigger_buffs_on(self_char_info,"enemy evaded",enemy_char_info)
 		
 
 	if hitted:
 		players_handler.rpc("charge_np_to_char_info_by_number",self_char_info.to_dictionary(),1)
-		players_handler.rpc("add_to_advanced_logs",str("Attacker charging phantasm"))
+		players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM")
 	roll_dice_optional_label.visible=false
 	if attack_type=="Physical" and players_handler.get_char_info_attack_range(self_char_info)<=2: 
 		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),kletka_id,get_current_kletka_id(),true)
@@ -1334,7 +1372,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			players_handler.rpc("reduce_additional_attacks_for_char_info",self_char_info.to_dictionary())
 		else:
 			reduce_one_action_point()
-			players_handler.rpc("add_to_advanced_logs",str("Attacker reduced action point"))
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
 
 	dice_holder_hbox.visible=false
 	roll_dice_control_container.visible=false
@@ -1395,13 +1433,13 @@ func roll_a_dice():
 	
 	
 	main_dice_node.roll(dice_roll_result_list["main_dice"])
-	attack_label.text="Attack roll: "+str(dice_roll_result_list["main_dice"])
+	attack_label.text=tr("PREVIOUS_ROLL_BASE_DICE")+str(dice_roll_result_list["main_dice"])
 	
 	crit_dice_node.roll(dice_roll_result_list["crit_dice"])
-	crit_label.text="Crit roll: "+str(dice_roll_result_list["crit_dice"])
+	crit_label.text=tr("PREVIOUS_ROLL_CRIT_DICE")+str(dice_roll_result_list["crit_dice"])
 	
 	defence_dice_node.roll(dice_roll_result_list["defence_dice"])
-	defence_label.text="Defence roll: "+str(dice_roll_result_list["defence_dice"])
+	defence_label.text=tr("PREVIOUS_ROLL_DEF_DICE")+str(dice_roll_result_list["defence_dice"])
 	
 	
 	
@@ -1450,12 +1488,13 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 			if by_whom_char_info in players_handler.get_allies() and not self_unit_hit:
 				disable_every_button()
 				var type=await choose_between_two(
-					str(Globals.pu_id_player_info[by_whom_char_info.pu_id]["nickname"],". is your ally and attacking you\nDo you consider this as betrayal?"),
-					"Yes",
-					"No"
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION").format(
+						{"Ally_nick":Globals.pu_id_player_info[by_whom_char_info.pu_id]["nickname"]}),
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT"),
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_DISAGREEMENT")
 				)
 				disable_every_button(false)
-				if type=="Yes":
+				if type==tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT"):
 					players_handler.additional_enemies+=by_whom_char_info.pu_id
 			
 
@@ -1476,9 +1515,13 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 			
 
 
-			you_were_attacked_label.text=str("You were attacked by ",by_whom_char_info.get_node().name," with this dice rolls:\n",
-			"Attack: ", recieved_dice_roll_result["main_dice"] ,"Crit: ",recieved_dice_roll_result["crit_dice"],
-			"\nWhat do you do?")
+			you_were_attacked_label.text=tr("YOU_WERE_ATTACKER_WHAT_TO_DO_QUESTION").format(
+				{
+					"Attacker_name":by_whom_char_info.get_node().name,
+					"Attacker_main_dice":recieved_dice_roll_result["main_dice"],
+					"Attacker_crit_dice":recieved_dice_roll_result["crit_dice"]
+				}
+			)
 
 			var atk_range=players_handler.get_char_info_attack_range(by_whom_char_info)
 
@@ -1517,7 +1560,11 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 			await _on_parry_button_pressed()
 			#await attack_answered
 		"roll_dice_for_result":
-			roll_dice_optional_label.text="You need to throw above %s to not get bad status"%[recieved_dice_roll_result["main_dice"]]
+			roll_dice_optional_label.text=tr("ROLL_DICE_FOR_RESULT_STATEMENT").format(
+				{
+					"dice_result":recieved_dice_roll_result["main_dice"]
+				}
+				)
 			roll_dice_optional_label.visible=true
 			await await_dice_roll()
 			roll_dice_optional_label.visible=false
@@ -1587,13 +1634,13 @@ func calculate_agility_bonus(self_agility_rank: String, attacker_agility_rank: S
 
 func _on_evade_button_pressed():
 	you_were_attacked_container.visible=false
-	fill_are_you_sure_screen("Evade")
+	fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE"))
 	var are_you_sure_result=await are_you_sure_signal
-	if are_you_sure_result=="no":
+	if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
 		you_were_attacked_container.visible=true
 		return
 	
-	players_handler.rpc("add_to_advanced_logs",str("Taker trying to evade"))
+	players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_ATTEMPT_EVADING")
 
 	print("\n\n_on_evade_button_pressed   dice_roll_result_list= ",dice_roll_result_list," recieved_dice_roll_result=",recieved_dice_roll_result)
 	dice_roll_result_list=await await_dice_including_rerolls("Evade")
@@ -1616,7 +1663,14 @@ func _on_evade_button_pressed():
 
 	print("counter attack=",counter_attack," (",dice_roll_result_list["main_dice"],"==",dice_roll_result_list["crit_dice"],") ?")
 
-	players_handler.rpc("add_to_advanced_logs",str("counter attack=",counter_attack," (",dice_roll_result_list["main_dice"],"==",dice_roll_result_list["crit_dice"],") ?"))
+	players_handler.rpc("add_to_advanced_logs",
+	"ADVANCED_LOG_COUNTER_ATTACK_CHECHKING",
+		{
+			"counter_attack_flag":counter_attack,
+			"main_dice_roll":dice_roll_result_list["main_dice"],
+			"crit_dice_roll":dice_roll_result_list["crit_dice"]
+		}
+	)
 
 	#dice_roll_result_list
 	#recieved_dice_roll_result
@@ -1624,18 +1678,41 @@ func _on_evade_button_pressed():
 	var enemy_has_ignore_evade=players_handler.char_info_has_buff(attacked_by_char_info,"Ignore Evade")
 
 
-	players_handler.rpc("add_to_advanced_logs",str("enemy_has_ignore_evade=",enemy_has_ignore_evade))
+	players_handler.rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK",
+		{"ignore_evade_buff":enemy_has_ignore_evade}
+	)
 
 	var dice_with_agility_bonus=min(6,dice_roll_result_list["main_dice"]+agility_bonus)
 
 
-	players_handler.rpc("add_to_advanced_logs",str("self_agility=",self_agility," enemy_agility=",enemy_agility," agility_bonus=",agility_bonus))
+	players_handler.rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_AGILITY_DIFFERENCE_SHOW",
+		{
+			"self_agility":self_agility,
+			"enemy_agility":enemy_agility,
+			"agility_bonus":agility_bonus
+
+		}
+	)
 
 	if dice_with_agility_bonus>recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
 		rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 		attack_answered.emit()
-		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by throwing ",dice_roll_result_list["main_dice"]," agility_bonus=",agility_bonus))
-		players_handler.rpc("add_to_advanced_logs",str(get_char_info_nick(char_info_attacked)," evaded by throwing ",dice_roll_result_list["main_dice"]," agility_bonus=",agility_bonus))
+		rpc("systemlog_message",str("{self_name} evaded by throwing {dice_result} agility_bonus={agility_bonus}").format({
+				"self_name":get_char_info_nick(char_info_attacked),
+				"dice_result":dice_roll_result_list["main_dice"],
+				"agility_bonus":agility_bonus
+			})
+			)
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_USER_EVADED_ATTACK",
+			{
+				"self_name":get_char_info_nick(char_info_attacked),
+				"dice_result":dice_roll_result_list["main_dice"],
+				"agility_bonus":agility_bonus
+			}
+		)
 	elif dice_with_agility_bonus==recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
 		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type,"Halfed Damage")
 		print("test")
@@ -1644,7 +1721,12 @@ func _on_evade_button_pressed():
 				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 				attack_answered.emit()
 				rpc("systemlog_message",str(attacked_by_char_info," evaded by buff"))
-				players_handler.rpc("add_to_advanced_logs",str(attacked_by_char_info," evaded by buff"))
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
+					{
+						"self_name":attacked_by_char_info.get_node().name
+					}
+				)
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
 			attack_answered.emit()
@@ -1663,7 +1745,12 @@ func _on_evade_button_pressed():
 				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
 				attack_answered.emit()
 				rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
-				players_handler.rpc("add_to_advanced_logs",str(attacked_by_char_info," evaded by buff"))
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
+					{
+						"self_name":attacked_by_char_info.get_node().name
+					}
+				)
 		else:
 			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
 			attack_answered.emit()
@@ -1691,11 +1778,11 @@ func _on_evade_button_pressed():
 		print("attempting counter attack kletki_with_players=",kletki_with_players," ? attacker_kletka_id=",attacker_kletka_id)
 
 		if attacker_kletka_id in kletki_with_players:
-			info_table_show("You rolled clear crit during evade. You can counter attack!")
+			info_table_show(tr("YOU_CAN_COUNTER_ATTACK"))
 			await info_ok_button.pressed
-			fill_are_you_sure_screen("Counter Attack")
+			fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK"))
 			are_you_sure_result=await are_you_sure_signal
-			if are_you_sure_result=="no":
+			if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
 				return
 			systemlog_message(str(get_char_info_nick(char_info_attacked)," counter attacking"))
 			var player_has_magic_attack=players_handler.get_char_info_magical_attack(get_current_self_char_info())
@@ -1743,9 +1830,9 @@ func remove_evade_buff_after_hit_for_char_info(char_info_dic:Dictionary):
 
 func _on_defence_button_pressed():
 	you_were_attacked_container.visible=false
-	fill_are_you_sure_screen("Defence")
+	fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_DEFENCE"))
 	var are_you_sure_result=await are_you_sure_signal
-	if are_you_sure_result=="no":
+	if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
 		you_were_attacked_container.visible=true
 		return
 	
@@ -1784,9 +1871,9 @@ func _on_parry_button_pressed():
 	
 	if self_action_status!="parrying":
 		you_were_attacked_container.visible=false
-		fill_are_you_sure_screen("Parry")
+		fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_PARRY"))
 		var are_you_sure_result=await are_you_sure_signal
-		if are_you_sure_result=="no":
+		if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
 			you_were_attacked_container.visible=true
 			return
 		
@@ -1980,13 +2067,13 @@ func choose_unit_to_play()->bool:
 					)
 
 	if kletki_with_non_played_units.size()<=0:
-		info_table_show("No units to play, skipping")
+		info_table_show(tr("NO_UNITS_AVAILABLE_TO_PLAY"))
 		maximum_playable_units=0
 		unit_ids_already_played_this_turn=[]
 		await info_ok_button.pressed
 		return false
 	current_action="wait"
-	info_table_show("Choose unit to play")
+	info_table_show(tr("CHOOSE_UNIT_TO_PLAY"))
 	await info_ok_button.pressed
 	choose_glowing_cletka_by_ids_array(kletki_with_non_played_units)
 	var choosen_kletka_id=await glow_kletka_pressed_signal
@@ -2129,9 +2216,9 @@ func start_turn():
 			paralyzed=true
 			disable_every_button()
 			if players_handler.char_info_has_buff(self_char_info,"Charm"):
-				info_table_show("You're charmed\n")
+				info_table_show(tr("YOU_ARE_CHARMED"))
 			else:
-				info_table_show("You're paralyzed\n")
+				info_table_show(tr("YOU_ARE_PARALYZED"))
 			await info_ok_button.pressed
 			end_turn_button.disabled=false
 			command_spells_button.disabled=false
@@ -2147,7 +2234,14 @@ func start_turn():
 				release_from_Presence_Concealment(true)
 			else:#waiting for minumum turns
 				disable_every_button()
-				info_table_show("Вы в сокрытии присутствия и не можете ходить еще\n"+str(abs(turns_passed-minimum_turns))+" ходов")
+				info_table_show(
+					tr("YOU_IN_PRESENCE_CONCEALMENT_FOR_TURNS").format(
+					{
+						"amount":abs(turns_passed-minimum_turns)
+					}
+				))
+
+
 				await info_ok_button.pressed
 	
 	
@@ -2163,12 +2257,12 @@ func start_turn():
 
 func release_from_Presence_Concealment(stun:bool):
 	if stun:
-		info_table_show("Вы можете выйти из сокрытия присутствия сейчас, но будете застанены следующий ход")
+		info_table_show(tr("EXIT_PRECENCE_CONCEALMENT_EARLIER"))
 		await info_ok_button.pressed
-		fill_are_you_sure_screen("Выйти из сокрытия присутствия")
+		fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_RELEASE_PRESENCE_CONCEALMENT"))
 		var choose=await are_you_sure_signal
 		print("choose="+str(choose))
-		if choose=="no":
+		if choose==tr("ARE_YOU_SURE_DISAGREEMENT"):
 			return
 		
 		
@@ -2182,7 +2276,7 @@ func release_from_Presence_Concealment(stun:bool):
 				"Power":1
 				})
 	else:
-		info_table_show("Вы обязаны выйти из сокрытия присутствия сейчас")
+		info_table_show(tr("PRESENCE_CONSEALMENT_END"))
 		await info_ok_button.pressed
 		
 		current_action="move"
@@ -2633,14 +2727,14 @@ func _on_chat_hide_show_button_pressed():
 	pass # Replace with function body.
 
 func fill_are_you_sure_screen(text:String=""):
-	are_you_sure_label.text="Are you sure you want to:\n"+text
+	are_you_sure_label.text=tr("ARE_YOU_SURE_YOU_WANT_TO_QUESTION")+text
 	are_you_sure_main_container.visible=true
 
 func _on_im_sure_button_pressed():
 	are_you_sure_main_container.visible=false
 	#are_you_sure_result="yes"
 	#are_you_sure_signal.emit()
-	emit_signal("are_you_sure_signal", "yes")
+	emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_AGREEMENT"))
 	
 	pass # Replace with function body.
 
@@ -2648,7 +2742,7 @@ func _on_im_sure_button_pressed():
 func _on_im_not_sure_button_pressed():
 	are_you_sure_main_container.visible=false
 	#are_you_sure_result="no"
-	emit_signal("are_you_sure_signal", "no")
+	emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_DISAGREEMENT"))
 	#are_you_sure_signal.emit()
 	
 	pass # Replace with function body.
@@ -2879,13 +2973,13 @@ func _on_command_spell_transfer_button_pressed():
 	hide_all_gui_windows("command_spells")
 
 
-	info_table_show("Choose player to transfer command spell to")
+	info_table_show(tr("CHOOSE_PLAYER_TO_TRANSFER_COMMAND_SPELL"))
 	await info_ok_button.pressed
 	var pu_id_to_cast_to=await players_handler.choose_single_in_range(999)
 	pu_id_to_cast_to=pu_id_to_cast_to[0]
 
 	if players_handler.pu_id_to_command_spells_int[pu_id_to_cast_to]>=3:
-		info_table_show("Player has maximum command spells, transfer failed")
+		info_table_show(tr("FAILED_TO_TRANSFER_COMMAND_SPELL_TO_MANY"))
 		await info_ok_button.pressed
 		return
 	players_handler.rpc("reduce_command_spell_on_pu_id",pu_id_to_cast_to,-1)

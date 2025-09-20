@@ -29,16 +29,16 @@ metadata/_edit_lock_ = true
 [node name="start" type="Button" parent="GUI/host_buttons"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "start"
+text = "HOST_BUTTON_START"
 
 [node name="reset" type="Button" parent="GUI/host_buttons"]
 layout_mode = 2
-text = "restart field"
+text = "HOST_BUTTON_RESET_FIELD"
 
 [node name="finish_button" type="Button" parent="GUI/host_buttons"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0, 0, 1)
-text = "Finish"
+text = "HOST_BUTTON_FINISH_GAME"
 
 [node name="command_spells_button" type="TextureButton" parent="GUI"]
 anchors_preset = -1
@@ -68,22 +68,22 @@ grow_vertical = 2
 [node name="command_spell_heal_button" type="Button" parent="GUI/command_spell_choices_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Heal 70% of max HP"
+text = "COMMAND_SPELL_HEAL_BUTTON"
 
 [node name="command_spell_np_charge_button" type="Button" parent="GUI/command_spell_choices_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Get 6 np charges"
+text = "COMMAND_SPELL_NP_CHARGE_BUTTON"
 
 [node name="command_spell_add_moves_button" type="Button" parent="GUI/command_spell_choices_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Get 3 additional moves"
+text = "COMMAND_SPELL_ADDITIONAL_MOVES_BUTTON"
 
 [node name="command_spell_transfer_button" type="Button" parent="GUI/command_spell_choices_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
-text = "Transfer to another player"
+text = "COMMAND_SPELL_TRANSFER_BUTTON"
 
 [node name="make_action" type="Button" parent="GUI"]
 anchors_preset = 5
@@ -97,7 +97,7 @@ size_flags_horizontal = 4
 size_flags_vertical = 0
 theme_override_font_sizes/font_size = 30
 disabled = true
-text = "MAKE ACTIONS"
+text = "MAKE_ACTION_BUTTON"
 metadata/_edit_lock_ = true
 
 [node name="alert_label" type="Label" parent="GUI"]
@@ -143,39 +143,39 @@ metadata/_edit_lock_ = true
 [node name="Attack" type="Button" parent="GUI/actions_buttons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "ATTACK"
+text = "ACTION_BUTTON_ATTACK"
 
 [node name="Move" type="Button" parent="GUI/actions_buttons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "MOVE"
+text = "ACTION_BUTTON_MOVE"
 
 [node name="Skill" type="Button" parent="GUI/actions_buttons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "SKILL"
+text = "ACTION_BUTTON_SKILL"
 
 [node name="Phantasm" type="Button" parent="GUI/actions_buttons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "Phantasm"
+text = "ACTION_BUTTON_PHANTASM"
 
 [node name="Unmount" type="Button" parent="GUI/actions_buttons"]
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "Unmount"
+text = "ACTION_BUTTON_UNMOUNT"
 
 [node name="Items" type="Button" parent="GUI/actions_buttons"]
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "ITEMS"
+text = "ACTION_BUTTON_ITEMS"
 
 [node name="Cancel" type="Button" parent="GUI/actions_buttons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "CANCEL"
+text = "ACTION_BUTTON_CANCEL"
 
 [node name="custom_choices_tab_container" type="TabContainer" parent="GUI"]
 visible = false
@@ -206,7 +206,7 @@ text = "Cooldown: 0"
 [node name="use_custom_button" type="Button" parent="GUI/use_custom_but_label_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 25
-text = "USE"
+text = "USE_CUSTOM_BUTTON"
 
 [node name="Skill_info_tab_container" type="TabContainer" parent="GUI"]
 visible = false
@@ -266,7 +266,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
 disabled = true
-text = "USE SKILL"
+text = "USE_SKILL_BUTTON"
 
 [node name="action" type="HBoxContainer" parent="GUI"]
 anchors_preset = -1
@@ -280,7 +280,7 @@ metadata/_edit_lock_ = true
 [node name="Label" type="Label" parent="GUI/action"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "ACTIONS:"
+text = "ACTIONS_AMOUNT_LABEL"
 
 [node name="current_actions" type="Label" parent="GUI/action"]
 layout_mode = 2
@@ -334,17 +334,17 @@ metadata/_edit_lock_ = true
 [node name="self_info_show_button" type="Button" parent="GUI/right_ange_buttons_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 31
-text = "Self info"
+text = "RIGHT_BUTTONS_SELF_INFO_BUTTON"
 
 [node name="Skill_info_show_button" type="Button" parent="GUI/right_ange_buttons_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 33
-text = "Skills info"
+text = "RIGHT_BUTTONS_SKILLS_INFO_BUTTON"
 
 [node name="dices_toggle_button" type="Button" parent="GUI/right_ange_buttons_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 31
-text = "Dices"
+text = "RIGHT_BUTTONS_DICES_BUTTON"
 
 [node name="End_turn" type="Button" parent="GUI/right_ange_buttons_container"]
 layout_mode = 2
@@ -380,7 +380,7 @@ layout_mode = 2
 
 [node name="get_selected_character" type="Button" parent="GUI/character_selection_container"]
 layout_mode = 2
-text = "Confirm"
+text = "CHARACTERS_SELECTION_CONRIRM_BUTTON"
 
 [node name="players_info_buttons_container" type="VBoxContainer" parent="GUI"]
 offset_left = 1.0
@@ -391,12 +391,12 @@ metadata/_edit_lock_ = true
 
 [node name="teams_button" type="Button" parent="GUI/players_info_buttons_container"]
 layout_mode = 2
-text = "Teams"
+text = "TEAMS_BUTTON"
 
 [node name="Label" type="Label" parent="GUI/players_info_buttons_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
-text = "Players:"
+text = "PLAYERS_LABEL"
 
 [node name="type_of_damage_choose_buttons_box" type="HBoxContainer" parent="GUI"]
 visible = false
@@ -412,12 +412,12 @@ metadata/_edit_lock_ = true
 [node name="regular_damage_button" type="Button" parent="GUI/type_of_damage_choose_buttons_box"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 31
-text = "Regular"
+text = "TYPE_OF_DAMAGE_CHOOSE_PHYSICAL"
 
 [node name="magical_damage_button" type="Button" parent="GUI/type_of_damage_choose_buttons_box"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 31
-text = "Magical"
+text = "TYPE_OF_DAMAGE_CHOOSE_MAGICAL"
 
 [node name="Current_roll_container" type="PanelContainer" parent="GUI"]
 anchors_preset = 2
@@ -440,19 +440,19 @@ alignment = 2
 
 [node name="Main_label_dont_touch" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
 layout_mode = 2
-text = "Yours last:"
+text = "PREVIOUS_ROLL_HEADER"
 
 [node name="Attack_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
 layout_mode = 2
-text = "Attack roll:"
+text = "PREVIOUS_ROLL_BASE_DICE"
 
 [node name="Crit_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
 layout_mode = 2
-text = "Crit roll:"
+text = "PREVIOUS_ROLL_CRIT_DICE"
 
 [node name="Defence_label" type="Label" parent="GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox"]
 layout_mode = 2
-text = "Defence roll:"
+text = "PREVIOUS_ROLL_DEF_DICE"
 
 [node name="ChatLog_container" type="VBoxContainer" parent="GUI"]
 anchors_preset = 1
@@ -526,23 +526,23 @@ layout_mode = 2
 [node name="Evade_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Evade"
+text = "YOU_WERE_ATTACKED_EVADE_OPTION"
 
 [node name="Defence_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Defence"
+text = "YOU_WERE_ATTACKED_DEF_OPTION"
 
 [node name="Parry_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Parry"
+text = "YOU_WERE_ATTACKED_PARRY_OPTION"
 
 [node name="Phantasm_evation_button" type="Button" parent="GUI/You_were_attacked_container/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 disabled = true
-text = "Phantasm"
+text = "YOU_WERE_ATTACKED_PHANTASM_OPTION"
 
 [node name="are_you_sure_main_container" type="VBoxContainer" parent="GUI"]
 visible = false
@@ -573,13 +573,13 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 19
-text = "Yes, I'm sure"
+text = "ARE_YOU_SURE_CONFIRM_BUTTON"
 
 [node name="im_not_sure_button" type="Button" parent="GUI/are_you_sure_main_container/are_you_sure_buttons_container"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 19
-text = "No, take me back"
+text = "ARE_YOU_SURE_DECLINE_BUTTON"
 
 [node name="roll_dice_control_container" type="VBoxContainer" parent="GUI"]
 visible = false
@@ -605,7 +605,7 @@ text = "Enemy parried, reroll"
 [node name="roll_dices_button" type="Button" parent="GUI/roll_dice_control_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 50
-text = "Roll dices"
+text = "ROLL_DICES_BUTTON"
 
 [node name="dice_holder_hbox" type="HBoxContainer" parent="GUI"]
 visible = false
@@ -678,7 +678,7 @@ editable = false
 [node name="show_buffs_advanced_way_button" type="Button" parent="GUI/Servant_info_main_container"]
 layout_mode = 2
 toggle_mode = true
-text = "Show buffs advanced way"
+text = "SHOW_BUFFS_ADVANCED_WAY"
 
 [node name="servant_info_skills_textedit" type="TextEdit" parent="GUI/Servant_info_main_container"]
 custom_minimum_size = Vector2(0, 200)
@@ -704,7 +704,7 @@ anchor_top = 0.74537
 anchor_right = 0.124132
 anchor_bottom = 0.817901
 theme_override_font_sizes/font_size = 28
-text = "Flip Sprite"
+text = "FLIP_SPRITE_BUTTON"
 metadata/_edit_use_anchors_ = true
 metadata/_edit_lock_ = true
 
@@ -736,7 +736,7 @@ anchor_top = 0.603395
 anchor_right = 0.991319
 anchor_bottom = 0.652778
 theme_override_font_sizes/font_size = 19
-text = "Turn: "
+text = "TURNS_COUNT_LABEL"
 metadata/_edit_use_anchors_ = true
 metadata/_edit_lock_ = true
 
@@ -761,8 +761,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 30
-text = "Someone disconnected
-awaiting reconnection"
+text = "SOMEONE_DISCONNECTED_AWAIT"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
@@ -827,7 +826,7 @@ text = "Reconnect"
 [node name="settings_button" type="Button" parent="GUI/menu_vbox_container"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
-text = "Settings"
+text = "MAIN_MENU_SETTINGS_BUTTON"
 
 [node name="teams_margin" type="MarginContainer" parent="GUI"]
 visible = false
@@ -854,7 +853,7 @@ size_flags_horizontal = 3
 
 [node name="all_teams_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox"]
 layout_mode = 2
-text = "All teams"
+text = "ALL_TEAMS"
 horizontal_alignment = 1
 
 [node name="your_teams_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"]
@@ -863,7 +862,7 @@ size_flags_horizontal = 3
 
 [node name="your_teams_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox"]
 layout_mode = 2
-text = "Your teams"
+text = "YOUR_TEAMS"
 horizontal_alignment = 1
 
 [node name="teams_options_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"]
@@ -872,7 +871,7 @@ size_flags_horizontal = 3
 
 [node name="teams_options_label" type="Label" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"]
 layout_mode = 2
-text = "Actions"
+text = "TEAMS_ACTIONS"
 horizontal_alignment = 1
 
 [node name="team_actions_vbox" type="VBoxContainer" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"]
@@ -881,17 +880,17 @@ layout_mode = 2
 [node name="Betray_team_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Betray"
+text = "BETRAY_PLAYER_TEAMS_BUTTON"
 
 [node name="ally_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Ally"
+text = "ALLY_PLAYER_TEAMS_BUTTON"
 
 [node name="neutral_button" type="Button" parent="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Neutral"
+text = "NEUTRAL_PLAYER_TEAMS_BUTTON"
 
 [node name="info_label_panel" type="Panel" parent="GUI"]
 visible = false

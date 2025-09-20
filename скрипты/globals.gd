@@ -41,6 +41,8 @@ var characters:Array=[]
 
 var uniqq_ids:Array=[]
 
+#var translations:Dictionary={}
+
 var DEFAULT_PORT = 9999
 const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
 const MAX_RECONNECT_ATTEMPTS: int = 5
@@ -82,6 +84,7 @@ func _ready():
 		Globals.user_folder="res:/"
 	preload_all_servant_sprites()
 	generate_unique_ids()
+	load_translation_file()
 
 
 func generate_unique_ids(amount:int=200)->Array:
@@ -103,6 +106,38 @@ func get_all_servants_subfolders_name(path:String=""):
 	return output
 
 
+func load_translation_file():
+	
+	var dir = DirAccess.open(Globals.user_folder+"/translations")
+	if not dir:
+		#if no external translations found, loading default one
+		print("no external translations found, loading default one")
+		dir=DirAccess.open("res://translations")
+	
+	dir.list_dir_begin()
+	var file_name:String = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir():
+			print("Found translation file for language " + file_name.get_basename())
+			if file_name.get_extension()=="json":
+				var file = dir.get_current_dir()+"/"+file_name
+				var json_as_text = FileAccess.get_file_as_string(file)
+				var json_as_dict = JSON.parse_string(json_as_text)
+				if json_as_dict:
+					var new_translation:Translation=Translation.new()
+					new_translation.locale=file_name.get_basename()
+					for key in json_as_dict.keys():
+						new_translation.add_message(key,json_as_dict[key])
+					TranslationServer.add_translation(new_translation)
+					print_debug("new_translation=",new_translation.get_message_list())
+					print_debug("translations loaded=",TranslationServer.get_loaded_locales())
+
+		file_name = dir.get_next()
+	
+
+
+func get_locale_text(language:String)->String:
+	return ""
 
 func preload_all_servant_sprites():
 	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
