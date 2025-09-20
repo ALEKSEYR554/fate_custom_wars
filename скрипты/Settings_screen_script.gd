@@ -1,5 +1,6 @@
 extends Control
 @onready var resolution_choice:OptionButton = $VBoxContainer/HBoxContainer/resolution_choice
+@onready var language_option_button:OptionButton = $VBoxContainer/HBoxContainer3/language_OptionButton
 
 const resolutions=[
 "1280x720",
@@ -17,6 +18,22 @@ const resolutions=[
 func _ready():
 	for item in resolutions:
 		resolution_choice.add_item(item)
+		
+	for language_name in TranslationServer.get_loaded_locales():
+		language_option_button.add_item(language_name)
+		print("adding language_name=",language_name)
+	
+	#Globals.language_code_selected=language_option_button.get_item_text(language_option_button.get_selected_id())
+	TranslationServer.set_locale(
+		language_option_button.get_item_text(
+			language_option_button.get_selected_id()
+			)
+		)
+	print("current locale=",TranslationServer.get_locale())
+
+	#print(tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
+	#TranslationServer.set_locale("ru")
+	#print(tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
 	pass # Replace with function body.
 
 
@@ -41,4 +58,9 @@ func _on_full_screen_toggle_toggled(toggled_on):
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	pass # Replace with function body.
+
+
+func _on_language_option_button_item_selected(index):
+	TranslationServer.set_locale(language_option_button.get_item_text(language_option_button.get_selected_id()))
 	pass # Replace with function body.

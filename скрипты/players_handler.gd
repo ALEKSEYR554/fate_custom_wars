@@ -684,7 +684,7 @@ func turns_loop() -> void:
 
 @rpc("authority","call_local","reliable")
 func alert_end_game():
-	field.info_table_show("There is only one team standing!\n You've won!\nAwaiting host's action")
+	field.info_table_show(tr("ONLY_ONE_TEAM_STANDING"))
 
 
 @rpc("any_peer","call_local","reliable")
@@ -1044,19 +1044,30 @@ func check_if_char_info_got_crit(char_info:CharInfo,dice_results:Dictionary)->bo
 	var is_crit=false
 	
 	is_crit = dice_results["main_dice"]==dice_results["crit_dice"]
-	rpc("add_to_advanced_logs",str("main and sub dices:",dice_results["main_dice"],"==",dice_results["crit_dice"]," is_crit=",is_crit))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CHECK_IF_USER_GOT_CRIT_DICES",
+		{
+			"main_dice":dice_results["main_dice"],
+			"crit_dice":dice_results["crit_dice"],
+			"is_crit":is_crit
+		}
+	)
+
 	for skill in get_char_info_buffs(char_info):
 		match skill["Name"]:
 			"Critical Remove":
 				crit_removed=true
-				rpc("add_to_advanced_logs","Attacker has their crit removed by buff")
+				rpc("add_to_advanced_logs","ADVANCED_LOG_CRIT_REMOVED_BY_BUFF")
 			"Critical Hit Rate Up":
-				rpc("add_to_advanced_logs",str("attacker has Critical Hit Rate Up buff with Chances=",skill["Crit Chances"]))
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_ATTACKER_HAS_CRIT_UP_BUFF",
+					{"crit_dice":skill["Crit Chances"]}
+				)
 				if dice_results["crit_dice"] in skill["Crit Chances"]:
-					rpc("add_to_advanced_logs","Crit Chances were applied")
+					rpc("add_to_advanced_logs","ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_VALID")
 					is_crit=true
 				else:
-					rpc("add_to_advanced_logs","Crit Chances were not applied")
+					rpc("add_to_advanced_logs","ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_NOT_VALID")
 	if crit_removed:
 		is_crit=false
 	return is_crit
@@ -1094,7 +1105,7 @@ func check_condition_wrapper(condition:Dictionary):
 	var exact=condition.get("Exact",null)
 
 	if not (who_to_check and what_to_check):
-		rpc("add_to_advanced_logs","condition doesn't have who_to_check or what_to_check")
+		rpc("add_to_advanced_logs","ADVANCED_LOG_BUFF_CONDITION_FIELDS_ERROR")
 		return false
 	
 	#var pu_id_to_check:Array
@@ -1105,7 +1116,10 @@ func check_condition_wrapper(condition:Dictionary):
 		"Self":
 			char_info_to_check=[field.get_current_self_char_info()]
 		
-	rpc("add_to_advanced_logs",str("who_to_check=",who_to_check))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_BUFF_CONDITION_WHO_TO_CHECK",
+		{"who_to_check":who_to_check}
+	)
 
 	var condition_check=false
 	for char_info in char_info_to_check:
@@ -1155,10 +1169,16 @@ func check_condition_wrapper(condition:Dictionary):
 				stat_to_check=get_char_info_luck(char_info)
 			"Buff Name":
 				if char_info_has_buff(char_info,exact):
-					rpc("add_to_advanced_logs",str("char have buff=",exact))
+					rpc("add_to_advanced_logs",
+						"ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME",
+						{"buff":exact}
+					)
 					return true
 				else:
-					rpc("add_to_advanced_logs",str("char does not have buff=",exact))
+					rpc("add_to_advanced_logs",
+						"ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME_NOT_VALID",
+						{"buff":exact}
+					)
 					return false
 			"Field":
 				var current_field=get_current_fields()
@@ -1237,17 +1257,25 @@ func calculate_char_info_attack_against_char_info(attacker_char_info:CharInfo,ta
 
 	attacker_buffs.append_array(phantasm_additional_buffs)
 
-	rpc("add_to_advanced_logs",str("checking attacker buffs=",attacker_buffs))
+	rpc("add_to_advanced_logs",
+	"ADVANCED_LOG_CHECKING_ATTACKER_BUFFS",
+	{"attacker_buffs":attacker_buffs})
 	for buff in attacker_buffs:
-		rpc("add_to_advanced_logs",str("checking buff=",buff))
+		rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_CHECKING_ATTACKER_BUFF",
+			{"buff":buff}
+		)
 		if buff.has("Condition"):
-			rpc("add_to_advanced_logs",str("buff has condition=",buff["Condition"]))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_BUFF_HAS_CONDITION",
+				{"condition":buff["Condition"]}
+			)
 			var check_buff=check_condition_wrapper(buff["Condition"])
 			print_debug("check_buff=",check_buff)
 			if not check_buff:
-				rpc("add_to_advanced_logs","condition is false")
+				rpc("add_to_advanced_logs","ADVANCED_LOG_BUFF_CONDITION_FALSE")
 				continue
-			rpc("add_to_advanced_logs","condition is true")
+			rpc("add_to_advanced_logs","ADVANCED_LOG_BUFF_CONDITION_TRUE")
 		match buff["Name"]:
 			"ATK Up":
 				attack_total+=buff["Power"]
@@ -1281,10 +1309,38 @@ func calculate_char_info_attack_against_char_info(attacker_char_info:CharInfo,ta
 					attack_total+=buff["Power"]
 		var poww=""
 		if buff.has("Power"):
-			poww=str(" power=",buff["Power"])
-		print(str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
-		rpc("add_to_advanced_logs",str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
-	rpc("add_to_advanced_logs","calculating attackers's multiplying buffs")
+			poww=str("Buff={buff_name} power={buff_power} damage_to_take={total_damage}").format(
+				{
+					"buff_name":buff["Name"],
+					"buff_power":buff["Power"],
+					"total_damage":attack_total
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_POWER_DAMAGE",
+				{
+					"buff_name":buff["Name"],
+					"buff_power":buff["Power"],
+					"total_damage":attack_total
+				}
+			)
+		else:
+			poww=str("Buff={buff_name} damage_to_take={total_damage}").format(
+				{
+					"buff_name":buff["Name"],
+					"total_damage":attack_total
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_NO_POWER_DAMAGE",
+				{
+					"buff_name":buff["Name"],
+					"total_damage":attack_total
+				}
+			)
+		print(poww)
+	
+	rpc("add_to_advanced_logs","ADVANCED_LOG_DAMAGE_CALCULATE_MULTY_BUFFS")
 	for buff in attacker_buffs:
 		match buff["Name"]:
 			"ATK UP X":
@@ -1318,9 +1374,35 @@ func calculate_char_info_attack_against_char_info(attacker_char_info:CharInfo,ta
 		
 		var poww=""
 		if buff.has("Power"):
-			poww=str(" power=",buff["Power"])
-		print(str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
-		rpc("add_to_advanced_logs",str("Buff= ",buff["Name"],poww," damage_to_take=",attack_total))
+			poww=str("Buff={buff_name} power={buff_power} damage_to_take={total_damage}").format(
+				{
+					"buff_name":buff["Name"],
+					"buff_power":buff["Power"],
+					"total_damage":attack_total
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_POWER_DAMAGE",
+				{
+					"buff_name":buff["Name"],
+					"buff_power":buff["Power"],
+					"total_damage":attack_total
+				}
+			)
+		else:
+			poww=str("Buff={buff_name} damage_to_take={total_damage}").format(
+				{
+					"buff_name":buff["Name"],
+					"total_damage":attack_total
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_NO_POWER_DAMAGE",
+				{
+					"buff_name":buff["Name"],
+					"total_damage":attack_total
+				}
+			)
 		
 	attack_total=ceil(attack_total)
 	return attack_total
@@ -1434,7 +1516,7 @@ func _on_phantasm_pressed()->void:
 	if char_info_has_buff(field.get_current_self_char_info(),"NP Seal"):
 		custom_choices_tab_container.visible=false
 		use_custom_but_label_container.visible=false
-		field.info_table_show("Your NP is sealed by debuff")
+		field.info_table_show(tr("NP_IS_SEALED_BY_DEBUFF"))
 		await field.info_ok_button.pressed
 		return
 	
@@ -1824,7 +1906,14 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 				remove_currency=true
 				#reduce_char_info_currency(self_char_info,curr,amount)
 			else:
-				field.info_table_show("Not enought "+str(curr)+" value:"+str(amount))
+				field.info_table_show(
+					tr("NOT_ENOUGHT_CURRENCY_AMOUNT").format(
+						{
+							"currency_name":curr,
+							"amount":amount
+						}
+					)
+					)
 				await field.info_ok_button.pressed
 				remove_currency=false
 				continue
@@ -1839,7 +1928,7 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 			if can_use_mandness_enhancement():
 				pass
 			else:
-				field.info_table_show("can not apply madness enchencement, you have buffs")
+				field.info_table_show(tr("CANT_APPLY_MAD_ENCHANCEMENT_BUFFS"))
 				await field.info_ok_button.pressed
 				continue
 		
@@ -2749,7 +2838,7 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 	
 
 	if counter>=limit:
-		field.info_table_show("Maximum units for this skill reached. Not summoning\nSkill used")
+		field.info_table_show(tr("MAXIMUM_SUMMONABLE_UNITS_REACHED_FOR_SKILL"))
 		await field.info_ok_button.pressed
 		return false
 
@@ -2861,9 +2950,10 @@ func remove_buff(cast_array:Array,skill_name:String,remove_passive=false,remove_
 						buff_removed.emit()
 						return
 				else:
-					who_to_remove_buff_char_info.get_node().buffs.pop_at(i)
-					buff_removed.emit()
-					return
+					if not remove_only_passive_one:
+						who_to_remove_buff_char_info.get_node().buffs.pop_at(i)
+						buff_removed.emit()
+						return
 			i+=1
 	buff_removed.emit()
 	
@@ -3000,7 +3090,8 @@ func get_charInfo_from_pu_id_unit_id(pu_id:String,unit_id:int)->CharInfo:
 
 
 @rpc("any_peer","reliable","call_local")
-func add_to_advanced_logs(text_to_add:String):
+func add_to_advanced_logs(text_code:String,formats:Dictionary={}):
+	var text_to_add=text_code.format(formats)
 	$"../GUI/advanced_logs_textedit".text+=text_to_add+"\n"
 
 
@@ -3011,8 +3102,16 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	var self_char_attacked=field.char_info_attacked
 	var current_kletka=field.char_info_to_kletka_number(self_char_attacked)
 
-	rpc("add_to_advanced_logs",str("Starting calculating damage to take to ",self_char_attacked.get_node().name,
-	" by ",attacker_char_info.get_node().name, " with dices=",enemies_dice_results," damage_type=",damage_type," damage_type=",special))
+	rpc("add_to_advanced_logs",
+	"ADVANCED_LOG_CALCULATE_DAMAGE_TO_TAKE_START",
+		{
+			"taker_name":self_char_attacked.get_node().name,
+			"attacker_name":attacker_char_info.get_node().name,
+			"enemy_dices":enemies_dice_results,
+			"damage_type":damage_type,
+			"special":special
+		}
+	)
 
 
 	var zero_damage=false
@@ -3034,7 +3133,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	if damage_type=="Magical":
 		#damage_to_take=Globals.pu_id_player_info[attacker_pu_id]["servant_node"].magic["Power"]
 		damage_to_take=get_char_info_magical_attack(attacker_char_info)
-		rpc("add_to_advanced_logs","attacker has magical attack")
+		rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_MAGICAL_ATTACK")
 
 		
 		var cur_kletka_conf=field.kletka_preference[current_kletka]
@@ -3047,7 +3146,8 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			if cur_kletka_conf.get("Owner","")==attacker_char_info.get_uniq_id() and cur_kletka_conf.get("Ignore Magical Defence",false) \
 			and attacker_kletka_conf.get("Owner","")==attacker_char_info.get_uniq_id() and attacker_kletka_conf.get("Ignore Magical Defence",false):
 				is_field_ignore_magic_defence=true
-				rpc("add_to_advanced_logs","attacker and taker on the attacker magical field, ignoring magical defence")
+				rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_CALCULATE_DAMAGE_ALL_ON_MAGICAL_FIELD")
 	else:
 		#damage_to_take=Globals.pu_id_player_info[attacker_pu_id]["servant_node"].attack_power
 		damage_to_take=get_char_info_attack_power(attacker_char_info)
@@ -3056,15 +3156,21 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	if damage_type=="Phantasm":
 		if !field.recieved_phantasm_config.is_empty():#for phantasm damage
 			damage_to_take=field.recieved_phantasm_config["Damage"]
-			rpc("add_to_advanced_logs","it is phantasm attack")
+			rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_ATTACK")
 			if field.recieved_phantasm_config.has("Ignore"):
 				buff_types_to_ignore=field.recieved_phantasm_config["Ignore"]
-				rpc("add_to_advanced_logs",str("phantasm ignoring types=",buff_types_to_ignore))
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_IGNORE_TYPES",
+					{"types":buff_types_to_ignore}
+				)
 		additional_buffs= field.recieved_phantasm_config.get("Phantasm Buffs",[])
 		
 	print("damage_type="+str(damage_type)+" damage_to_take="+str(damage_to_take))
 
-	rpc("add_to_advanced_logs",str("base damage=",damage_to_take))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CALCULATE_DAMAGE_BASE_DAMAGE",
+		{"damage":damage_to_take}
+	)
 	
 	#calculating attacker damage
 	print("calculating attacker damage")
@@ -3073,27 +3179,29 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 
 	damage_to_take=calculate_char_info_attack_against_char_info(attacker_char_info,self_char_attacked,damage_type)
 
-	rpc("add_to_advanced_logs",str("damage_to_take after attacker buffs=",damage_to_take))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CALCULATE_DAMAGE_AFTER_ATTACKER_BUFFS",	{"damage_to_take":damage_to_take}
+	)
 
-	rpc("add_to_advanced_logs","checking if attacker got crit")
+	rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_CHECK_ATTACKER_CRIT")
 	is_crit=check_if_char_info_got_crit(attacker_char_info,enemies_dice_results)
 
 	
 	if is_crit:
 		print("it is crit")
-		rpc("add_to_advanced_logs","Attacker has crit")
+		rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_VALID")
 		damage_before_crit=damage_to_take
 		damage_to_take=calculate_crit_damage(attacker_char_info,damage_to_take)
 	else:
 		print("it is not crit")
-		rpc("add_to_advanced_logs","Attacker has no crit")
+		rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_NOT_VALID")
 	
 	print("calculating ignore buffs")
 
-	rpc("add_to_advanced_logs","calculating ignore buffs")
+	rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_IGNORE_BUFFS")
 	
 	for buff in buff_ignoring:
-		if char_info_has_buff(self_char_attacked, buff):
+		if char_info_has_buff(attacker_char_info, buff):
 			match buff:
 				"Ignore Defence":
 					buff_types_to_ignore.append("Defence")
@@ -3108,11 +3216,14 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 
 	
 	
-	rpc("add_to_advanced_logs",str("total types to ignore=",buff_types_to_ignore))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_TYPES_TO_IGNORE",
+		{"types":buff_types_to_ignore}
+	)
 	var defence_multiplier=1
 	#calculating self defence
 	print("calculating self defence")
-	rpc("add_to_advanced_logs","calculating defender defence")
+	rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE")
 	#for skill in peer_id_player_info[Globals.self_peer_id]["servant_node"].buffs:
 	for skill in get_char_info_buffs(self_char_attacked):
 		var skill_type_array
@@ -3123,7 +3234,10 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 		
 		if skill_type_array.is_empty():
 			push_error("No types found for skill=",skill)
-			rpc("add_to_advanced_logs",str("No types found for skill=",skill))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_CALCULATE_DAMAGE_NO_TYPES_FOR_BUFF",
+				{"buff":skill}
+			)
 			continue
 		var ignore=false
 		for skill_type in skill_type_array:
@@ -3146,11 +3260,15 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			"NP Damage Def Up X":
 				defence_multiplier=floor(damage_to_take/skill["Power"])
 			"Evade":
-				rpc("add_to_advanced_logs","Taker has Evade buff")
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_EVADE_BUFF"
+				)
 				return "evaded"
-			"Invincibility":#if power==0 then all turns else for N hits
+			"Invincibility":
 				zero_damage=true
-				rpc("add_to_advanced_logs","Taker has Invincibility buff, zero damage")
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_INVINCIBILITY_BUFF"
+				)
 				damage_to_take*=0
 				break
 			"Def Up Against Trait":
@@ -3166,22 +3284,59 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 				if skill["Trait"] in attacker_traits:
 					defence_multiplier*=skill["Power"]
 					
-		var out_string=str("Buff= ",skill["Name"])
+	
+		var out_string=""
 		if skill.has("Power"):
-			out_string+=str(" power=",skill["Power"])
-		out_string+=str(" damage_to_take=",damage_to_take)
+			out_string=str("Buff={buff_name} power={buff_power} damage_to_take={total_damage}").format(
+				{
+					"buff_name":skill["Name"],
+					"buff_power":skill["Power"],
+					"total_damage":damage_to_take
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_POWER_DAMAGE",
+				{
+					"buff_name":skill["Name"],
+					"buff_power":skill["Power"],
+					"total_damage":damage_to_take
+				}
+			)
+		else:
+			out_string=str("Buff={buff_name} damage_to_take={total_damage}").format(
+				{
+					"buff_name":skill["Name"],
+					"total_damage":damage_to_take
+				}
+			)
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_NO_POWER_DAMAGE",
+				{
+					"buff_name":skill["Name"],
+					"total_damage":damage_to_take
+				}
+			)
+
+
+
+		#out_string+=str(" damage_to_take=",damage_to_take)
 		print(out_string)
-		rpc("add_to_advanced_logs",str("Taker ",out_string))
 	
 	damage_to_take*=defence_multiplier
 
-	rpc("add_to_advanced_logs",str("multiplying defence, damage_to_take=",damage_to_take))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CALCULATE_DAMAGE_MULTIPLYING_DEFENCE",
+		{"damage_to_take":damage_to_take}
+	)
 	
 	print("special=",special, " buff_types_to_ignore=",buff_types_to_ignore)
 	if special=="Halfed Damage":
 		damage_to_take=floor(damage_to_take/2)
 		print("Halfed Damage   damage_to_take="+str(damage_to_take))
-		rpc("add_to_advanced_logs",str("Halfed Damage   damage_to_take="+str(damage_to_take)))
+		rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_CALCULATE_DAMAGE_HALFED_DAMAGE",
+			{"damage_to_take":damage_to_take}
+		)
 	
 	if damage_type=="Magical":
 		if not is_field_ignore_magic_defence:
@@ -3189,22 +3344,36 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			damage_to_take-=self_magic_res
 			print(str("magical resistange=",self_magic_res," damage_to_take=",damage_to_take))
 
-			rpc("add_to_advanced_logs",str("Substracting magical resistance=",self_magic_res," damage_to_take=",damage_to_take))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_CALCULATE_DAMAGE_MAGICAL_DEFENCE",
+				{
+					"self_magic_res":self_magic_res,
+					"damage_to_take":damage_to_take
+				}
+			)
 		else:
 			print("field is ignoring magical defence")
-			rpc("add_to_advanced_logs","field is ignoring magical defence")
-		#if Globals.pu_id_player_info[attacker_pu_id]["servant_node"].servant_class=="Saber":
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_CALCULATE_DAMAGE_FIELD_IGNORING_MAGICAL_DEFENCE"
+			)
+
 		if get_char_info_class(self_char_attacked)=="Saber":
-			damage_to_take=floor(damage_to_take/2)
-			print(str("Saber resistance", "damage_to_take=",damage_to_take))
-			rpc("add_to_advanced_logs",str("Saber resistance", "damage_to_take=",damage_to_take))
+			if char_info_has_buff(self_char_attacked,"Magic Resistance"):
+				damage_to_take=floor(damage_to_take/2)
+				print(str("Saber resistance", "damage_to_take=",damage_to_take))
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_CALCULATE_DAMAGE_SABER_HAS_MAGICAL_RESISTANCE",
+					{"damage_to_take":damage_to_take}
+				)
 		
 	if special=="Defence":
 		var ignore=false
-		rpc("add_to_advanced_logs",str("Taker defending"))
+		rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENDING")
 		if "Defence" in buff_types_to_ignore:
 			print("ignoring defence")
-			rpc("add_to_advanced_logs",str("Attacker ignoring Taker's defending"))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_IGNORES_DEFENDING"
+			)
 			ignore=true
 		if ignore:
 			pass
@@ -3212,7 +3381,13 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			damage_to_take-=field.dice_roll_result_list["defence_dice"]
 			print(str("defending=",field.dice_roll_result_list["defence_dice"]," damage_to_take=",damage_to_take))
 
-			rpc("add_to_advanced_logs",str("Taker defending by=",field.dice_roll_result_list["defence_dice"]," damage_to_take=",damage_to_take))
+			rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE_RESULT",
+				{
+					"defence_dice":field.dice_roll_result_list["defence_dice"],
+					"damage_to_take":damage_to_take
+				}
+			)
 	if damage_to_take<=1:
 		damage_to_take=1
 		
@@ -3227,7 +3402,13 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	
 	print(str("damage_to_take=",damage_to_take," type=",damage_type,"\n\n"))
 
-	rpc("add_to_advanced_logs",str("Total damage_to_take=",damage_to_take," type=",damage_type,"\n\n"))
+	rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_DAMAGE_TO_TAKE",
+		{
+			"damage_to_take":damage_to_take,
+			"damage_type":damage_type
+		}
+	)
 	
 	return damage_to_take
 
@@ -3247,21 +3428,31 @@ func take_damage_to_char_info(char_info_dic:Dictionary,damage_amount:int,can_kil
 	update_hp_on_char_info(char_info.to_dictionary(),new_hp)
 	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
 		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
-		rpc("add_to_advanced_logs",str(char_info.get_node().name," HP is ",new_hp," now"))
+		rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_PLAYER_TOOK_DAMAGE",
+			{
+				"player_name":char_info.get_node().name,
+				"new_hp":new_hp
+			}
+		)
 	print(str(char_info.get_node().name," HP is ",new_hp," now"))
 	
 	
 	
 	if new_hp<=0:
 		print("death")
-		add_to_advanced_logs(str(char_info.get_node().name," is dead, triggering death "))
 		trigger_death_to_char_info(char_info,by_whom_char_info_dic)
 
 
 func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=null):
 	#TODO replace loop with this func
 	#if peer_id_has_buff(Globals.self_peer_id, buff):
-	add_to_advanced_logs(str(char_info_died.get_node().name," is dead, triggering death "))
+	add_to_advanced_logs(
+		"ADVANCED_LOG_PLAYER_TOOK_LETAL_DAMAGE_DEATH",
+		{
+			"player_name":char_info_died.get_node().name,
+		}
+	)
 	if by_whom_char_info_dic!=null:
 		by_whom_char_info_dic=CharInfo.from_dictionary(by_whom_char_info_dic)
 	
@@ -3271,7 +3462,12 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 	if guts_buff:
 		var hp_to_recover=guts_buff.get("HP To Recover",1)
 
-		add_to_advanced_logs(str(node_died.name," has guts buff, reviving with hp_to_recover=",hp_to_recover))
+		add_to_advanced_logs("ADVANCED_LOG_PLAYER_REVIVES_WITH_GUTS_BUFF",
+			{
+				"player_name":node_died.name,
+				"hp_to_recover":hp_to_recover
+			}
+		)
 
 		heal_char_info(char_info_died,hp_to_recover)
 		trigger_buffs_on(char_info_died,"Guts Used",by_whom_char_info_dic)
@@ -3285,17 +3481,23 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 	if pu_id_to_command_spells_int[char_info_died.pu_id]>=3 and not summoned:
 		var max_hp=node_died.default_stats["hp"]
 		rpc("update_hp_on_char_info",char_info_died.to_dictionary(),max_hp)
-		reduce_command_spell_on_pu_id(char_info_died.pu_id)
-		reduce_command_spell_on_pu_id(char_info_died.pu_id)
-		reduce_command_spell_on_pu_id(char_info_died.pu_id)
-		add_to_advanced_logs(str(node_died.name," has 3 command spells, using it to revive"))
+		reduce_command_spell_on_pu_id(char_info_died.pu_id,3)
+		add_to_advanced_logs("ADVANCED_LOG_REVIVE_WITH_COMMAND_SPELLS",
+			{
+				"player_name":node_died.name,
+			}
+		)
 		trigger_buffs_on(char_info_died,"Command Spell Revive")
 	else:#total death
 		for i in range(9):
 			node_died.rotation_degrees+=10
 			await get_tree().create_timer(0.1).timeout
 		if check_if_all_pu_id_units_dead(char_info_died.pu_id):
-			add_to_advanced_logs(str("All units for player with pu_id=",char_info_died.pu_id," are dead, removing it from turns order loop"))
+			add_to_advanced_logs("ADVANCED_LOG_ALL_PLAYER_UNITS_DEAD",
+				{
+					"pu_id":char_info_died.pu_id
+				}
+			)
 			turns_order_by_pu_id.erase(char_info_died.pu_id)
 		
 		trigger_buffs_on(by_whom_char_info_dic,"Total Kill",char_info_died)
@@ -3304,7 +3506,7 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 		#unmounting if mount
 		if node_died.get_meta("Mount",false):
 			var mount_char_info=char_info_died
-			add_to_advanced_logs(str("unmounting deadass"))
+			add_to_advanced_logs("ADVANCED_LOG_UNMOUNTING_DEAD_UNIT")
 			var currently_on_mount:Array = mount_char_info.get_node().get_meta("Mounted_by_uniq_ids_array",[])
 			for uniq_id in currently_on_mount:
 				var char_info_to_dismount=field.get_char_info_from_uniq_id(uniq_id)
@@ -3348,13 +3550,23 @@ func _on_texture_rect_gui_input(event)->void:
 func reduce_additional_moves_for_char_info(char_info_dic:Dictionary,amount:int=1)->void:
 	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
 	char_info.get_node().additional_moves-=amount
-	add_to_advanced_logs(str("reduce_additional_moves_for_char_info for ",char_info.get_node().name," by ",amount," points"))
+	add_to_advanced_logs("ADVANCED_LOG_REDUCE_ADDITIONAL_MOVES",
+		{
+			"player_name":char_info.get_node().name,
+			"amount":amount
+		}
+	)
 
 @rpc("any_peer","reliable","call_local")
 func reduce_additional_attacks_for_char_info(char_info_dic:Dictionary,amount:int=1)->void:
 	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
 	char_info.get_node().additional_attack-=amount
-	add_to_advanced_logs(str("reduce_additional_attacks_for_char_info for ",char_info.get_node().name," by ",amount," points"))
+	add_to_advanced_logs("ADVANCED_LOG_REDUCE_ADDITIONAL_ATTACKS",
+		{
+			"player_name":char_info.get_node().name,
+			"amount":amount
+		}
+	)
 
 @rpc("any_peer","reliable","call_local")
 func set_char_info_cooldown_for_skill_id(char_info_dic:Dictionary,skill_number,cooldown)->void:
@@ -3383,12 +3595,21 @@ func _on_use_skill_button_pressed():
 	match skill_info_tab_container.current_tab+1:
 		1:
 			#Globals.self_servant_node.first_skill()
-			rpc("add_to_advanced_logs",str(get_self_servant_node().name," is using first skill "))
+			rpc("add_to_advanced_logs","ADVANCED_LOG_PLAYER_USING_FIRST_SKILL",
+				{
+					"player_name":get_self_servant_node().name
+				}
+			)
+
 			skill_consume_action= get_self_servant_node().skills["First Skill"].get("Consume Action",true)
 
 			succesfully=await use_skill(get_self_servant_node().skills["First Skill"]["Effect"])
 
-			rpc("add_to_advanced_logs",str(" skill uses succesfully=",succesfully))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_SKILL_USAGE_RESULT",
+				{"result":succesfully}
+			)
+
 			var skill_cooldown=get_self_servant_node().skills["First Skill"]["Cooldown"]
 			
 			if one_time_skills:
@@ -3399,10 +3620,17 @@ func _on_use_skill_button_pressed():
 				skill_cooldown)
 		2:
 			#Globals.self_servant_node.second_skill()
-			rpc("add_to_advanced_logs",str(get_self_servant_node().name," is using second skill "))
+			rpc("add_to_advanced_logs","ADVANCED_LOG_PLAYER_USING_SECOND_SKILL",
+				{
+					"player_name":get_self_servant_node().name
+				}
+			)
 			skill_consume_action= get_self_servant_node().skills["Second Skill"].get("Consume Action",true)
 			succesfully=await use_skill(get_self_servant_node().skills["Second Skill"]["Effect"])
-			rpc("add_to_advanced_logs",str(" skill uses succesfully=",succesfully))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_SKILL_USAGE_RESULT",
+				{"result":succesfully}
+			)
 			
 			var skill_cooldown=get_self_servant_node().skills["Second Skill"]["Cooldown"]
 
@@ -3416,9 +3644,16 @@ func _on_use_skill_button_pressed():
 		3:
 			#Globals.self_servant_node.third_skill()
 			skill_consume_action= get_self_servant_node().skills["Third Skill"].get("Consume Action",true)
-			rpc("add_to_advanced_logs",str(get_self_servant_node().name," is using Third skill "))
+			rpc("add_to_advanced_logs","ADVANCED_LOG_PLAYER_USING_THIRD_SKILL",
+				{
+					"player_name":get_self_servant_node().name
+				}
+			)
 			succesfully=await use_skill(get_self_servant_node().skills["Third Skill"]["Effect"])
-			rpc("add_to_advanced_logs",str(" skill uses succesfully=",succesfully))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_SKILL_USAGE_RESULT",
+				{"result":succesfully}
+			)
 			var skill_cooldown=get_self_servant_node().skills["Third Skill"]["Cooldown"]
 
 			
@@ -3432,7 +3667,14 @@ func _on_use_skill_button_pressed():
 			var class_skill_number= skill_info_tab_container.get_current_tab_control().current_tab+1
 
 			skill_consume_action= get_self_servant_node().skills["Class Skill "+str(class_skill_number)].get("Consume Action",true)
-			rpc("add_to_advanced_logs",str(get_self_servant_node().name," is using Third skill Class Skill "+str(class_skill_number)))
+			rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_PLAYER_USING_CLASS_SKILL",
+				{
+					"player_name":get_self_servant_node().name,
+					"class_skill_number":class_skill_number
+				}
+			)
+
 			var skill_cooldown=get_self_servant_node().skills["Class Skill "+str(class_skill_number)]["Cooldown"]
 
 			if one_time_skills:
@@ -3452,15 +3694,29 @@ func _on_use_skill_button_pressed():
 				succesfully=true#idk
 				change_weapon(weapon_name_to_change_to,class_skill_number)
 
-				rpc("add_to_advanced_logs",str(get_self_servant_node().name," is changing its weapon"))
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_PLAYER_USING_WEAPON_CHANGE",
+					{
+						"player_name":get_self_servant_node().name
+					}
+				)
 			else:
 				#Globals.self_servant_node.call("Class Skill "+str(class_skill_number))
-				rpc("add_to_advanced_logs",str(get_self_servant_node().name," is using Third skill Class Skill "+str(class_skill_number)))
+				rpc("add_to_advanced_logs",
+					"ADVANCED_LOG_PLAYER_USING_CLASS_SKILL",
+					{
+						"player_name":get_self_servant_node().name,
+						"class_skill_number":class_skill_number
+					}
+				)
 				succesfully=await use_skill(get_self_servant_node().skills["Class Skill "+str(class_skill_number)]["Effect"])
 				if succesfully:
 					rpc("set_char_info_cooldown_for_skill_id",char_info.to_dictionary(),2+class_skill_number,
 					skill_cooldown)
-				rpc("add_to_advanced_logs",str(" skill uses succesfully=",succesfully))
+				rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_SKILL_USAGE_RESULT",
+				{"result":succesfully}
+			)
 	if skill_consume_action and succesfully:
 		field.reduce_one_action_point()
 	if succesfully:
@@ -3775,17 +4031,17 @@ func _on_betray_team_button_pressed():
 
 	if current_player_pu_id_turn!=Globals.self_pu_id:
 		#how can you betray enemy?
-		field.info_table_show("You can betray only\n during your turn")
+		field.info_table_show(tr("CAN_BETRAY_ONLY_DURING_SELF_TURN"))
 		return
 
 	if who_to_betray_pu_id==Globals.self_pu_id:
-		#how can you betray enemy?
-		field.info_table_show("This is you")
+		#how can you betray yourself?
+		field.info_table_show(tr("ATTEMPT_TO_BETRAY_YOURSELF"))
 		return
 
 	if not (who_to_betray_pu_id in get_allies()):
 		#how can you betray enemy?
-		field.info_table_show("You can't betray your enemy")
+		field.info_table_show(tr("ATTEMPT_TO_BETRAY_ENEMY"))
 		return
 	
 	field.disable_every_button()
@@ -3830,25 +4086,25 @@ func _on_ally_button_pressed():
 
 	if current_player_pu_id_turn!=Globals.self_pu_id:
 		#how can you betray enemy?
-		field.info_table_show("You can ally only\n during your turn")
+		field.info_table_show(tr("CAN_BETRAY_ONLY_DURING_SELF_TURN"))
 		return
 
 	if who_to_ally_pu_id==Globals.self_pu_id:
 		#how can you betray enemy?
-		field.info_table_show("This is you")
+		field.info_table_show(tr("ATTEMPT_TO_ALLY_YOURSELF"))
 		return
 	
 
 	if (who_to_ally_pu_id in get_allies()):
 		#how can you betray enemy?
-		field.info_table_show("You're already allies")
+		field.info_table_show(tr("ATTEMPT_TO_ALLY_ALLY"))
 		return
 	
 	var peer_id_to_ally=Globals.pu_id_player_info[who_to_ally_pu_id]["current_peer_id"]
 
 	rpc_id(peer_id_to_ally,"request_alliance")
 	field.disable_every_button()
-	field.info_table_show("Awaiting answer")
+	field.info_table_show(tr("AWAITING_ALLIANCE_REQUEST_ANSWER"))
 	var answer=await team_confirm_answer
 	field.disable_every_button(false)
 	if answer:
@@ -3856,30 +4112,35 @@ func _on_ally_button_pressed():
 
 		Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].append(who_to_ally_pu_id)
 
-		field.info_table_show("Succesful alliance")
+		field.info_table_show(tr("SUCCESFULLY_MADE_ALLIANCE"))
 	else:
 		field.disable_every_button()
 		var type=await field.choose_between_two(
-			str("Player declined alliance. Do you want to make one-sided alliance?"),
-			"Yes",
-			"No"
+			tr("ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION"),
+			tr("ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_AGREEMENT"),
+			tr("ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_DISAGREEMENT")
 		)
 		field.disable_every_button(false)
-		if type=="Yes":
+		if type==tr("ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_AGREEMENT"):
 			additional_allies[who_to_ally_pu_id]="one-sided"
 
 
 			Globals.pu_id_to_allies[Globals.self_pu_id]["allies"].append(who_to_ally_pu_id)
-			field.info_table_show("You made one-sided alliance with "+Globals.pu_id_player_info[who_to_ally_pu_id]["nickname"]+" "+Globals.pu_id_player_info[who_to_ally_pu_id]["servant_name"] )
+			field.info_table_show(tr("ONE_SIDED_SUCCESS").format(
+				{
+					"player_nick":Globals.pu_id_player_info[who_to_ally_pu_id]["nickname"],
+					"servant_name":Globals.pu_id_player_info[who_to_ally_pu_id]["servant_name"]
+				}
+			) )
 
 			field.disable_every_button()
 			type=await field.choose_between_two(
-				str("Do you want to make it public?"),
-				"Yes",
-				"No"
+				tr("MAKE_PUBLIC_ONE_SIDED_QUESTION"),
+				tr("MAKE_PUBLIC_ONE_SIDED_QUESTION_AGREEMENT"),
+				tr("MAKE_PUBLIC_ONE_SIDED_QUESTION_DISAGREEMENT")
 			)
 			field.disable_every_button(false)
-			if type=="Yes":
+			if type==tr("MAKE_PUBLIC_ONE_SIDED_QUESTION_AGREEMENT"):
 				field.rpc("systemlog_message",str(Globals.nickname+" allied with "+Globals.pu_id_player_info[who_to_ally_pu_id]["nickname"]))
 		
 		else:
@@ -3998,12 +4259,12 @@ func _on_neutral_button_pressed():
 
 	if current_player_pu_id_turn!=Globals.self_pu_id:
 		#how can you betray enemy?
-		field.info_table_show("You can neutral only\n during your turn")
+		field.info_table_show(tr("ATTEMPT_TO_NEUTRAL_DURING_OTHERS_TURN"))
 		return
 
 	if who_to_neutral_pu_id==Globals.self_pu_id:
 		#how can you betray enemy?
-		field.info_table_show("This is you")
+		field.info_table_show(tr("ATTEMPT_TO_NEUTRAL_YOURSELF"))
 		return
 
 	field.disable_every_button()

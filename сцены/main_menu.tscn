@@ -31,17 +31,17 @@ grow_vertical = 2
 [node name="Host" type="Button" parent="start_screen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 77
-text = "HOST"
+text = "MAIN_MENU_HOST_BUTTON"
 
 [node name="Connect" type="Button" parent="start_screen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 77
-text = "CONNECT"
+text = "MAIN_MENU_CONNECT_BUTTON"
 
 [node name="Settings" type="Button" parent="start_screen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
-text = "SETTINGS"
+text = "MAIN_MENU_SETTINGS_BUTTON"
 
 [node name="User_folder_button" type="Button" parent="start_screen"]
 layout_mode = 2

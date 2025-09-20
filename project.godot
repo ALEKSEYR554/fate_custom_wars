@@ -61,6 +61,11 @@ drag={
 
 pointing/emulate_touch_from_mouse=true
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/default/output.csv")
+locale/locale_filter_mode=0
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
