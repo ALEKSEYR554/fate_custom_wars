@@ -41,6 +41,7 @@ var characters:Array=[]
 
 var uniqq_ids:Array=[]
 
+var settings_node:Control
 #var translations:Dictionary={}
 
 var DEFAULT_PORT = 9999
@@ -85,7 +86,13 @@ func _ready():
 	preload_all_servant_sprites()
 	generate_unique_ids()
 	load_translation_file()
+	settings_node = get_tree().get_root().get_child(1).find_child("Settings_screen")
 
+func _input(event):
+	if event is InputEventKey:
+		if event.keycode == KEY_F11 and event.pressed:
+			#print("f11 pressed")
+			settings_node._on_full_screen_toggle_toggled(null)
 
 func generate_unique_ids(amount:int=200)->Array:
 	for i in range(amount):
@@ -133,6 +140,8 @@ func load_translation_file():
 					print_debug("translations loaded=",TranslationServer.get_loaded_locales())
 
 		file_name = dir.get_next()
+	
+	TranslationServer.set_locale("en")
 	
 
 
