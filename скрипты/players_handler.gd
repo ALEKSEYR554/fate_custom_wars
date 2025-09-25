@@ -3,52 +3,56 @@ extends Node2D
 #region Onready
 @onready var field = self.get_parent()
 
-@onready var host_buttons:VBoxContainer = $"../GUI/host_buttons"
-
-@onready var servant_info_main_container:VBoxContainer = $"../GUI/Servant_info_main_container"
-@onready var servant_info_picture_and_stats_container:HBoxContainer = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container"
-@onready var servant_info_picture:TextureRect = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_picture"
-@onready var servant_info_stats_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_picture_and_stats_container/servant_info_stats_textedit"
-@onready var servant_info_skills_textedit:TextEdit = $"../GUI/Servant_info_main_container/servant_info_skills_textedit"
-@onready var show_buffs_advanced_way_button = $"../GUI/Servant_info_main_container/show_buffs_advanced_way_button"
+@onready var host_buttons:VBoxContainer = %host_buttons
 
 
-@onready var current_hp_container:HBoxContainer = $"../GUI/current_hp_container"
-@onready var current_hp_value_label:Label = $"../GUI/current_hp_container/current_hp_value_label"
+@onready var servant_info_main_container:VBoxContainer = %Servant_info_main_container
+@onready var servant_info_picture_and_stats_container:HBoxContainer = %servant_info_picture_and_stats_container
+@onready var servant_info_picture:TextureRect = %servant_info_picture
+@onready var servant_info_stats_textedit:TextEdit = %servant_info_stats_textedit
+@onready var show_buffs_advanced_way_button:Button = %show_buffs_advanced_way_button
+@onready var servant_info_skills_textedit:TextEdit = %servant_info_skills_textedit
 
 
-@onready var players_info_buttons_container:VBoxContainer = $"../GUI/players_info_buttons_container"
 
-@onready var get_selected_character_button:Button = $"../GUI/character_selection_container/get_selected_character"
-@onready var char_select:Control = $"../GUI/character_selection_container/Char_select"
-
-@onready var skill_info_tab_container:TabContainer = $"../GUI/Skill_info_tab_container"
-@onready var first_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/First Skill"
-@onready var second_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/Second Skill"
-@onready var third_skill_text_edit:TextEdit = $"../GUI/Skill_info_tab_container/Third Skill"
-@onready var class_skills_text_edit:TabContainer = $"../GUI/Skill_info_tab_container/Class Skills"
+@onready var current_hp_container:HBoxContainer = %current_hp_container
+@onready var current_hp_value_label:Label = %current_hp_value_label
 
 
-@onready var custom_choices_tab_container:TabContainer = $"../GUI/custom_choices_tab_container"
-@onready var use_custom_but_label_container:VBoxContainer = $"../GUI/use_custom_but_label_container"
-@onready var use_custom_label:Label = $"../GUI/use_custom_but_label_container/use_custom_label"
-@onready var use_custom_button:Button = $"../GUI/use_custom_but_label_container/use_custom_button"
-@onready var current_players_ready_label:Label = $"../GUI/character_selection_container/Current_players_ready"
+@onready var players_info_buttons_container:VBoxContainer = %players_info_buttons_container
+
+@onready var get_selected_character_button:Button = %get_selected_character
+@onready var char_select:Control = %Char_select
+
+@onready var skill_info_tab_container:TabContainer = %Skill_info_tab_container
+@onready var first_skill_text_edit:TextEdit = %First_Skill_text_edit
+@onready var second_skill_text_edit:TextEdit = %"Second Skill_text_edit"
+@onready var third_skill_text_edit:TextEdit = %"Third Skill_text_edit"
+@onready var class_skills_text_edit:TabContainer = %"Class Skills_text_edit"
 
 
-@onready var teams_margin = $"../GUI/teams_margin"
-@onready var teams_panel_container = $"../GUI/teams_margin/teams_panel_container"
-@onready var teams_main_hboxcontainer = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer"
-@onready var all_teams_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox"
-@onready var all_teams_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/all_teams_vbox/all_teams_label"
-@onready var your_teams_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox"
-@onready var your_teams_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/your_teams_vbox/your_teams_label"
-@onready var teams_options_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox"
-@onready var teams_options_label = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/teams_options_label"
-@onready var team_actions_vbox = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox"
-@onready var betray_team_button = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/Betray_team_button"
-@onready var ally_button = $"../GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/ally_button"
 
+
+@onready var custom_choices_tab_container:TabContainer = %custom_choices_tab_container
+@onready var use_custom_but_label_container:VBoxContainer = %use_custom_but_label_container
+@onready var use_custom_label:Label = %use_custom_label
+@onready var use_custom_button:Button = %use_custom_button
+@onready var current_players_ready_label:Label = %Current_players_ready_label
+
+
+@onready var teams_margin = %teams_margin
+@onready var teams_panel_container = %teams_panel_container
+@onready var teams_main_hboxcontainer = %teams_main_hboxcontainer
+@onready var all_teams_vbox = %all_teams_vbox
+@onready var all_teams_label = %all_teams_label
+@onready var your_teams_vbox = %your_teams_vbox
+@onready var your_teams_label = %your_teams_label
+@onready var teams_options_vbox = %teams_options_vbox
+@onready var teams_options_label = %teams_options_label
+@onready var team_actions_vbox = %team_actions_vbox
+@onready var betray_team_button = %Betray_team_button
+@onready var ally_team_button = %ally_team_button
+@onready var neutral_team_button = %neutral_team_button
 
 
 #endregion
@@ -146,6 +150,10 @@ func _ready():
 	$"../GUI/peer_id_label".text=str(Globals.self_pu_id)
 	rpc("update_ready_users_count",current_users_ready,Globals.pu_id_player_info.size())
 	#print(str(dir.get_directories()))
+	skill_info_tab_container.set_tab_title(0,"First Skill")
+	skill_info_tab_container.set_tab_title(1,"Second Skill")
+	skill_info_tab_container.set_tab_title(2,"Third Skill")
+	skill_info_tab_container.set_tab_title(3,"Class Skills")
 	return
 
 @rpc("any_peer","reliable","call_local")
@@ -168,6 +176,13 @@ func get_uniqq_id_from_host()->String:
 	rpc_id(1,"id_requested")
 	var output=await iddd_reqw
 	return output
+
+
+func get_fully_translated_servant_script(servant_path:String,servant_name_just_name:String)->String:
+	#load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd")
+	var script_full_path=Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"
+	FileAccess.open(script_full_path, FileAccess.READ)
+	return ""
 
 
 @rpc("call_local","any_peer","reliable")
@@ -204,6 +219,8 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
+
+
 	#print("servant_folder_name=",servant_folder_name)
 	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
 	#print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
@@ -693,7 +710,7 @@ func update_current_player_turn(cur_player_turn_pu_id:String):
 
 @rpc("any_peer","reliable","call_remote")
 func turn_update(turn) -> void:
-	$"../GUI/turns_label".text=str("Turn: ",turn)
+	%turns_label.text=str("Turn: ",turn)
 	turns_counter=turn
 
 #endregion
@@ -777,6 +794,7 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 	first_skill_text_edit.text=servant_skills.get("First Skill").get("Description")
 	second_skill_text_edit.text=servant_skills.get("Second Skill").get("Description")
 	third_skill_text_edit.text=servant_skills.get("Third Skill").get("Description")
+
 	#print("third_skill_text_edit.text="+str(third_skill_text_edit.text))
 	var cct=1
 	for children in class_skills_text_edit.get_children():
@@ -3008,9 +3026,6 @@ func heal_char_info(char_info:CharInfo,amount:int,type:String="normal"):
 	rpc("update_hp_on_char_info",char_info.to_dictionary(),servant_node_to_heal.hp)
 	print(str("hp now is ",servant_node_to_heal.hp,"\n"))
 	
-func _process(_delta):
-	pass
-
 @rpc("any_peer","call_local","reliable")
 func charge_np_to_char_info_by_number(char_info_dic:Dictionary,number:int,source="damage"):
 	var char_info=CharInfo.from_dictionary(char_info_dic)

@@ -51,6 +51,11 @@ func _ready():
 		#get_tree().root.add_child(vb)
 		get_parent().add_child.call_deferred(vb)
 		vb.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	
+
+	
+
+
 	pass
 
 func _on_host_button_up():

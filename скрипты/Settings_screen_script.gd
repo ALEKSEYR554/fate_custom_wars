@@ -1,6 +1,7 @@
 extends Control
 @onready var resolution_choice:OptionButton = $VBoxContainer/HBoxContainer/resolution_choice
 @onready var language_option_button:OptionButton = $VBoxContainer/HBoxContainer3/language_OptionButton
+@onready var full_screen_toggle = $VBoxContainer/HBoxContainer2/full_screen_toggle
 
 const resolutions=[
 "1280x720",
@@ -36,12 +37,6 @@ func _ready():
 	#print(tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
 	pass # Replace with function body.
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
-
-
 func _on_apply_button_pressed():
 	var cut_selected_id=resolution_choice.get_selected_id()
 	var resolution_choosen=resolution_choice.get_item_text(cut_selected_id)
@@ -54,6 +49,9 @@ func _on_apply_button_pressed():
 
 
 func _on_full_screen_toggle_toggled(toggled_on):
+	if toggled_on==null:
+		toggled_on=!full_screen_toggle.button_pressed
+		full_screen_toggle.button_pressed=toggled_on
 	if toggled_on:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
