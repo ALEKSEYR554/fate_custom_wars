@@ -25,8 +25,3 @@ func _draw():
 	else:
 		draw_circle(Vector2(0,0),30, color)
 	pass
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
