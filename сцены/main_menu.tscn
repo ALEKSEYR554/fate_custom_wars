@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bwad82u5xwnhb" path="res://сцены/settings_screen.tscn" id="4_1a2ow"]
 [ext_resource type="Texture2D" uid="uid://ddahg0i7o6kg" path="res://images/logo.png" id="4_8u1lk"]
 
-[node name="Main Menu" type="Control"]
+[node name="Main_Menu" type="Control"]
 layout_mode = 3
 anchor_right = 0.998
 anchor_bottom = 0.994
@@ -46,7 +46,7 @@ text = "MAIN_MENU_SETTINGS_BUTTON"
 [node name="User_folder_button" type="Button" parent="start_screen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
-text = "Open user folder"
+text = "MAIN_MENU_RULES_BUTTON"
 
 [node name="Connect_scene" parent="." instance=ExtResource("2_qnb14")]
 visible = false

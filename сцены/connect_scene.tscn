@@ -11,46 +11,61 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_df7gr")
 
-[node name="IP" type="LineEdit" parent="."]
-layout_mode = 0
-offset_left = 152.0
-offset_top = 116.0
-offset_right = 644.0
-offset_bottom = 221.0
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -334.0
+offset_top = -145.0
+offset_right = 334.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 29
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="IP" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
 theme_override_font_sizes/font_size = 70
 text = "127.0.0.1"
 placeholder_text = "IP"
 virtual_keyboard_type = 2
 
-[node name="connect" type="Button" parent="."]
-layout_mode = 0
-offset_left = 416.0
-offset_top = 251.0
-offset_right = 805.0
-offset_bottom = 427.0
-theme_override_font_sizes/font_size = 80
-text = "CONNECT"
-
-[node name="Port" type="LineEdit" parent="."]
-layout_mode = 0
-offset_left = 662.0
-offset_top = 121.0
-offset_right = 1038.0
-offset_bottom = 225.0
+[node name="Port" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
 theme_override_font_sizes/font_size = 70
 text = "9999"
 placeholder_text = "PORT"
 max_length = 4
 
+[node name="connect" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 80
+text = "CONNECT"
+
 [node name="nickname" type="LineEdit" parent="."]
+unique_name_in_owner = true
 layout_mode = 0
-offset_left = 47.0
-offset_top = 494.0
-offset_right = 452.0
-offset_bottom = 614.0
+anchor_left = 0.0371094
+anchor_top = 0.729167
+anchor_right = 0.432617
+anchor_bottom = 0.885417
 theme_override_font_sizes/font_size = 50
 text = "Nick"
 placeholder_text = "YOU NICKNAME"
 max_length = 20
+metadata/_edit_use_anchors_ = true
 
-[connection signal="button_up" from="connect" to="." method="_on_connect_button_button_up"]
+[connection signal="button_up" from="VBoxContainer/connect" to="." method="_on_connect_button_button_up"]
