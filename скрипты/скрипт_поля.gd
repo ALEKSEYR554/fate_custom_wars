@@ -1,17 +1,159 @@
 extends Node2D
 #1717486472.816
 #1717743283.689
+
+#region onready
+@onready var players_handler = %players_handler
+
+@onready var character_selection_container = %character_selection_container
+
+@onready var char_select:Control = %Char_select
+
+@onready var alert_label = %alert_label
+
+@onready var you_were_attacked_container = %You_were_attacked_container
+
+@onready var you_were_attacked_label = %You_were_attacked_label
+
+@onready var you_were_attacked_evade_option_button = %YOU_WERE_ATTACKED_EVADE_OPTION_BUTTON
+@onready var you_were_attacked_def_option_button = %YOU_WERE_ATTACKED_DEF_OPTION_BUTTON
+@onready var you_were_attacked_parry_option_button = %YOU_WERE_ATTACKED_PARRY_OPTION_BUTTON
+@onready var you_were_attacked_phantasm_option_button = %YOU_WERE_ATTACKED_PHANTASM_OPTION_BUTTON
+
+
+@onready var chat_hide_show_button = %Chat_hide_show_button
+
+@onready var message_line_edit = %Message_LineEdit
+
+@onready var chat_log_container = %ChatLog_container
+
+@onready var chat_log_main = %ChatLog_main
+
+@onready var char_info_choose_scroll_container = %char_info_choose_scroll_container
+
+@onready var char_choose_main_VBoxContainer = %char_choose_main_VBoxContainer
+
+@onready var char_choose_button = %char_choose_button
+
+@onready var info_label_panel = %info_label_panel
+
+@onready var custom_main_VBoxContainer = %custom_main_VBoxContainer
+
+@onready var info_ok_button = %info_ok_button
+
+@onready var info_label = %info_label
+
+@onready var main_label_dont_touch = %Main_label_dont_touch
+
+
+@onready var current_roll_container = %Current_roll_container
+
+@onready var previous_roll_base_dice_label = %PREVIOUS_ROLL_BASE_DICE_LABEL
+@onready var previous_roll_crit_dice_label = %PREVIOUS_ROLL_CRIT_DICE_LABEL
+@onready var previous_roll_def_dice_label = %PREVIOUS_ROLL_DEF_DICE_LABEL
+
+
+
+@onready var type_of_damage_choose_buttons_box = %type_of_damage_choose_buttons_box
+
+@onready var regular_damage_button = %regular_damage_button
+
+@onready var magical_damage_button = %magical_damage_button
+
+@onready var reset_button = %HOST_BUTTON_RESET_FIELD
+
+@onready var start_button = %HOST_BUTTON_START
+
+@onready var finish_button = %finish_button
+
+@onready var menu_vbox_container = %menu_vbox_container
+@onready var disconnect_button = %disconnect_Button
+@onready var reconnect_button = %reconnect_button
+@onready var settings_button = %settings_button
+
+
+@onready var make_action_button = %MAKE_ACTION_BUTTON
+
+@onready var actions_buttons = %actions_buttons
+
+@onready var current_action_points_label = %current_action_points_label
+
+
+@onready var action_button_attack = %ACTION_BUTTON_ATTACK
+
+@onready var action_button_move = %ACTION_BUTTON_MOVE
+
+@onready var action_button_skill = %ACTION_BUTTON_SKILL
+
+@onready var action_button_phantasm = %ACTION_BUTTON_PHANTASM
+
+@onready var action_button_unmount = %ACTION_BUTTON_UNMOUNT
+
+@onready var action_button_items = %ACTION_BUTTON_ITEMS
+
+@onready var action_button_cancel = %ACTION_BUTTON_CANCEL
+
+@onready var are_you_sure_main_container = %are_you_sure_main_container
+@onready var are_you_sure_label = %are_you_sure_label
+@onready var are_you_sure_buttons_container = %are_you_sure_buttons_container
+@onready var im_sure_button = %im_sure_button
+@onready var im_not_sure_button = %im_not_sure_button
+
+@onready var info_but_choose_1 = %info_but_choose_1
+@onready var info_but_choose_2 = %info_but_choose_2
+
+
+@onready var dices_main_VBoxContainer = %dices_main_VBoxContainer
+@onready var dice_holder_hbox = %dice_holder_hbox
+@onready var main_dice = %main_dice
+@onready var crit_dice = %crit_dice
+@onready var defence_dice = %defence_dice
+
+
+@onready var roll_dice_control_container = %roll_dice_control_container
+@onready var roll_dice_optional_label = %roll_dice_optional_label
+@onready var roll_dices_button = %roll_dices_button
+
+
+@onready var right_ange_buttons_container = %right_ange_buttons_container
+@onready var self_info_show_button = %self_info_show_button
+@onready var skill_info_show_button = %Skill_info_show_button
+@onready var dices_toggle_button = %dices_toggle_button
+@onready var end_turn_button = %End_turn_button
+
+
+@onready var skill_info_tab_container = %Skill_info_tab_container
+
+@onready var use_skill_but_label_container = %use_skill_but_label_container
+@onready var current_skill_cooldown_label = %current_skill_cooldown_label
+@onready var use_skill_button = %Use_skill_button
+
+
+@onready var command_spells_button = %command_spells_button
+
+@onready var command_spell_choices_container = %command_spell_choices_container
+
+@onready var gui = %GUI
+
+@onready var camera_2d = %Camera2D
+
+@onready var day_or_night_sprite_2d:Sprite2D = $day_or_night_sprite2d
+
+@onready var host_buttons = %host_buttons
+
+
+#endregion
+
+
+
+
 var glow_array=[]
 const Glow = preload("res://сцены/glow.tscn")
 var time
 var glowing_kletka_number_selected
 var is_game_started=false
-@onready var players_handler = $players_handler
 var is_pole_generated=false
-@onready var character_selection_container = $GUI/character_selection_container
 
-@onready var char_select:Control = $GUI/character_selection_container/Char_select
-@onready var alert_label = $GUI/alert_label
 
 var glow_cletki_node
 var captured_kletki_node=null
@@ -33,23 +175,11 @@ var kletka_owned_by_unit_uniq_id:Dictionary={}
 var enemy_to_pull:CharInfo
 var temp_kletka_capture_config
 
-@onready var you_were_attacked_container = $GUI/You_were_attacked_container
-@onready var you_were_attacked_label = $GUI/You_were_attacked_container/You_were_attacked_label
-@onready var evade_button = $GUI/You_were_attacked_container/HBoxContainer/Evade_button
-@onready var defence_button = $GUI/You_were_attacked_container/HBoxContainer/Defence_button
-@onready var parry_button = $GUI/You_were_attacked_container/HBoxContainer/Parry_button
-@onready var phantasm_evade_button = $GUI/You_were_attacked_container/HBoxContainer/Phantasm_evation_button
 
 
 
-@onready var chat_hide_show_button = $GUI/Chat_hide_show_button
-@onready var message_line_edit = $GUI/ChatLog_container/HBoxContainer/Message_LineEdit
-@onready var chat_log_container = $GUI/ChatLog_container
-@onready var chat_log_main = $GUI/ChatLog_container/ChatLog_main
 
 
-@onready var char_info_choose_scroll_container = $GUI/char_info_choose_scroll_container
-@onready var char_choose_button = $GUI/char_choose_button
 
 
 
@@ -63,30 +193,19 @@ var current_unit_id:int=0
 var current_player_name:String
 
 var my_turn=false
-@onready var info_label_panel = $GUI/info_label_panel
-@onready var info_ok_button = $GUI/info_ok_button
-@onready var info_label = $GUI/info_label_panel/info_label
 
 signal movement_finished
 
 var current_open_window=""
 
-@onready var main_label_dont_touch = $GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox/Main_label_dont_touch
-@onready var attack_label = $GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox/Attack_label
-@onready var crit_label = $GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox/Crit_label
-@onready var defence_label = $GUI/Current_roll_container/Current_roll_marg_conta/Current_roll_vbox/Defence_label
 
 var damage_type="physical"#"magic"
 var recieved_damage_type="physical"
 var recieved_phantasm_config={}
 
-@onready var type_of_damage_choose_buttons_box = $GUI/type_of_damage_choose_buttons_box
-@onready var regular_damage_button = $GUI/type_of_damage_choose_buttons_box/regular_damage_button
-@onready var magical_damage_button = $GUI/type_of_damage_choose_buttons_box/magical_damage_button
 
 
-@onready var reset_button = $GUI/host_buttons/reset
-@onready var start_button = $GUI/host_buttons/start
+
 
 var dice_roll_result_list:Dictionary={"main_dice":0,"crit_dice":0,"defence_dice":0,"additional_d6":0,"additional_d6_2":0,"additional_d100":0}
 var recieved_dice_roll_result
@@ -110,64 +229,7 @@ const cell_scene = preload("res://сцены/клетка.tscn")
 
 var pole_generated_seed
 
-@onready var menu_vbox_container = $GUI/menu_vbox_container
-@onready var disconnect_button = $GUI/menu_vbox_container/disconnect_Button
-@onready var settings_button = $GUI/menu_vbox_container/settings_button
-
-
-
-@onready var actions_buttons = $GUI/actions_buttons
-
-@onready var current_action_points_label = $GUI/action/current_actions
-@onready var make_action_button = $GUI/make_action
-@onready var items_button = $GUI/actions_buttons/Items
-
-
-@onready var are_you_sure_main_container = $GUI/are_you_sure_main_container
-@onready var are_you_sure_label = $GUI/are_you_sure_main_container/are_you_sure_label
-@onready var im_sure_button = $GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_sure_button
-
 signal are_you_sure_signal(result:String)
-@onready var info_but_choose_1 = $GUI/info_but_choose_1
-@onready var info_but_choose_2 = $GUI/info_but_choose_2
-
-@onready var im_not_sure_button = $GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_not_sure_button
-
-#var are_you_sure_result#"yes","no"
-
-#@onready var dice_holder_hbox = $GUI/dice_holder_node2d
-#@onready var main_dice_node = $GUI/dice_holder_node2d/main_dice
-#@onready var crit_dice_node = $GUI/dice_holder_node2d/crit_dice
-#@onready var defence_dice_node = $GUI/dice_holder_node2d/defence_dice
-
-
-@onready var dice_holder_hbox = $GUI/dice_holder_hbox
-@onready var main_dice_node = $GUI/dice_holder_hbox/main_dice
-@onready var crit_dice_node = $GUI/dice_holder_hbox/crit_dice
-@onready var defence_dice_node = $GUI/dice_holder_hbox/defence_dice
-
-
-
-@onready var roll_dice_control_container = $GUI/roll_dice_control_container
-@onready var roll_dice_optional_label = $GUI/roll_dice_control_container/roll_dice_optional_label
-@onready var roll_dices_button = $GUI/roll_dice_control_container/roll_dices_button
-
-@onready var right_ange_buttons_container = $GUI/right_ange_buttons_container
-@onready var dices_toggle_button = $GUI/right_ange_buttons_container/dices_toggle_button
-@onready var end_turn_button = $GUI/right_ange_buttons_container/End_turn
-@onready var skill_info_show_button = $GUI/right_ange_buttons_container/Skill_info_show_button
-@onready var self_info_show_button = $GUI/right_ange_buttons_container/self_info_show_button
-
-
-
-@onready var skill_info_tab_container = $GUI/Skill_info_tab_container
-@onready var use_skill_button = $GUI/use_skill_but_label_container/Use_skill_button
-@onready var current_skill_cooldown_label = $GUI/use_skill_but_label_container/current_skill_cooldown_label
-@onready var use_skill_but_label_container = $GUI/use_skill_but_label_container
-
-@onready var command_spells_button = $GUI/command_spells_button
-@onready var command_spell_choices_container = $GUI/command_spell_choices_container
-
 
 signal rolled_a_dice(result:Dictionary)
 
@@ -193,9 +255,7 @@ var cell_size = Vector2(64, 64)
 var scene_bounds = Vector2(3000, 1500)
 # Минимальное расстояние между клетками
 var min_distance = 200.0
-@onready var gui = $GUI
 
-@onready var camera_2d = $Camera2D
 
 # Словарь позиций клеток, где ключ - индекс клетки, значение - позиция клетки
 var cell_positions = {}
@@ -203,11 +263,9 @@ var cell_positions = {}
 var connected = {}
 var const_connected:Dictionary
 
-@onready var day_or_night_sprite_2d:Sprite2D = $day_or_night_sprite2d
 const SUN = preload("res://images/sun.png")
 const MOON = preload("res://images/moon.png")
 
-@onready var host_buttons = $GUI/host_buttons
 
 var field_status={"Default":"City","Field Buffs":[]}
 var awaiting_responce_from_pu_id:String
@@ -227,14 +285,12 @@ func _ready():
 	Globals.someone_status_changed.connect(disconnect_alert_show)
 	
 	
-	#$GUI/peer_id_label/android_debug_label.text=str(char_select.characters)
 	
 	day_or_night_sprite_2d.position=Vector2(scene_bounds.x/2,-400)
 	if Globals.host_or_user=='host':
 		pass
-		
-		$GUI/debug_character_control.visible=Globals.debug_mode
-		$GUI/cheats_show_button.visible=Globals.debug_mode
+		%debug_character_control.visible=Globals.debug_mode
+		%cheats_show_button.visible=Globals.debug_mode
 	
 	#connecting every GUI item to camera script
 	#mouse_entered_gui_element()
@@ -623,7 +679,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 			#print(connected[get_current_kletka_id()])
 			#make_action_button.disabled=false
 			right_ange_buttons_container.visible=true
-			$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
+			%Chat_send_button.disabled=false
 			
 			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
 			disable_every_button(false)
@@ -830,7 +886,7 @@ func _on_unmount_pressed():
 	if answer==tr("UNMOUNT_QUESTION_AGREEMENT"):
 		print("dismounting")
 		#checking if available kletki exists
-		$GUI/actions_buttons/Cancel.disabled=true
+		%action_button_cancel.disabled=true
 		var move_ck=[]
 		var skip=false
 		for i in connected[get_current_kletka_id()]:
@@ -859,7 +915,7 @@ func _on_unmount_pressed():
 		_on_move_pressed()
 		current_action="move"
 		await glowing_kletka_number_selected
-		$GUI/actions_buttons/Cancel.disabled=false
+		%action_button_cancel.disabled=false
 	pass
 
 
@@ -1082,8 +1138,8 @@ func _on_start_pressed():
 
 
 func await_dice_roll()->Dictionary:
-	roll_dice_control_container.visible=true
-	dice_holder_hbox.visible=true
+	dices_main_VBoxContainer.visible=true
+
 	
 	var result=await rolled_a_dice
 	await hide_dice_rolls_with_timeout(2)
@@ -1092,8 +1148,7 @@ func await_dice_roll()->Dictionary:
 
 func hide_dice_rolls_with_timeout(timeout_in_seconds):
 	await get_tree().create_timer(timeout_in_seconds).timeout
-	roll_dice_control_container.visible=false
-	dice_holder_hbox.visible=false
+	dices_main_VBoxContainer.visible=false
 
 
 
@@ -1143,7 +1198,7 @@ func disable_every_button(block=true):
 	hide_all_gui_windows("all")
 	var blocked_this_iteration=[]
 	if block:
-		for child in get_all_children($GUI):
+		for child in get_all_children(%GUI):
 			if "Button" in str(child.get_class()):
 				if child.is_visible_in_tree():
 					child.disabled=block
@@ -1153,7 +1208,7 @@ func disable_every_button(block=true):
 			button.disabled=false
 		if players_handler.current_player_pu_id_turn==Globals.self_pu_id:
 			end_turn_button.disabled=false
-	$GUI/ChatLog_container/HBoxContainer/Chat_send_button.disabled=false
+	%Chat_send_button.disabled=false
 	
 	blocked_previous_iteration=blocked_this_iteration
 	pass
@@ -1162,10 +1217,12 @@ func info_table_show(text="someone forgot to set this, contact anyone, SCREAM"):
 	hide_all_gui_windows()
 	#disable_every_button(true)
 	info_label.text=text
+	custom_main_VBoxContainer.visible=true
 	info_label_panel.visible=true
 	info_ok_button.visible=true
 
 func _on_info_ok_button_pressed():
+	custom_main_VBoxContainer.visible=false
 	info_label_panel.visible=false
 	info_ok_button.visible=false
 	#info_ok_button_clicked.emit()
@@ -1253,7 +1310,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			{"attacker_roll":dice_roll_result_list}
 		)
 			
-		roll_dice_control_container.visible=false
+		dices_main_VBoxContainer.visible=false
 		you_were_attacked_container.visible=false
 		are_you_sure_main_container.visible=false
 		
@@ -1374,8 +1431,7 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			reduce_one_action_point()
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
 
-	dice_holder_hbox.visible=false
-	roll_dice_control_container.visible=false
+	dices_main_VBoxContainer.visible=false
 	if players_handler.current_player_pu_id_turn==Globals.self_pu_id:
 		disable_every_button(false)
 		end_turn_button.disabled=false
@@ -1432,14 +1488,14 @@ func roll_a_dice():
 		dice_roll_result_list["additional_d100"]=randi_range(1,100)
 	
 	
-	main_dice_node.roll(dice_roll_result_list["main_dice"])
-	attack_label.text=tr("PREVIOUS_ROLL_BASE_DICE")+str(dice_roll_result_list["main_dice"])
+	main_dice.roll(dice_roll_result_list["main_dice"])
+	previous_roll_base_dice_label.text=tr("PREVIOUS_ROLL_BASE_DICE")+str(dice_roll_result_list["main_dice"])
 	
-	crit_dice_node.roll(dice_roll_result_list["crit_dice"])
-	crit_label.text=tr("PREVIOUS_ROLL_CRIT_DICE")+str(dice_roll_result_list["crit_dice"])
+	crit_dice.roll(dice_roll_result_list["crit_dice"])
+	previous_roll_crit_dice_label.text=tr("PREVIOUS_ROLL_CRIT_DICE")+str(dice_roll_result_list["crit_dice"])
 	
-	defence_dice_node.roll(dice_roll_result_list["defence_dice"])
-	defence_label.text=tr("PREVIOUS_ROLL_DEF_DICE")+str(dice_roll_result_list["defence_dice"])
+	defence_dice.roll(dice_roll_result_list["defence_dice"])
+	previous_roll_def_dice_label.text=tr("PREVIOUS_ROLL_DEF_DICE")+str(dice_roll_result_list["defence_dice"])
 	
 	
 	
@@ -1531,17 +1587,17 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 			var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_range).size()
 			print_debug("parry atk_range=",atk_range," distance_between_enemie=",distance_between_enemie)
 			if attack_type=="Phantasm" or distance_between_enemie==0: #distance_between_enemie>atk_range:
-				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=true
+				you_were_attacked_parry_option_button.disabled=true
 			else: 
-				$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled=false
+				you_were_attacked_parry_option_button.disabled=false
 			
-			$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled   = not can_parry
-			$GUI/You_were_attacked_container/HBoxContainer/Evade_button.disabled   = not can_evade
-			$GUI/You_were_attacked_container/HBoxContainer/Defence_button.disabled = not can_defence
+			you_were_attacked_parry_option_button.disabled   = not can_parry
+			you_were_attacked_evade_option_button.disabled   = not can_evade
+			you_were_attacked_def_option_button.disabled = not can_defence
 
-			var all_actions_blocked=$GUI/You_were_attacked_container/HBoxContainer/Parry_button.disabled and \
-			$GUI/You_were_attacked_container/HBoxContainer/Evade_button.disabled and \
-			$GUI/You_were_attacked_container/HBoxContainer/Defence_button.disabled
+			var all_actions_blocked=you_were_attacked_parry_option_button.disabled and \
+			you_were_attacked_evade_option_button.disabled and \
+			you_were_attacked_def_option_button.disabled
 
 			if all_actions_blocked:
 				var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
@@ -1763,8 +1819,7 @@ func _on_evade_button_pressed():
 	
 
 
-	roll_dice_control_container.visible=false
-	dice_holder_hbox.visible=false
+	dices_main_VBoxContainer.visible=false
 
 
 	if counter_attack:
@@ -1864,7 +1919,7 @@ func _on_defence_button_pressed():
 	
 	rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," defending by throwing ",dice_roll_result_list["defence_dice"]))
 	
-	dice_holder_hbox.visible=false
+	dices_main_VBoxContainer.visible=false
 
 
 func _on_parry_button_pressed():
@@ -1913,7 +1968,7 @@ func _on_parry_button_pressed():
 		
 		
 		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
-	dice_holder_hbox.visible=false
+	dices_main_VBoxContainer.visible=false
 	
 
 
@@ -1930,10 +1985,6 @@ func answer_attack(status):
 @rpc("any_peer","call_local","reliable")
 func receice_dice_roll_results(recieved_dice_roll_result_temp):
 	recieved_dice_roll_result=recieved_dice_roll_result_temp.duplicate()
-	#a
-	#attack_label.text="Attack roll: "+str(recieved_dice_roll_result["main_dice"])
-	#crit_label.text="Crit roll: "+str(recieved_dice_roll_result["crit_dice"])
-	#defence_label.text="Defence roll: "+str(recieved_dice_roll_result["defence_dice"])
 	
 func new_turn():
 	make_action_button.disabled=false
@@ -1942,7 +1993,7 @@ func new_turn():
 func main_game():
 	print("GAME STARTED")
 	
-	$GUI/character_selection_container.queue_free()
+	%character_selection_container.queue_free()
 	#print("connected="+str(connected))
 	#spawn random dommies
 	#generate_characters_on_random_kletkax()
@@ -2111,10 +2162,9 @@ func choose_unit_to_play()->bool:
 			get_current_self_char_info().to_dictionary(),
 			-node_choosen.get_meta("Attack_Points", 0)
 			)
-	
-	$GUI/action/np_points_number_label.text=str(node_choosen.phantasm_charge)
-	$GUI/current_hp_container/current_hp_value_label.text=str(node_choosen.hp)
-	$GUI/peer_id_label.text=str(node_choosen.name)
+	%np_points_number_label.text=str(node_choosen.phantasm_charge)
+	%current_hp_value_label.text=str(node_choosen.hp)
+	%peer_id_label.text=str(node_choosen.name)
 
 	players_handler.reduce_all_cooldowns(get_current_self_char_info())
 
@@ -2199,8 +2249,7 @@ func start_turn():
 		skills_enabledd = self_char_info.get_node().get_meta("Skills_Enabled",false)
 
 
-	$GUI/right_ange_buttons_container/Skill_info_show_button.disabled=not skills_enabledd
-
+	skill_info_show_button.disabled=not skills_enabledd
 
 	#players_handler.unit_uniq_id_player_game_stat_info[Globals.self_peer_id]["attacked_this_turn"]=0
 
@@ -2380,12 +2429,13 @@ func choose_between_two(question:String,first:String,second:String)->String:
 	info_but_choose_1.pressed.connect(info_but_choose.bind(first))
 	info_but_choose_2.pressed.connect(info_but_choose.bind(second))
 	disable_every_button()
+	custom_main_VBoxContainer.visible=true
 	info_but_choose_1.visible=true
 	info_but_choose_2.visible=true
 	info_label_panel.visible=true
 	
 	out=await choose_two
-
+	custom_main_VBoxContainer.visible=false
 	info_but_choose_1.visible=false
 	info_but_choose_2.visible=false
 	info_label_panel.visible=false
@@ -2584,7 +2634,7 @@ func find_nearest_free_cell(start_id)->int:
 
 
 func _on_make_action_pressed():
-	items_button.visible=true
+	action_button_items.visible=true
 	blinking_glow_button=false
 	glow_cletki_node.visible=false
 	
@@ -2604,7 +2654,7 @@ func _on_make_action_pressed():
 	print(str("players_handler.unit_unique_id_to_items_owned=",players_handler.unit_unique_id_to_items_owned))
 
 	if players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()].is_empty():
-		items_button.visible=false
+		action_button_items.visible=false
 	else:
 		#{ "Name": &"Heal Potion", "Effect": [{ "Name": "Heal", "Power": 5 }] }
 		print("players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]="+str(players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]))
@@ -2616,15 +2666,15 @@ func _on_make_action_pressed():
 	if maximum_skills:
 		var used_skills_this_turn=players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["skill_used_this_turn"]
 		if used_skills_this_turn>=maximum_skills["Power"]:
-			$GUI/actions_buttons/Skill.disabled=true
+			action_button_skill.disabled=true
 			print("max skills reached")
 		else:
-			$GUI/actions_buttons/Skill.disabled=false
+			action_button_skill.disabled=false
 			print("max skills not reached")
 	else:
-		$GUI/actions_buttons/Skill.disabled=false
+		action_button_skill.disabled=false
 
-	$GUI/actions_buttons/Unmount.visible=mounting_something
+	action_button_unmount.visible=mounting_something
 
 
 	print("\nmax_hit="+str(max_hit or false))
@@ -2636,25 +2686,25 @@ func _on_make_action_pressed():
 		print("attacked_this_turn="+str(attacked_this_turn))
 		
 		if attacked_this_turn>=max_hit["Power"]:
-			$GUI/actions_buttons/Attack.disabled=true
+			action_button_attack.disabled=true
 			print("max hit reached")
 		else:
-			$GUI/actions_buttons/Attack.disabled=false
+			action_button_attack.disabled=false
 			print("max hit not reached")
 	else:
-		$GUI/actions_buttons/Attack.disabled=false
+		action_button_attack.disabled=false
 	
 
 	if not skills_enabledd:
-		$GUI/actions_buttons/Skill.disabled=true
+		action_button_skill.disabled=true
 		print("summon can't use skills")
 	
 	if not attack_enabledd:
-		$GUI/actions_buttons/Attack.disabled=true
+		action_button_attack.disabled=true
 		print("summon can't attack")
 	
 	if not phantasm_enabledd:
-		$GUI/actions_buttons/Phantasm.disabled=true
+		action_button_phantasm.disabled=true
 		print("summon can't use phantasm")
 		
 	
@@ -2749,9 +2799,8 @@ func _on_im_not_sure_button_pressed():
 
 
 func _on_dices_toggle_button_pressed():
-	var vis=roll_dice_control_container.visible
-	roll_dice_control_container.visible= !vis
-	dice_holder_hbox.visible= !vis
+	#var vis=roll_dice_control_container.visible
+	dices_main_VBoxContainer.visible= !dices_main_VBoxContainer.visible
 	#for pu_id in Globals.pu_id_player_info.keys():
 		#print(Globals.pu_id_player_info[pu_id]["servant_node"].buffs)
 	pass # Replace with function body.
@@ -2776,13 +2825,13 @@ func hide_all_gui_windows(except_name="all"):
 	print("hide_all_gui_windows= "+str(except_name))
 	
 	var dictio={"servant_info_main_container":[players_handler.servant_info_main_container],
-	"skill_info_tab_container":[skill_info_tab_container,use_skill_but_label_container],
+	"skill_info_tab_container":[%skill_info_main_VBoxContainer,skill_info_tab_container,use_skill_but_label_container],
 	"actions_buttons":[actions_buttons],
-	"use_custom":[players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
+	"use_custom":[%custom_choices_main_Vboxcontainer,players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
 	"command_spells":[command_spell_choices_container],
 	"menu":[menu_vbox_container],
 	"teams":[players_handler.teams_margin],
-	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button]
+	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button,char_choose_main_VBoxContainer]
 	}
 	var did_changed=false
 	for key in dictio:
@@ -3002,11 +3051,11 @@ func disconnect_alert_show(pu_id:String,peer_disconnected:bool,disconnect_names:
 	if pu_id==awaiting_responce_from_pu_id and peer_disconnected:
 		attack_response.emit("Disconnect")
 		if disconnect_names=="":
-			$GUI/disconnect_alert_panel/disconnect_alert_label.text="Someone disconnected\nawaiting reconnection"
+			$disconnect_alert_label.text="Someone disconnected\nawaiting reconnection"
 		else:
-			$GUI/disconnect_alert_panel/disconnect_alert_label.text=disconnect_names
+			$disconnect_alert_label.text=disconnect_names
 
-	$GUI/disconnect_alert_panel.visible=peer_disconnected
+	%disconnect_alert_panel.visible=peer_disconnected
 
 
 func char_info_to_kletka_number(char_info:CharInfo)->int:
@@ -3028,11 +3077,11 @@ func _input(event):
 	if event is InputEventKey:
 		if event.keycode == KEY_ESCAPE and event.pressed:
 			if OS.has_feature("editor"):
-				$GUI/menu_vbox_container/disconnect_Button.visible=true
-				$GUI/menu_vbox_container/reconnect_button.visible=true
+				disconnect_button.visible=true
+				reconnect_button.visible=true
 			hide_all_gui_windows("menu")
 		if event.keycode == KEY_TAB and event.pressed:
-			$GUI/advanced_logs_textedit.visible=!$GUI/advanced_logs_textedit.visible
+			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
 
 func _on_disconnect_button_pressed():
 	Globals.disconnection_request.emit()
@@ -3050,5 +3099,5 @@ func _on_reconnect_button_pressed():
 
 
 func _on_cheats_show_button_pressed():
-	$GUI/debug_character_control.visible=!$GUI/debug_character_control.visible
+	%debug_character_control.visible=!%debug_character_control.visible
 	pass # Replace with function body.

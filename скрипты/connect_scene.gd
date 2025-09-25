@@ -1,10 +1,10 @@
 extends Node
 
-@onready var IP_entry = $IP
-@onready var connect_button = $connect # Переименовал для ясности
-@onready var port_entry = $Port # Переименовал для ясности
-@onready var nickname_edit = $nickname # Переименовал для ясности
-@onready var back_button = $"../Back_button" # Осторожно с free(), если он нужен для UI после дисконнекта
+@onready var IP_entry = %IP
+@onready var connect_button = %connect
+@onready var port_entry = %Port
+@onready var nickname_edit = %nickname
+@onready var back_button = $"../Back_button"
 @onready var main_menu = $".."
 @onready var host_scene = $"../Host_scene"
 

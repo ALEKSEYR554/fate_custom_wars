@@ -4,15 +4,15 @@ const DATAFOUND = preload("res://images/datafound.png")
 const DATALOST = preload("res://images/datalost.png")
 
 @onready var back_button = $"../Back_button"
-@onready var create_server_button = $Button # Переименовал для ясности
-@onready var game_start_button = $game_start_button
-@onready var nickname_edit = $nickname # Переименовал для ясности
+@onready var create_server_button = %host_Button
+@onready var game_start_button = %game_start_button
+@onready var nickname_edit = %nickname_lineEdit
 @onready var main_menu = $".."
-@onready var players_container = $players_container # Предполагаю, что это VBoxContainer или GridContainer
-@onready var spin_box_max_players = $SpinBox # Для установки макс. кол-ва видимых слотов
+@onready var players_container = $players_container 
+@onready var spin_box_max_players = %players_count_SpinBox 
 @onready var connect_scene = $"../Connect_scene"
 
-@onready var host_button = $Button
+@onready var host_button = %host_Button
 
 
 
