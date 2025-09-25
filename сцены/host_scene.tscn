@@ -13,7 +13,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_1yc4k")
 
-[node name="Button" type="Button" parent="."]
+[node name="host_Button" type="Button" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -29,18 +30,20 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 50
 text = "HOST"
 
-[node name="SpinBox" type="SpinBox" parent="."]
+[node name="players_count_SpinBox" type="SpinBox" parent="."]
+unique_name_in_owner = true
 layout_mode = 0
-offset_left = 854.0
-offset_top = 320.0
-offset_right = 937.063
-offset_bottom = 351.0
+anchor_left = 0.833984
+anchor_top = 0.416667
+anchor_right = 0.915101
+anchor_bottom = 0.457031
 min_value = 2.0
 max_value = 6.0
 value = 2.0
 allow_greater = true
+metadata/_edit_use_anchors_ = true
 
-[node name="Label" type="Label" parent="SpinBox"]
+[node name="number_of_players_info_Label" type="Label" parent="players_count_SpinBox"]
 layout_mode = 0
 offset_left = -3.0
 offset_top = -52.0
@@ -51,6 +54,7 @@ text = "Number
 horizontal_alignment = 1
 
 [node name="game_start_button" type="Button" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.38916
@@ -60,18 +64,6 @@ anchor_bottom = 0.693359
 grow_horizontal = 2
 grow_vertical = 2
 text = "START"
-metadata/_edit_use_anchors_ = true
-
-[node name="nickname" type="LineEdit" parent="."]
-layout_mode = 0
-anchor_left = 0.0224609
-anchor_top = 0.742188
-anchor_right = 0.417969
-anchor_bottom = 0.898438
-theme_override_font_sizes/font_size = 50
-text = "Host"
-placeholder_text = "YOU NICKNAME"
-max_length = 20
 metadata/_edit_use_anchors_ = true
 
 [node name="players_container" type="HBoxContainer" parent="."]
@@ -179,6 +171,20 @@ text = "It is you"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[connection signal="button_up" from="Button" to="." method="_on_create_server_button_button_up"]
-[connection signal="value_changed" from="SpinBox" to="." method="_on_spin_box_value_changed"]
+[node name="nickname_lineEdit" type="LineEdit" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+anchor_left = 0.0527344
+anchor_top = 0.792
+anchor_right = 0.053
+anchor_bottom = 0.921875
+offset_top = -0.256042
+offset_right = 307.728
+text = "Host"
+placeholder_text = "YOU NICKNAME"
+max_length = 20
+metadata/_edit_use_anchors_ = true
+
+[connection signal="button_up" from="host_Button" to="." method="_on_create_server_button_button_up"]
+[connection signal="value_changed" from="players_count_SpinBox" to="." method="_on_spin_box_value_changed"]
 [connection signal="button_up" from="game_start_button" to="." method="_on_game_start_button_button_up"]
