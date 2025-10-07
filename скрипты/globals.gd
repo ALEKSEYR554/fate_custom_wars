@@ -190,7 +190,7 @@ func preload_all_servant_sprites():
 		#editor
 		characters=[]
 		print("servant selection type Editor")
-		for folder in ["bunyan","bunyan/horse","el_melloy","gray","hakuno_female","summer_bb","tamamo","jalter_santa_lily","jaguar_man","queen_medb","queen_medb/warrior","queen_medb/druid"]:
+		for folder in ["bunyan","bunyan/horse","el_melloy","medusa_saber","gray","hakuno_female","summer_bb","tamamo","jalter_santa_lily","jaguar_man","queen_medb","queen_medb/warrior","queen_medb/druid"]:
 			#var img = Image.new()
 			print("folder=","res://servants/"+str(folder)+"/sprite.png")
 			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
