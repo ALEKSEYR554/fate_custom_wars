@@ -181,8 +181,70 @@ func get_uniqq_id_from_host()->String:
 func get_fully_translated_servant_script(servant_path:String,servant_name_just_name:String)->String:
 	#load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd")
 	var script_full_path=Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"
+	var script_folder=script_full_path.get_base_dir()
 	FileAccess.open(script_full_path, FileAccess.READ)
+	var keys_to_translate=["Description"]
+	var dir = DirAccess.open(script_folder)
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir():
+			print("Found file: " + file_name)
+			if file_name.get_extension()=="json" and file_name.get_basename().get_file().length()==2:
+				var lang_script=load(script_folder+'/'+file_name)
+				var lang=lang_script.new()
+
+		file_name = dir.get_next()
 	return ""
+
+
+func add_servants_translations_for_servant_name(servant_node:Node2D,servant_path:String,servant_name_just_name:String)->void:
+	var servant_folder=Globals.user_folder+"/servants/"+str(servant_path)
+
+	var dir = DirAccess.open(servant_folder)
+	var file_name = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir():
+			print("Found file: " + file_name)
+			if file_name.get_extension()=="json" and file_name.get_basename().get_file().length()==2:
+				print("found translation for lang="+file_name.get_basename().get_file()+" for servant="+servant_name_just_name)
+				var json_as_text = FileAccess.get_file_as_string(servant_folder+'/'+file_name)
+				var json_as_dict = JSON.parse_string(json_as_text)
+				servant_node.translation[file_name.get_basename()]=json_as_dict
+		file_name = dir.get_next()
+
+	pass
+
+
+func apply_all_translation_codes(servant_node:Node2D)->void:
+	
+	_recursive_merge_descriptions(servant_node.skills, servant_node.translation)
+	_recursive_merge_descriptions(servant_node.phantasms, servant_node.translation)
+	_recursive_merge_descriptions(servant_node.passive_skills, servant_node.translation)
+
+
+func _recursive_merge_descriptions(data, translations_map):
+	match typeof(data):
+		TYPE_DICTIONARY:
+			# Сначала проверяем, есть ли в этом словаре нужный нам ключ
+			if data.has("Description ID"):
+				var desc_id = data["Description ID"]
+				var descriptions = {}
+				
+				for lang_code in translations_map:
+					if translations_map[lang_code].has(desc_id):
+						descriptions[lang_code] = translations_map[lang_code][desc_id]
+				
+				if not descriptions.is_empty():
+					data["Description"] = descriptions
+			
+			for value in data.values():
+				_recursive_merge_descriptions(value, translations_map)
+		
+		TYPE_ARRAY:
+			for item in data:
+				_recursive_merge_descriptions(item, translations_map)
+
 
 
 @rpc("call_local","any_peer","reliable")
@@ -206,13 +268,11 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 		push_error("No sprite Found while loading servant")
 		return
 
-	#var dir = DirAccess.open(folderr+"://servants/")
-	#for i in dir.get_directories():#getting custom characters
 	var player:Node2D=Node2D.new()
 	var player_textureRect:TextureRect = TextureRect.new()
 	var effect_layer:TextureRect = TextureRect.new()
 	var buff_name_label:Label= Label.new()
-	#var servant_folder_name:String=folderr+"servants/"+str(servant_name)
+
 	var servant_path=servant_name
 
 	var servant_name_just_name=servant_path.get_file().get_basename()
@@ -220,21 +280,6 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
 
-
-	#print("servant_folder_name=",servant_folder_name)
-	#print("folder content=",DirAccess.open(servant_folder_name).get_files())
-	#print('ResourceLoader.exists(servant_folder_name+"/sprite.png")=',ResourceLoader.exists(servant_folder_name+"/sprite.png"))
-	#print('img.load(servant_folder_name+"/sprite.png")=',load(servant_folder_name+"/sprite.png"))
-	
-	#var img = Image.new()
-	#var er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
-	
-	#if er!=OK:
-	#	er=img.load(Globals.user_folder+"servants/"+str(servant_name)+"/sprite.png")
-		
-	#if er!=OK:
-	#	push_error("No sprite Found while loading servant")
-	#	return
 		
 	player_textureRect.texture=ImageTexture.create_from_image(img)
 	effect_layer.texture=load("res://images/white.png")
@@ -428,7 +473,10 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	player.set_meta("servant_name_just_name",servant_path.get_file().get_basename())
 	
 
+	add_servants_translations_for_servant_name(player,servant_path,servant_name_just_name)
 
+
+	apply_all_translation_codes(player)
 
 	unit_unique_id_to_items_owned[get_id_from_hostt]={}
 	unit_uniq_id_player_game_stat_info[get_id_from_hostt]=DEFAULT_GAME_STAT.duplicate(true)
@@ -1753,7 +1801,9 @@ func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_curren
 	print("choose_single_in_range=",ketki_array)
 	field.current_action="choose_allie"
 	await chosen_allie
-	return [servant_name_to_pu_id[choosen_allie_return_value.name]]
+	var choosen_allie_return_value_node = choosen_allie_return_value
+	#return choosen_allie_return_value_node.get_meta("CharInfoDic")
+	return [choosen_allie_return_value_node.get_meta("CharInfoDic")]
 
 func check_if_hp_is_bigger_than_max_hp_for_char_info(char_info:CharInfo)->void:
 	var max_hp=get_char_info_maximun_hp(char_info)
@@ -3593,8 +3643,8 @@ func _on_use_skill_button_pressed():
 	print("[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]")
 	print(skill_info_tab_container.current_tab)
 	field.hide_all_gui_windows("skill_info_tab_container")
-
-	$"../GUI/make_action".disabled=true
+	
+	%MAKE_ACTION_BUTTON.disabled=true
 	field.skill_info_show_button.disabled=true
 	var skill_consume_action=true
 	var succesfully

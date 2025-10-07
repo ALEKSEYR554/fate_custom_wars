@@ -186,5 +186,6 @@
     "TEAMS_ACTIONS":"Действия",
     "BETRAY_PLAYER_TEAMS_BUTTON":"Предать",
     "ALLY_PLAYER_TEAMS_BUTTON":"Союзник",
-    "NEUTRAL_PLAYER_TEAMS_BUTTON":"Нейтральный"
+    "NEUTRAL_PLAYER_TEAMS_BUTTON":"Нейтральный",
+    "MAIN_MENU_RULES_BUTTON":"Правила"
 }

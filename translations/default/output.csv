@@ -1,219 +1,190 @@
 id,en,ru
-WAITING_ENEMIE_ATTACK_RESPONCE,You've attacked an enemie, waiting for it's responce,Вы атаковали врага, ожидаем его ответа
-ENTER_MOUNT_QUESTION,You about to enter a mount.
-Are you sure?,Вы собираетесь войти в средство передвижения.
-Вы уверены?
-ENTER_MOUNT_QUESTION_AGREEMENT,Yes,Да
-ENTER_MOUNT_QUESTION_DISAGREEMENT,No,Нет
-UNMOUNT_QUESTION,Are you sure you want to unmount?,Вы уверены, что хотите спешиться?
-UNMOUNT_QUESTION_AGREEMENT,Yes,Да
-UNMOUNT_QUESTION_DISAGREEMENT,No,Нет
-UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND,No valid cells to dismount found
-aborting,Нет свободных клеток для спешивания
-Отмена
-DO_YOU_WANT_TO_REROLL_QUESTION,Do you want to reroll?,Вы хотите перебросить?
-DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT,Yes,Да
-DO_YOU_WANT_TO_REROLL_QUESTION_DISAGREEMENT,No,Нет
-ADVANCED_LOG_USER_HAS_REROLL_DICE_BUFF,User has buff increasing dice roll for type={type} new roll={dice_roll_result_list},У пользователя есть бафф, увеличивающий бросок кубиков для типа={type} новый бросок={dice_roll_result_list}
-ADVANCED_LOG_ATTACK_ATTEMPT,{Attacker_name} is attempting to attack {Taker_name},{Attacker_name} пытается атаковать {Taker_name}
-PLAYER_CANT_ATTACK_CERTAN_DUE_TO_DEBUFF,You cant attack this player due to debuff!,Вы не можете атаковать этого игрока из-за дебаффа!
-ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF,{Attacker_name} can not attack {Taker_name} due to debuff!,{Attacker_name} не может атаковать {Taker_name} из-за дебаффа!
-ARE_YOU_SURE_AGREEMENT,Yes,Да
-ARE_YOU_SURE_DISAGREEMENT,No,Нет
-ARE_YOU_SURE_YOU_WANT_TO_QUESTION,Are you sure you want to:%s?,Вы уверены, что хотите:%s?
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK,Attack,Атаковать
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE,Evade,Уклониться
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK,Counter Attack,Контратаковать
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_DEFENCE,Defence,Защищаться
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_PARRY,Parry,Парировать
-ARE_YOU_SURE_YOU_WANT_TO_ACTION_RELEASE_PRESENCE_CONCEALMENT,Release Presence Concealment,Снять Сокрытие Присутствия
-ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE,,
-ENEMY_PARRIED_ATTACK_REROLLING,Enemy parried, reroll,Враг парировал, переброс
-ADVANCED_LOG_SHOWING_ATTACKER_ROLL,Attacker rolls={attacker_roll},Броски атакующего={attacker_roll}
-TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION,{Ally_nick} is your ally and attacking you
-Do you consider this as betrayal?,{Ally_nick} - ваш союзник и атакует вас
-Считаете ли вы это предательством?
-TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT,Yes,Да
-TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_DISAGREEMENT,No,Нет
-YOU_WERE_ATTACKER_WHAT_TO_DO_QUESTION,You were attacked by {Attacker_name} with this dice rolls:
-Attack:{Attacker_main_dice} Crit: {Attacker_crit_dice}
-What do you do?,Вас атаковал {Attacker_name} со следующими бросками:
-Атака:{Attacker_main_dice} Крит: {Attacker_crit_dice}
-Что вы будете делать?
-ROLL_DICE_FOR_RESULT_STATEMENT,You need to throw above {dice_result} to not get bad status,Вам нужно выбросить выше {dice_result}, чтобы не получить плохой статус
-ADVANCED_LOG_TAKER_PARRIED,Damage taker parried parry_count_max={parry_count_max},Получатель урона парировал parry_count_max={parry_count_max}
-ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY,Attacker run out of stamina, FULL PARRY,У атакующего закончилась выносливость, ПОЛНОЕ ПАРИРОВАНИЕ
-ADVANCED_LOG_TAKER_HALFED_DAMAGE,Taker halfed damage,Получатель урона уменьшил урон вдвое
-ADVANCED_LOG_DIRECT_HIT,Direct hit,Прямое попадание
-ADVANCED_LOG_TAKER_DEFENDED,Taker defended,Получатель урона защитился
-ADVANCED_LOG_TAKER_EVADED,Taker evaded,Получатель урона уклонился
-ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM,Attacker charging phantasm,Атакующий заряжает Фантазм
-ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT,Attacker reduced action point,Атакующий уменьшил очки действия
-ADVANCED_LOG_TAKER_ATTEMPT_EVADING,Taker trying to evade,Получатель урона пытается уклониться
-ADVANCED_LOG_COUNTER_ATTACK_CHECHKING,counter attack={counter_attack_flag} ({main_dice_roll}=={crit_dice_roll}) ?,контратака={counter_attack_flag} ({main_dice_roll}=={crit_dice_roll}) ?
-ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK,enemy_has_ignore_evade={ignore_evade_buff},у_врага_есть_игнор_уклонения={ignore_evade_buff}
-ADVANCED_LOG_AGILITY_DIFFERENCE_SHOW,self_agility={self_agility} enemy_agility={enemy_agility} agility_bonus={agility_bonus},своя_ловкость={self_agility} ловкость_врага={enemy_agility} бонус_ловкости={agility_bonus}
-ADVANCED_LOG_USER_EVADED_ATTACK,{self_name} evaded by throwing {dice_result} agility_bonus={agility_bonus},{self_name} уклонился, выбросив {dice_result} бонус_ловкости={agility_bonus}
-ADVANCED_LOG_TAKER_EVADED_BY_BUFF,{self_name} evaded by buff,{self_name} уклонился благодаря баффу
-ADVANCED_LOG_CHECK_IF_USER_GOT_CRIT_DICES,main and sub dices:{main_dice}=={crit_dice} is_crit={is_crit},основные и дополнительные кубики:{main_dice}=={crit_dice} является_критом={is_crit}
-ADVANCED_LOG_CRIT_REMOVED_BY_BUFF,Attacker has their crit removed by buff,Атакующий потерял свой крит из-за баффа
-ADVANCED_LOG_ATTACKER_HAS_CRIT_UP_BUFF,Attacker has Critical Hit Rate Up buff with Chances={crit_dice},У атакующего есть бафф на увеличение шанса крит. удара с шансами={crit_dice}
-ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_VALID,Crit Chances were applied,Шансы крита были применены
-ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_NOT_VALID,Crit Chances were not applied,Шансы крита не были применены
-ADVANCED_LOG_BUFF_CONDITION_FIELDS_ERROR,condition doesn't have who_to_check or what_to_check,у условия нет who_to_check или what_to_check
-ADVANCED_LOG_BUFF_CONDITION_WHO_TO_CHECK,who_to_check={who_to_check},кого_проверить={who_to_check}
-ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME_VALID,char have buff={buff},у персонажа есть бафф={buff}
-ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME_NOT_VALID,char does not have buff={buff},у персонажа нет баффа={buff}
-ADVANCED_LOG_CHECKING_ATTACKER_BUFFS,checking attacker buffs={attacker_buffs},проверка баффов атакующего={attacker_buffs}
-ADVANCED_LOG_CHECKING_ATTACKER_BUFF,checking buff={buff},проверка баффа={buff}
-ADVANCED_LOG_BUFF_HAS_CONDITION,buff has condition={condition},у баффа есть условие={condition}
-ADVANCED_LOG_BUFF_CONDITION_FALSE,condition is false,условие ложно
-ADVANCED_LOG_BUFF_CONDITION_TRUE,condition is true,условие истинно
-ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_POWER_DAMAGE,Buff={buff_name} power={buff_power} damage_to_take={total_damage},Бафф={buff_name} сила={buff_power} урон_получить={total_damage}
-ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_NO_POWER_DAMAGE,Buff={buff_name} damage_to_take={total_damage},Бафф={buff_name} урон_получить={total_damage}
-ADVANCED_LOG_DAMAGE_CALCULATE_MULTY_BUFFS,calculating attackers's multiplying buffs,расчет умножающих баффов атакующего
-ADVANCED_LOG_CALCULATE_DAMAGE_TO_TAKE_START,Starting calculating damage to take to {taker_name} by {attacker_name} with dices={enemy_dices} damage_type={damage_type} special={special},Начало расчета урона для {taker_name} от {attacker_name} с кубиками={enemy_dices} тип_урона={damage_type} специальный={special}
-ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_MAGICAL_ATTACK,attacking with magic,атака магией
-ADVANCED_LOG_CALCULATE_DAMAGE_ALL_ON_MAGICAL_FIELD,attacker and taker on the attacker magical field, ignoring magical defence,атакующий и получатель урона находятся на магическом поле атакующего, игнорируя магическую защиту
-ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_ATTACK,it is phantasm attack,это атака фантазмом
-ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_IGNORE_TYPES,phantasm ignoring types={types},фантазм игнорирует типы={types}
-ADVANCED_LOG_CALCULATE_DAMAGE_BASE_DAMAGE,base damage={damage},базовый урон={damage}
-ADVANCED_LOG_CALCULATE_DAMAGE_AFTER_ATTACKER_BUFFS,damage_to_take after attacker buffs={damage_to_take},урон_получить после баффов атакующего={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_CHECK_ATTACKER_CRIT,checking if attacker got crit,проверка крита атакующего
-ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_VALID,Attacker has crit,Атакующий имеет крит
-ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_NOT_VALID,Attacker has no crit,Атакующий не имеет крита
-ADVANCED_LOG_CALCULATE_DAMAGE_IGNORE_BUFFS,calculating attacker ignore buffs,расчет баффов игнорирования атакующего
-ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_TYPES_TO_IGNORE,total types to ignore={types},всего типов игнорирования={types}
-ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE,calculating defender defence,расчет защиты защищающегося
-ADVANCED_LOG_CALCULATE_DAMAGE_NO_TYPES_FOR_BUFF,No types found for buff={buff}, skipping,Не найдено типов для баффа={buff}, пропуск
-ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_EVADE_BUFF,Taker has Evade buff,Получатель урона имеет бафф уклонения
-ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_INVINCIBILITY_BUFF,Taker has Invincibility buff, zero damage,Получатель урона имеет бафф неуязвимости, ноль урона
-ADVANCED_LOG_CALCULATE_DAMAGE_MULTIPLYING_DEFENCE,multiplying defence, damage_to_take={damage_to_take},умножающая защита, урон_получить={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_HALFED_DAMAGE,Halfed Damage   damage_to_take={damage_to_take},Урон уменьшен вдвое урон_получить={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_MAGICAL_DEFENCE,Substracting magical resistance={self_magic_res} damage_to_take={damage_to_take},Вычитание магического сопротивления={self_magic_res} урон_получить={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_FIELD_IGNORING_MAGICAL_DEFENCE,field is ignoring magical defence,поле игнорирует магическую защиту
-ADVANCED_LOG_CALCULATE_DAMAGE_SABER_HAS_MAGICAL_RESISTANCE,Saber has magical resistance damage_to_take={damage_to_take},Сэйбер имеет магическое сопротивление урон_получить={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENDING,Taker defending,Получатель урона защищается
-ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_IGNORES_DEFENDING,Attacker ignoring Taker's defending,Атакующий игнорирует защиту Получателя урона
-ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE_RESULT,Taker defending with dice={defence_dice} damage_to_take={damage_to_take},Получатель урона защищается кубиком={defence_dice} урон_получить={damage_to_take}
-ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_DAMAGE_TO_TAKE,Total damage_to_take={damage_to_take} type={damage_type}
-
-,Общий урон_получить={damage_to_take} тип={damage_type}
-
-
-ADVANCED_LOG_PLAYER_TOOK_DAMAGE,{player_name} HP is {new_hp} now,HP {player_name} теперь {new_hp}
-ADVANCED_LOG_PLAYER_TOOK_LETAL_DAMAGE_DEATH,{player_name} is dead, triggering death ,{player_name} мертв, запускается смерть
-ADVANCED_LOG_PLAYER_REVIVES_WITH_GUTS_BUFF,{player_name} has guts buff, reviving with hp_to_recover={hp_to_recover},У {player_name} есть бафф «Мужество», воскрешение с HP для восстановления={hp_to_recover}
-ADVANCED_LOG_REVIVE_WITH_COMMAND_SPELLS,{player_name} has 3 command spells, using it to revive,У {player_name} есть 3 командных заклинания, используем их для воскрешения
-ADVANCED_LOG_ALL_PLAYER_UNITS_DEAD,All units for player with pu_id={pu_id} are dead, removing it from turns order loop,Все юниты для игрока с pu_id={pu_id} мертвы, удаляем его из цикла порядка ходов
-ADVANCED_LOG_UNMOUNTING_DEAD_UNIT,unmounting dead unit,спешивание мертвого юнита
-ADVANCED_LOG_REDUCE_ADDITIONAL_MOVES,reduce_additional_moves_for_char_info for {player_name} by {amount} points,уменьшение_дополнительных_ходов_для_информации_о_персонаже для {player_name} на {amount} очков
-ADVANCED_LOG_REDUCE_ADDITIONAL_ATTACKS,reduce_additional_attacks_for_char_info for {player_name} by {amount} points,уменьшение_дополнительных_атак_для_информации_о_персонаже для {player_name} на {amount} очков
-ADVANCED_LOG_PLAYER_USING_FIRST_SKILL,{player_name} is using first skill,{player_name} использует первый навык
-ADVANCED_LOG_SKILL_USAGE_RESULT,skill used succesfully={result}?,навык использован успешно={result}?
-ADVANCED_LOG_PLAYER_USING_SECOND_SKILL,{player_name} is using second skill,{player_name} использует второй навык
-ADVANCED_LOG_PLAYER_USING_THIRD_SKILL,{player_name} is using third skill,{player_name} использует третий навык
-ADVANCED_LOG_PLAYER_USING_CLASS_SKILL,{player_name} is using class skill {class_skill_number},{player_name} использует классовый навык {class_skill_number}
-ADVANCED_LOG_PLAYER_USING_WEAPON_CHANGE,{player_name} is changing its weapon,{player_name} меняет свое оружие
-ONLY_ONE_TEAM_STANDING,There is only one team standing!
- You've won!
-Awaiting host's action,Осталась только одна команда!
-Вы победили!
-Ожидаем действия хоста
-NP_IS_SEALED_BY_DEBUFF,Your NP is sealed by debuff,Ваш НФ запечатан дебаффом
-NOT_ENOUGHT_CURRENCY_AMOUNT,Not enought {currency_name} value:{amount},Недостаточно {currency_name} значение:{amount}
-CANT_APPLY_MAD_ENCHANCEMENT_BUFFS,can not apply madness enchencement, you have buffs,Нельзя применить Безумное Усиление, у вас есть баффы
-MAXIMUM_SUMMONABLE_UNITS_REACHED_FOR_SKILL,Maximum units for this skill reached. Not summoning
-Skill used,Максимальное количество юнитов для этого навыка достигнуто. Не призываем
-Навык использован
-CAN_BETRAY_ONLY_DURING_SELF_TURN,You can betray only
- during your turn,Вы можете предать только
- во время своего хода
-ATTEMPT_TO_BETRAY_YOURSELF,This is you,Это вы
-ATTEMPT_TO_BETRAY_ENEMY,You can't betray your enemy,Вы не можете предать своего врага
-ATTEMPT_TO_ALLY_ALLY,You're already allies,Вы уже союзники
-ATTEMPT_TO_ALLY_YOURSELF,This is you,Это вы
-AWAITING_ALLIANCE_REQUEST_ANSWER,Awaiting answer,Ожидаем ответа
-SUCCESFULLY_MADE_ALLIANCE,Succesful alliance,Успешный альянс
-ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION,Player declined alliance. Do you want to make one-sided alliance?,Игрок отклонил предложение об альянсе. Хотите создать односторонний альянс?
-ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_AGREEMENT,Yes,Да
-ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_DISAGREEMENT,No,Нет
-MAKE_PUBLIC_ONE_SIDED_QUESTION,Do you want to make it public?,Вы хотите сделать его публичным?
-MAKE_PUBLIC_ONE_SIDED_QUESTION_AGREEMENT,Yes,Да
-MAKE_PUBLIC_ONE_SIDED_QUESTION_DISAGREEMENT,No,Нет
-ONE_SIDED_SUCCESS,You made one-sided alliance with {player_nick} {servant_name},Вы создали односторонний альянс с {player_nick} {servant_name}
-ATTEMPT_TO_NEUTRAL_DURING_OTHERS_TURN,You can neutral only
- during your turn,Вы можете быть нейтральным только
- во время своего хода
-ATTEMPT_TO_NEUTRAL_YOURSELF,This is you,Это вы
-YOU_CAN_COUNTER_ATTACK,You rolled clear crit during evade. You can counter attack!,Вы выбросили чистый крит при уклонении. Вы можете контратаковать!
-NO_UNITS_AVAILABLE_TO_PLAY,No units to play, skipping,Нет юнитов для игры, пропуск
-CHOOSE_UNIT_TO_PLAY,Choose unit to play,Выберите юнит для игры
-YOU_ARE_CHARMED,You're charmed
-,Вы очарованы
-
-YOU_ARE_PARALYZED,You're paralyzed
-,Вы парализованы
-
-YOU_IN_PRESENCE_CONCEALMENT_FOR_TURNS,You are in Presence Concealment and cannot move for {amount} more turns.,Вы находитесь в Сокрытии Присутствия и не можете двигаться еще {amount} ходов.
-EXIT_PRECENCE_CONCEALMENT_EARLIER,You can exit presence concealment now, but you will be stunned next turn.,Вы можете выйти из Сокрытия Присутствия сейчас, но будете оглушены в следующем ходу.
-PRESENCE_CONSEALMENT_END,You must come out of concealment of presence now.,Вы должны выйти из Сокрытия Присутствия сейчас.
-CHOOSE_PLAYER_TO_TRANSFER_COMMAND_SPELL,Choose player to transfer command spell to,Выберите игрока для передачи командного заклинания
-FAILED_TO_TRANSFER_COMMAND_SPELL_TO_MANY,Player has maximum command spells, transfer failed,У игрока максимум командных заклинаний, передача не удалась
-HOST_BUTTON_START,start,старт
-HOST_BUTTON_RESET_FIELD,restart field,перезапустить поле
-HOST_BUTTON_FINISH_GAME,finish,завершить
-COMMAND_SPELL_HEAL_BUTTON,Heal 70% of max HP,Исцелить 70% от макс. HP
-COMMAND_SPELL_NP_CHARGE_BUTTON,Get 6 np charges,Получить 6 зарядов НФ
-COMMAND_SPELL_ADDITIONAL_MOVES_BUTTON,Get 3 additional moves,Получить 3 дополнительных хода
-COMMAND_SPELL_TRANSFER_BUTTON,Transfer to another player,Передать другому игроку
-MAKE_ACTION_BUTTON,MAKE ACTIONS,СОВЕРШИТЬ ДЕЙСТВИЯ
-MAIN_MENU_HOST_BUTTON,HOST,ХОСТ
-MAIN_MENU_CONNECT_BUTTON,CONNECT,ПОДКЛЮЧИТЬСЯ
-MAIN_MENU_SETTINGS_BUTTON,SETTINGS,НАСТРОЙКИ
-SETTINGS_RESOLUTION_LABEL,resolution,разрешение
-SETTINGS_FULLSCREEN_LABEL,FullScreen,На весь экран
-SETTINGS_LANGUAGE_LABEL,Language,Язык
-SETTINGS_APPLY_BUTTON,APPLY,ПРИМЕНИТЬ
-ACTION_BUTTON_ATTACK,ATTACK,АТАКА
-ACTION_BUTTON_MOVE,MOVE,ПЕРЕМЕЩЕНИЕ
-ACTION_BUTTON_SKILL,SKILL,НАВЫК
-ACTION_BUTTON_PHANTASM,PHANTASM,ФАНТАЗМ
-ACTION_BUTTON_UNMOUNT,UNMOUNT,СПЕШИТЬСЯ
-ACTION_BUTTON_ITEMS,ITEMS,ПРЕДМЕТЫ
-ACTION_BUTTON_CANCEL,CANCEL,ОТМЕНА
-USE_CUSTOM_BUTTON,USE,ИСПОЛЬЗОВАТЬ
-USE_SKILL_BUTTON,USE SKILL,ИСПОЛЬЗОВАТЬ НАВЫК
-ACTIONS_AMOUNT_LABEL,ACTIONS:,ДЕЙСТВИЯ:
-RIGHT_BUTTONS_SELF_INFO_BUTTON,Self info,Своя информация
-RIGHT_BUTTONS_SKILLS_INFO_BUTTON,Skills info,Информация о навыках
-RIGHT_BUTTONS_DICES_BUTTON,Dices,Кубики
-RIGHT_BUTTONS_END_TURN_BUTTON,END TURN,ЗАВЕРШИТЬ ХОД
-CHARACTERS_SELECTION_CONRIRM_BUTTON,Confirm,Подтвердить
-TEAMS_BUTTON,Teams,Команды
-PLAYERS_LABEL,Players:,Игроки:
-TYPE_OF_DAMAGE_CHOOSE_PHYSICAL,Regular,Обычный
-TYPE_OF_DAMAGE_CHOOSE_MAGICAL,Magical,Магический
-PREVIOUS_ROLL_HEADER,Yours last:,Ваш последний:
-PREVIOUS_ROLL_BASE_DICE,Attack roll: ,Бросок атаки: 
-PREVIOUS_ROLL_CRIT_DICE,Crit roll: ,Бросок крита: 
-PREVIOUS_ROLL_DEF_DICE,Defense roll: ,Бросок защиты: 
-YOU_WERE_ATTACKED_EVADE_OPTION,Evade,Уклонение
-YOU_WERE_ATTACKED_DEF_OPTION,Defence,Защита
-YOU_WERE_ATTACKED_PARRY_OPTION,Parry,Парирование
-YOU_WERE_ATTACKED_PHANTASM_OPTION,Phantasm,Фантазм
-ARE_YOU_SURE_CONFIRM_BUTTON,Yes, I'm sure,Да, я уверен
-ARE_YOU_SURE_DECLINE_BUTTON,No, take me back,Нет, верните меня
-ROLL_DICES_BUTTON,Roll dices,Бросить кубики
-SHOW_BUFFS_ADVANCED_WAY,Show buffs advanced way,Показать баффы расширенно
-FLIP_SPRITE_BUTTON,Flip Sprite,Отразить спрайт
-TURNS_COUNT_LABEL,Turn: ,Ход: 
-SOMEONE_DISCONNECTED_AWAIT,Someone disconnected
-awaiting reconnection,Кто-то отключился
-ожидаем переподключения
-ALL_TEAMS,All teams,Все команды
-YOUR_TEAMS,Your teams,Ваши команды
-TEAMS_ACTIONS,Actions,Действия
-BETRAY_PLAYER_TEAMS_BUTTON,Betray,Предать
-ALLY_PLAYER_TEAMS_BUTTON,Ally,Союзник
-NEUTRAL_PLAYER_TEAMS_BUTTON,Neutral,Нейтральный
+ACTIONS_AMOUNT_LABEL,"ACTIONS:","ДЕЙСТВИЯ:"
+ACTION_BUTTON_ATTACK,"ATTACK","АТАКА"
+ACTION_BUTTON_CANCEL,"CANCEL","ОТМЕНА"
+ACTION_BUTTON_ITEMS,"ITEMS","ПРЕДМЕТЫ"
+ACTION_BUTTON_MOVE,"MOVE","ПЕРЕМЕЩЕНИЕ"
+ACTION_BUTTON_PHANTASM,"PHANTASM","ФАНТАЗМ"
+ACTION_BUTTON_SKILL,"SKILL","НАВЫК"
+ACTION_BUTTON_UNMOUNT,"UNMOUNT","СПЕШИТЬСЯ"
+ADVANCED_LOG_AGILITY_DIFFERENCE_SHOW,"self_agility={self_agility} enemy_agility={enemy_agility} agility_bonus={agility_bonus}","своя_ловкость={self_agility} ловкость_врага={enemy_agility} бонус_ловкости={agility_bonus}"
+ADVANCED_LOG_ALL_PLAYER_UNITS_DEAD,"All units for player with pu_id={pu_id} are dead, removing it from turns order loop","Все юниты для игрока с pu_id={pu_id} мертвы, удаляем его из цикла порядка ходов"
+ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM,"Attacker charging phantasm","Атакующий заряжает Фантазм"
+ADVANCED_LOG_ATTACKER_HAS_CRIT_UP_BUFF,"Attacker has Critical Hit Rate Up buff with Chances={crit_dice}","У атакующего есть бафф на увеличение шанса крит. удара с шансами={crit_dice}"
+ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT,"Attacker reduced action point","Атакующий уменьшил очки действия"
+ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY,"Attacker run out of stamina, FULL PARRY","У атакующего закончилась выносливость, ПОЛНОЕ ПАРИРОВАНИЕ"
+ADVANCED_LOG_ATTACK_ATTEMPT,"{Attacker_name} is attempting to attack {Taker_name}","{Attacker_name} пытается атаковать {Taker_name}"
+ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME_NOT_VALID,"char does not have buff={buff}","у персонажа нет баффа={buff}"
+ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME_VALID,"char have buff={buff}","у персонажа есть бафф={buff}"
+ADVANCED_LOG_BUFF_CONDITION_FALSE,"condition is false","условие ложно"
+ADVANCED_LOG_BUFF_CONDITION_FIELDS_ERROR,"condition doesn't have who_to_check or what_to_check","у условия нет who_to_check или what_to_check"
+ADVANCED_LOG_BUFF_CONDITION_TRUE,"condition is true","условие истинно"
+ADVANCED_LOG_BUFF_CONDITION_WHO_TO_CHECK,"who_to_check={who_to_check}","кого_проверить={who_to_check}"
+ADVANCED_LOG_BUFF_HAS_CONDITION,"buff has condition={condition}","у баффа есть условие={condition}"
+ADVANCED_LOG_CALCULATE_DAMAGE_AFTER_ATTACKER_BUFFS,"damage_to_take after attacker buffs={damage_to_take}","урон_получить после баффов атакующего={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_ALL_ON_MAGICAL_FIELD,"attacker and taker on the attacker magical field, ignoring magical defence","атакующий и получатель урона находятся на магическом поле атакующего, игнорируя магическую защиту"
+ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_NOT_VALID,"Attacker has no crit","Атакующий не имеет крита"
+ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_CRIT_VALID,"Attacker has crit","Атакующий имеет крит"
+ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_IGNORES_DEFENDING,"Attacker ignoring Taker's defending","Атакующий игнорирует защиту Получателя урона"
+ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_MAGICAL_ATTACK,"attacking with magic","атака магией"
+ADVANCED_LOG_CALCULATE_DAMAGE_BASE_DAMAGE,"base damage={damage}","базовый урон={damage}"
+ADVANCED_LOG_CALCULATE_DAMAGE_CHECK_ATTACKER_CRIT,"checking if attacker got crit","проверка крита атакующего"
+ADVANCED_LOG_CALCULATE_DAMAGE_FIELD_IGNORING_MAGICAL_DEFENCE,"field is ignoring magical defence","поле игнорирует магическую защиту"
+ADVANCED_LOG_CALCULATE_DAMAGE_HALFED_DAMAGE,"Halfed Damage   damage_to_take={damage_to_take}","Урон уменьшен вдвое урон_получить={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_IGNORE_BUFFS,"calculating attacker ignore buffs","расчет баффов игнорирования атакующего"
+ADVANCED_LOG_CALCULATE_DAMAGE_MAGICAL_DEFENCE,"Substracting magical resistance={self_magic_res} damage_to_take={damage_to_take}","Вычитание магического сопротивления={self_magic_res} урон_получить={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_MULTIPLYING_DEFENCE,"multiplying defence, damage_to_take={damage_to_take}","умножающая защита, урон_получить={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_NO_TYPES_FOR_BUFF,"No types found for buff={buff}, skipping","Не найдено типов для баффа={buff}, пропуск"
+ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_ATTACK,"it is phantasm attack","это атака фантазмом"
+ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_IGNORE_TYPES,"phantasm ignoring types={types}","фантазм игнорирует типы={types}"
+ADVANCED_LOG_CALCULATE_DAMAGE_SABER_HAS_MAGICAL_RESISTANCE,"Saber has magical resistance damage_to_take={damage_to_take}","Сэйбер имеет магическое сопротивление урон_получить={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE,"calculating defender defence","расчет защиты защищающегося"
+ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENCE_RESULT,"Taker defending with dice={defence_dice} damage_to_take={damage_to_take}","Получатель урона защищается кубиком={defence_dice} урон_получить={damage_to_take}"
+ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_DEFENDING,"Taker defending","Получатель урона защищается"
+ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_EVADE_BUFF,"Taker has Evade buff","Получатель урона имеет бафф уклонения"
+ADVANCED_LOG_CALCULATE_DAMAGE_TAKER_HAS_INVINCIBILITY_BUFF,"Taker has Invincibility buff, zero damage","Получатель урона имеет бафф неуязвимости, ноль урона"
+ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_DAMAGE_TO_TAKE,"Total damage_to_take={damage_to_take} type={damage_type}\n\n","Общий урон_получить={damage_to_take} тип={damage_type}\n\n"
+ADVANCED_LOG_CALCULATE_DAMAGE_TOTAL_TYPES_TO_IGNORE,"total types to ignore={types}","всего типов игнорирования={types}"
+ADVANCED_LOG_CALCULATE_DAMAGE_TO_TAKE_START,"Starting calculating damage to take to {taker_name} by {attacker_name} with dices={enemy_dices} damage_type={damage_type} special={special}","Начало расчета урона для {taker_name} от {attacker_name} с кубиками={enemy_dices} тип_урона={damage_type} специальный={special}"
+ADVANCED_LOG_CHECKING_ATTACKER_BUFF,"checking buff={buff}","проверка баффа={buff}"
+ADVANCED_LOG_CHECKING_ATTACKER_BUFFS,"checking attacker buffs={attacker_buffs}","проверка баффов атакующего={attacker_buffs}"
+ADVANCED_LOG_CHECK_IF_USER_GOT_CRIT_DICES,"main and sub dices:{main_dice}=={crit_dice} is_crit={is_crit}","основные и дополнительные кубики:{main_dice}=={crit_dice} является_критом={is_crit}"
+ADVANCED_LOG_COUNTER_ATTACK_CHECHKING,"counter attack={counter_attack_flag} ({main_dice_roll}=={crit_dice_roll}) ?","контратака={counter_attack_flag} ({main_dice_roll}=={crit_dice_roll}) ?"
+ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_NOT_VALID,"Crit Chances were not applied","Шансы крита не были применены"
+ADVANCED_LOG_CRIT_CHANCES_FROM_BUFF_VALID,"Crit Chances were applied","Шансы крита были применены"
+ADVANCED_LOG_CRIT_REMOVED_BY_BUFF,"Attacker has their crit removed by buff","Атакующий потерял свой крит из-за баффа"
+ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_NO_POWER_DAMAGE,"Buff={buff_name} damage_to_take={total_damage}","Бафф={buff_name} урон_получить={total_damage}"
+ADVANCED_LOG_DAMAGE_CALCULATE_BUFF_POWER_DAMAGE,"Buff={buff_name} power={buff_power} damage_to_take={total_damage}","Бафф={buff_name} сила={buff_power} урон_получить={total_damage}"
+ADVANCED_LOG_DAMAGE_CALCULATE_MULTY_BUFFS,"calculating attackers's multiplying buffs","расчет умножающих баффов атакующего"
+ADVANCED_LOG_DIRECT_HIT,"Direct hit","Прямое попадание"
+ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK,"enemy_has_ignore_evade={ignore_evade_buff}","у_врага_есть_игнор_уклонения={ignore_evade_buff}"
+ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF,"{Attacker_name} can not attack {Taker_name} due to debuff!","{Attacker_name} не может атаковать {Taker_name} из-за дебаффа!"
+ADVANCED_LOG_PLAYER_REVIVES_WITH_GUTS_BUFF,"{player_name} has guts buff, reviving with hp_to_recover={hp_to_recover}","У {player_name} есть бафф «Мужество», воскрешение с HP для восстановления={hp_to_recover}"
+ADVANCED_LOG_PLAYER_TOOK_DAMAGE,"{player_name} HP is {new_hp} now","HP {player_name} теперь {new_hp}"
+ADVANCED_LOG_PLAYER_TOOK_LETAL_DAMAGE_DEATH,"{player_name} is dead, triggering death ","{player_name} мертв, запускается смерть"
+ADVANCED_LOG_PLAYER_USING_CLASS_SKILL,"{player_name} is using class skill {class_skill_number}","{player_name} использует классовый навык {class_skill_number}"
+ADVANCED_LOG_PLAYER_USING_FIRST_SKILL,"{player_name} is using first skill","{player_name} использует первый навык"
+ADVANCED_LOG_PLAYER_USING_SECOND_SKILL,"{player_name} is using second skill","{player_name} использует второй навык"
+ADVANCED_LOG_PLAYER_USING_THIRD_SKILL,"{player_name} is using third skill","{player_name} использует третий навык"
+ADVANCED_LOG_PLAYER_USING_WEAPON_CHANGE,"{player_name} is changing its weapon","{player_name} меняет свое оружие"
+ADVANCED_LOG_REDUCE_ADDITIONAL_ATTACKS,"reduce_additional_attacks_for_char_info for {player_name} by {amount} points","уменьшение_дополнительных_атак_для_информации_о_персонаже для {player_name} на {amount} очков"
+ADVANCED_LOG_REDUCE_ADDITIONAL_MOVES,"reduce_additional_moves_for_char_info for {player_name} by {amount} points","уменьшение_дополнительных_ходов_для_информации_о_персонаже для {player_name} на {amount} очков"
+ADVANCED_LOG_REVIVE_WITH_COMMAND_SPELLS,"{player_name} has 3 command spells, using it to revive","У {player_name} есть 3 командных заклинания, используем их для воскрешения"
+ADVANCED_LOG_SHOWING_ATTACKER_ROLL,"Attacker rolls={attacker_roll}","Броски атакующего={attacker_roll}"
+ADVANCED_LOG_SKILL_USAGE_RESULT,"skill used succesfully={result}?","навык использован успешно={result}?"
+ADVANCED_LOG_TAKER_ATTEMPT_EVADING,"Taker trying to evade","Получатель урона пытается уклониться"
+ADVANCED_LOG_TAKER_DEFENDED,"Taker defended","Получатель урона защитился"
+ADVANCED_LOG_TAKER_EVADED,"Taker evaded","Получатель урона уклонился"
+ADVANCED_LOG_TAKER_EVADED_BY_BUFF,"{self_name} evaded by buff","{self_name} уклонился благодаря баффу"
+ADVANCED_LOG_TAKER_HALFED_DAMAGE,"Taker halfed damage","Получатель урона уменьшил урон вдвое"
+ADVANCED_LOG_TAKER_PARRIED,"Damage taker parried parry_count_max={parry_count_max}","Получатель урона парировал parry_count_max={parry_count_max}"
+ADVANCED_LOG_UNMOUNTING_DEAD_UNIT,"unmounting dead unit","спешивание мертвого юнита"
+ADVANCED_LOG_USER_EVADED_ATTACK,"{self_name} evaded by throwing {dice_result} agility_bonus={agility_bonus}","{self_name} уклонился, выбросив {dice_result} бонус_ловкости={agility_bonus}"
+ADVANCED_LOG_USER_HAS_REROLL_DICE_BUFF,"User has buff increasing dice roll for type={type} new roll={dice_roll_result_list}","У пользователя есть бафф, увеличивающий бросок кубиков для типа={type} новый бросок={dice_roll_result_list}"
+ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE,"",""
+ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION,"Player declined alliance. Do you want to make one-sided alliance?","Игрок отклонил предложение об альянсе. Хотите создать односторонний альянс?"
+ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_AGREEMENT,"Yes","Да"
+ALLIANCE_REQUEST_DECLINED_ONE_SIDE_QUESTION_DISAGREEMENT,"No","Нет"
+ALLY_PLAYER_TEAMS_BUTTON,"Ally","Союзник"
+ALL_TEAMS,"All teams","Все команды"
+ARE_YOU_SURE_AGREEMENT,"Yes","Да"
+ARE_YOU_SURE_CONFIRM_BUTTON,"Yes, I'm sure","Да, я уверен"
+ARE_YOU_SURE_DECLINE_BUTTON,"No, take me back","Нет, верните меня"
+ARE_YOU_SURE_DISAGREEMENT,"No","Нет"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK,"Attack","Атаковать"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK,"Counter Attack","Контратаковать"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_DEFENCE,"Defence","Защищаться"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE,"Evade","Уклониться"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_PARRY,"Parry","Парировать"
+ARE_YOU_SURE_YOU_WANT_TO_ACTION_RELEASE_PRESENCE_CONCEALMENT,"Release Presence Concealment","Снять Сокрытие Присутствия"
+ARE_YOU_SURE_YOU_WANT_TO_QUESTION,"Are you sure you want to:%s?","Вы уверены, что хотите:%s?"
+ATTEMPT_TO_ALLY_ALLY,"You're already allies","Вы уже союзники"
+ATTEMPT_TO_ALLY_YOURSELF,"This is you","Это вы"
+ATTEMPT_TO_BETRAY_ENEMY,"You can't betray your enemy","Вы не можете предать своего врага"
+ATTEMPT_TO_BETRAY_YOURSELF,"This is you","Это вы"
+ATTEMPT_TO_NEUTRAL_DURING_OTHERS_TURN,"You can neutral only\n during your turn","Вы можете быть нейтральным только\n во время своего хода"
+ATTEMPT_TO_NEUTRAL_YOURSELF,"This is you","Это вы"
+AWAITING_ALLIANCE_REQUEST_ANSWER,"Awaiting answer","Ожидаем ответа"
+BETRAY_PLAYER_TEAMS_BUTTON,"Betray","Предать"
+CANT_APPLY_MAD_ENCHANCEMENT_BUFFS,"can not apply madness enchencement, you have buffs","Нельзя применить Безумное Усиление, у вас есть баффы"
+CAN_BETRAY_ONLY_DURING_SELF_TURN,"You can betray only\n during your turn","Вы можете предать только\n во время своего хода"
+CHARACTERS_SELECTION_CONRIRM_BUTTON,"Confirm","Подтвердить"
+CHOOSE_PLAYER_TO_TRANSFER_COMMAND_SPELL,"Choose player to transfer command spell to","Выберите игрока для передачи командного заклинания"
+CHOOSE_UNIT_TO_PLAY,"Choose unit to play","Выберите юнит для игры"
+COMMAND_SPELL_ADDITIONAL_MOVES_BUTTON,"Get 3 additional moves","Получить 3 дополнительных хода"
+COMMAND_SPELL_HEAL_BUTTON,"Heal 70% of max HP","Исцелить 70% от макс. HP"
+COMMAND_SPELL_NP_CHARGE_BUTTON,"Get 6 np charges","Получить 6 зарядов НФ"
+COMMAND_SPELL_TRANSFER_BUTTON,"Transfer to another player","Передать другому игроку"
+DO_YOU_WANT_TO_REROLL_QUESTION,"Do you want to reroll?","Вы хотите перебросить?"
+DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT,"Yes","Да"
+DO_YOU_WANT_TO_REROLL_QUESTION_DISAGREEMENT,"No","Нет"
+ENEMY_PARRIED_ATTACK_REROLLING,"Enemy parried, reroll","Враг парировал, переброс"
+ENTER_MOUNT_QUESTION,"You about to enter a mount.\nAre you sure?","Вы собираетесь войти в средство передвижения.\nВы уверены?"
+ENTER_MOUNT_QUESTION_AGREEMENT,"Yes","Да"
+ENTER_MOUNT_QUESTION_DISAGREEMENT,"No","Нет"
+EXIT_PRECENCE_CONCEALMENT_EARLIER,"You can exit presence concealment now, but you will be stunned next turn.","Вы можете выйти из Сокрытия Присутствия сейчас, но будете оглушены в следующем ходу."
+FAILED_TO_TRANSFER_COMMAND_SPELL_TO_MANY,"Player has maximum command spells, transfer failed","У игрока максимум командных заклинаний, передача не удалась"
+FLIP_SPRITE_BUTTON,"Flip Sprite","Отразить спрайт"
+HOST_BUTTON_FINISH_GAME,"finish","завершить"
+HOST_BUTTON_RESET_FIELD,"restart field","перезапустить поле"
+HOST_BUTTON_START,"start","старт"
+MAIN_MENU_CONNECT_BUTTON,"CONNECT","ПОДКЛЮЧИТЬСЯ"
+MAIN_MENU_HOST_BUTTON,"HOST","ХОСТ"
+MAIN_MENU_RULES_BUTTON,"Rules","Правила"
+MAIN_MENU_SETTINGS_BUTTON,"SETTINGS","НАСТРОЙКИ"
+MAKE_ACTION_BUTTON,"MAKE ACTIONS","СОВЕРШИТЬ ДЕЙСТВИЯ"
+MAKE_PUBLIC_ONE_SIDED_QUESTION,"Do you want to make it public?","Вы хотите сделать его публичным?"
+MAKE_PUBLIC_ONE_SIDED_QUESTION_AGREEMENT,"Yes","Да"
+MAKE_PUBLIC_ONE_SIDED_QUESTION_DISAGREEMENT,"No","Нет"
+MAXIMUM_SUMMONABLE_UNITS_REACHED_FOR_SKILL,"Maximum units for this skill reached. Not summoning\nSkill used","Максимальное количество юнитов для этого навыка достигнуто. Не призываем\nНавык использован"
+NEUTRAL_PLAYER_TEAMS_BUTTON,"Neutral","Нейтральный"
+NOT_ENOUGHT_CURRENCY_AMOUNT,"Not enought {currency_name} value:{amount}","Недостаточно {currency_name} значение:{amount}"
+NO_UNITS_AVAILABLE_TO_PLAY,"No units to play, skipping","Нет юнитов для игры, пропуск"
+NP_IS_SEALED_BY_DEBUFF,"Your NP is sealed by debuff","Ваш НФ запечатан дебаффом"
+ONE_SIDED_SUCCESS,"You made one-sided alliance with {player_nick} {servant_name}","Вы создали односторонний альянс с {player_nick} {servant_name}"
+ONLY_ONE_TEAM_STANDING,"There is only one team standing!\n You've won!\nAwaiting host's action","Осталась только одна команда!\nВы победили!\nОжидаем действия хоста"
+PLAYERS_LABEL,"Players:","Игроки:"
+PLAYER_CANT_ATTACK_CERTAN_DUE_TO_DEBUFF,"You cant attack this player due to debuff!","Вы не можете атаковать этого игрока из-за дебаффа!"
+PRESENCE_CONSEALMENT_END,"You must come out of concealment of presence now.","Вы должны выйти из Сокрытия Присутствия сейчас."
+PREVIOUS_ROLL_BASE_DICE,"Attack roll: ","Бросок атаки: "
+PREVIOUS_ROLL_CRIT_DICE,"Crit roll: ","Бросок крита: "
+PREVIOUS_ROLL_DEF_DICE,"Defense roll: ","Бросок защиты: "
+PREVIOUS_ROLL_HEADER,"Yours last:","Ваш последний:"
+RIGHT_BUTTONS_DICES_BUTTON,"Dices","Кубики"
+RIGHT_BUTTONS_END_TURN_BUTTON,"END TURN","ЗАВЕРШИТЬ ХОД"
+RIGHT_BUTTONS_SELF_INFO_BUTTON,"Self info","Своя информация"
+RIGHT_BUTTONS_SKILLS_INFO_BUTTON,"Skills info","Информация о навыках"
+ROLL_DICES_BUTTON,"Roll dices","Бросить кубики"
+ROLL_DICE_FOR_RESULT_STATEMENT,"You need to throw above {dice_result} to not get bad status","Вам нужно выбросить выше {dice_result}, чтобы не получить плохой статус"
+SETTINGS_APPLY_BUTTON,"APPLY","ПРИМЕНИТЬ"
+SETTINGS_FULLSCREEN_LABEL,"FullScreen","На весь экран"
+SETTINGS_LANGUAGE_LABEL,"Language","Язык"
+SETTINGS_RESOLUTION_LABEL,"resolution","разрешение"
+SHOW_BUFFS_ADVANCED_WAY,"Show buffs advanced way","Показать баффы расширенно"
+SOMEONE_DISCONNECTED_AWAIT,"Someone disconnected\nawaiting reconnection","Кто-то отключился\nожидаем переподключения"
+SUCCESFULLY_MADE_ALLIANCE,"Succesful alliance","Успешный альянс"
+TEAMS_ACTIONS,"Actions","Действия"
+TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION,"{Ally_nick} is your ally and attacking you\nDo you consider this as betrayal?","{Ally_nick} - ваш союзник и атакует вас\nСчитаете ли вы это предательством?"
+TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT,"Yes","Да"
+TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_DISAGREEMENT,"No","Нет"
+TEAMS_BUTTON,"Teams","Команды"
+TURNS_COUNT_LABEL,"Turn: ","Ход: "
+TYPE_OF_DAMAGE_CHOOSE_MAGICAL,"Magical","Магический"
+TYPE_OF_DAMAGE_CHOOSE_PHYSICAL,"Regular","Обычный"
+UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND,"No valid cells to dismount found\naborting","Нет свободных клеток для спешивания\nОтмена"
+UNMOUNT_QUESTION,"Are you sure you want to unmount?","Вы уверены, что хотите спешиться?"
+UNMOUNT_QUESTION_AGREEMENT,"Yes","Да"
+UNMOUNT_QUESTION_DISAGREEMENT,"No","Нет"
+USE_CUSTOM_BUTTON,"USE","ИСПОЛЬЗОВАТЬ"
+USE_SKILL_BUTTON,"USE SKILL","ИСПОЛЬЗОВАТЬ НАВЫК"
+WAITING_ENEMIE_ATTACK_RESPONCE,"You've attacked an enemie, waiting for it's responce","Вы атаковали врага, ожидаем его ответа"
+YOUR_TEAMS,"Your teams","Ваши команды"
+YOU_ARE_CHARMED,"You're charmed\n","Вы очарованы\n"
+YOU_ARE_PARALYZED,"You're paralyzed\n","Вы парализованы\n"
+YOU_CAN_COUNTER_ATTACK,"You rolled clear crit during evade. You can counter attack!","Вы выбросили чистый крит при уклонении. Вы можете контратаковать!"
+YOU_IN_PRESENCE_CONCEALMENT_FOR_TURNS,"You are in Presence Concealment and cannot move for {amount} more turns.","Вы находитесь в Сокрытии Присутствия и не можете двигаться еще {amount} ходов."
+YOU_WERE_ATTACKED_DEF_OPTION,"Defence","Защита"
+YOU_WERE_ATTACKED_EVADE_OPTION,"Evade","Уклонение"
+YOU_WERE_ATTACKED_PARRY_OPTION,"Parry","Парирование"
+YOU_WERE_ATTACKED_PHANTASM_OPTION,"Phantasm","Фантазм"
+YOU_WERE_ATTACKER_WHAT_TO_DO_QUESTION,"You were attacked by {Attacker_name} with this dice rolls:\nAttack:{Attacker_main_dice} Crit: {Attacker_crit_dice}\nWhat do you do?","Вас атаковал {Attacker_name} со следующими бросками:\nАтака:{Attacker_main_dice} Крит: {Attacker_crit_dice}\nЧто вы будете делать?"

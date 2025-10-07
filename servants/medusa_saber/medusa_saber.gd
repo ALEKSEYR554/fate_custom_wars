@@ -40,6 +40,7 @@ const default_stats={
 	"attack_power":6,#check table info
 	"strength":"A+",
 	"agility":"C",
+	"attribute":"Earth",
 	"endurance":"C",
 	"luck":"E",
 	"magic":{"Rank":"A","Power":0,"Resistance":5},#check table info
@@ -64,6 +65,7 @@ var additional_attack=0
 var current_weapon="Scythe"#if character doen't have weapon then dont touch it
 var phantasm_charge=0
 var strength
+var attribute
 
 
 var passive_skills=[
@@ -91,42 +93,42 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 	
 	"Effect":[
 		{
-            "Buffs":[
+			"Buffs":[
 			{
 				"Name":"Paralysis",
 				"Duration":1
 			}
 			],
 			"Cast":"single in range","Cast Range":3},
-        {
-            "Buffs":[
-                {
-                    "Name":"Dice +",
-                    "Action":"Attack",
-                    "Duration":3
-                },
-                {
-                    "Name":"Poison On Attack",
-                    "Trigger": "Success Attack",
-                    "Types":["Buff Positive Effect"],
-                    "Effect On Trigger":
-                        {"Buffs":[
-                            {
-                                "Name":"Poison",
-                                "Duration":5,
-                                "Power":2,
-                                "Trigger":"End Turn",
-                                "Effect On Trigger":"Take Damage By Power"
-                            }
-                            ],
-                            "Cast":"Trigger Initiator"},
-                    "Duration":3,
-                    "Power":1
-                }
-                ],
+		{
+			"Buffs":[
+				{
+					"Name":"Dice +",
+					"Action":"Attack",
+					"Duration":3
+				},
+				{
+					"Name":"Poison On Attack",
+					"Trigger": "Success Attack",
+					"Types":["Buff Positive Effect"],
+					"Effect On Trigger":
+						{"Buffs":[
+							{
+								"Name":"Poison",
+								"Duration":5,
+								"Power":2,
+								"Trigger":"End Turn",
+								"Effect On Trigger":"Take Damage By Power"
+							}
+							],
+							"Cast":"Trigger Initiator"},
+					"Duration":3,
+					"Power":1
+				}
+				],
 			"Cast":"Self"}
-    
-    ]
+	
+	]
 },
 
 "Second Skill":{
@@ -140,16 +142,16 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 				"Name":"NP Charge",
 				"Power":3
 			},
-            {
+			{
 				"Name":"ATK Up",
 				"Duration":3,
 				"Power":2
 			},
-            {
-                "Name":"ATK Up X Against Trait",
-                "Power":2,
-                "Trait":"Demonic"
-            }
+			{
+				"Name":"ATK Up X Against Trait",
+				"Power":2,
+				"Trait":"Demonic"
+			}
 			],
 			"Cast":"All allies"}
 		]
@@ -167,9 +169,9 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 				"Power":3,
 			},
 			{
-                "Name":"Nullify Debuff",
-                "Duration":3,
-            },
+				"Name":"Nullify Debuff",
+				"Duration":3,
+			},
 			{
 				"Name":"Critical Hit Rate Up",
 				"Duration":3,
@@ -181,7 +183,7 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 },
 
 "Class Skill 1":{
-    "Type":"Buff Granting",
+	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":8,
 	"Description":"Divinity: Increases your strength by 3 points (Cooldown - 8),",
@@ -215,15 +217,15 @@ Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls t
 					[
 						{"Buffs":[
 							{
-                                "Name":"Roll dice for effect",
-							    "Buff To Add":
+								"Name":"Roll dice for effect",
+								"Buff To Add":
 								[
-                                    {
-                                        "Name":"Paralysis",
-									    "Duration":1
+									{
+										"Name":"Paralysis",
+										"Duration":1
 									}									
 								]
-                            }
+							}
 						],
 						"Cast":"Phantasm Attacked"},
 						{
@@ -231,7 +233,7 @@ Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls t
 								{
 									"Name":"ATK Up X",
 									"Power":2,
-                                    "Duration":0.5
+									"Duration":0.5
 								}
 							],
 							"Cast":"All Allies"
@@ -249,15 +251,15 @@ Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls t
 					[
 						{"Buffs":[
 							{
-                                "Name":"Roll dice for effect",
-							    "Buff To Add":
+								"Name":"Roll dice for effect",
+								"Buff To Add":
 								[
-                                    {
-                                        "Name":"Paralysis",
-									    "Duration":1
+									{
+										"Name":"Paralysis",
+										"Duration":1
 									}									
 								]
-                            }
+							}
 						],
 						"Cast":"Phantasm Attacked"},
 						{
@@ -265,7 +267,7 @@ Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls t
 								{
 									"Name":"ATK Up X",
 									"Power":2,
-                                    "Duration":0.5
+									"Duration":0.5
 								}
 							],
 							"Cast":"All Allies"
