@@ -88,8 +88,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":7,
-	"Description":"Paralyzes one enemy within three cells for one turn, increases the accuracy of your attacks (the result of the dice roll when attacking is greater than 1) for three turns, and also gives yourself the following buff:
-If the attack is successful, the enemy is debuffed with poison for five turns, which deals 1 damage (Cooldown - 7)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{
@@ -135,7 +134,7 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":7,
-	"Description":"Charge her Phantasma Gauge by 3 points, increases hers' and allies' strength by 2 points for 3 turns, and doubles your strength against Demonic trait for 3 turns. (Cooldown - 7)",
+	"Description ID":"Second Skill",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -161,7 +160,7 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":8,
-	"Description":"Gives herself an invulnerability buff for three attacks, immunity to debuffs for three turns, and increases her critical attack chance (1 and 6 on the second die count as a critical attack) for three turns. (Cooldown - 8).",
+	"Description ID":"Third Skill",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -186,7 +185,7 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":8,
-	"Description":"Divinity: Increases your strength by 3 points (Cooldown - 8),",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -202,9 +201,7 @@ If the attack is successful, the enemy is debuffed with poison for five turns, w
 var phantasms={
 	"Chrysaor":{
 		"Rank":"A",
-		"Description":"""Chrysaor - Deals 8 damage to one enemy within a five-cell radius, then rolls the die with the enemy. If Medusa's result is higher, the enemy is paralyzed. Then doubles allies' strength for one turn. If the enemy is male, the damage is increased by 3 points.
-Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls the die with the enemy. If Medusa's result is higher, the enemy is paralyzed. Then doubles allies' strength for one turn. If the enemy is male, the damage is increased by 6 points.
-	""",
+		"Description ID":"Chrysaor",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Single In Range","Range":5,"Damage":8,
@@ -279,10 +276,19 @@ Overcharge: Deals 16 damage to one enemy within a five-cell radius, then rolls t
 }
 
 
-
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"en":{
+		"First Skill":"Paralyzes one enemy within three cells for one turn, increases the accuracy of your attacks (the result of the dice roll when attacking is greater than 1) for three turns, and also gives yourself the following buff:\nIf the attack is successful, the enemy is debuffed with poison for five turns, which deals 1 damage (Cooldown - 7)",
+		"Second Skill":"Charge her Phantasma Gauge by 3 points, increases hers' and allies' strength by 2 points for 3 turns, and doubles your strength against Demonic trait for 3 turns. (Cooldown - 7)",
+		"Third Skill":"Gives herself an invulnerability buff for three attacks, immunity to debuffs for three turns, and increases her critical attack chance (1 and 6 on the second die count as a critical attack) for three turns. (Cooldown - 8).",
+		"Class Skill 1":"Divinity: Increases your strength by 3 points (Cooldown - 8)",
+		"Chrysaor":"Chrysaor - Deals 8 damage to one enemy within a five-cell radius, then rolls the die with the enemy. If Medusa's result is higher, the enemy is paralyzed. Then doubles allies' strength for one turn. If the enemy is male, the damage is increased by 3 points.\nOvercharge: Deals 16 damage to one enemy within a five-cell radius, then rolls the die with the enemy. If Medusa's result is higher, the enemy is paralyzed. Then doubles allies' strength for one turn. If the enemy is male, the damage is increased by 6 points."
+	},
+	"ru":{
+		"First Skill":"Парализует одного врага в пределах трех клеток на один ход, увеличивает точность ваших атак (результат броска кубика при атаке больше 1) на три хода, а также дает себе следующий бафф:\nЕсли атака прошла успешно, противник получает дебафф яда на пять ходов, который наносит 1 урон (Куллдаун - 7)",
+		"Second Skill":"Заряжает свою Шкалу Фантазма на 3 очка, увеличивает свою и союзников силу на 2 очка на 3 хода, а также удваивает свою силу против Демонического признака на 3 хода. (Куллдаун - 7)",
+		"Third Skill":"Дарует себе бафф неуязвимости на три атаки, иммунитет к дебаффам на три хода и увеличивает шанс своей критической атаки (1 и 6 на втором кубике считаются критической атакой) на три хода. (Куллдаун - 8).",
+		"Class Skill 1":"Божественность: Увеличивает вашу силу на 3 очка (Куллдаун - 8)",
+		"Chrysaor":"Chrysaor - Наносит 8 урона одному врагу в радиусе пяти клеток, затем бросает кубик с врагом. Если результат Медузы выше, враг парализуется. Затем удваивает силу союзников на один ход. Если враг мужского пола, урон увеличивается на 3 очка.\nОверчардж: Наносит 16 урона одному врагу в радиусе пяти клеток, затем бросает кубик с врагом. Если результат Медузы выше, враг парализуется. Затем удваивает силу союзников на один ход. Если враг мужского пола, урон увеличивается на 6 очков."
+	}
+}

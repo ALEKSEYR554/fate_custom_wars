@@ -69,7 +69,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"C",
 	"Cooldown":5,
-	"Description":"Restores 13 health to yourself or an ally, and removes the crit disable debuff. (Cooldown - 5)",
+	"Description ID":"First Skill",
 
 	"Effect":[
 		{"Buffs":[
@@ -90,7 +90,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":5,
-	"Description":"Charges your Phantasm Gauge by 1 point and also grants yourself immunity to debuffs for three turns. (Cooldown - 5)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -111,10 +111,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":6,
-	"Description":"Grants herself the following buffs for one turn:
-Invulnerability until the end of the next turn,
-Increases strength by 3 points,
-However, after activation, it deals 2 damage. (Skill cannot kill) (Cooldown - 6)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -139,11 +136,9 @@ However, after activation, it deals 2 damage. (Skill cannot kill) (Cooldown - 6)
 }
 
 var phantasms={
-	"!!!!!!!!!!!!!!!!!!PHANTASM NAME!!!!!!!!!!!!!!!!!!":{
+	"La Grace Fille Noël":{
 		"Rank":"A",
-		"Description":"""La Grace Fille Noël: Deals 6 damage to all enemies within a 3-tile radius, then increases self and allies' strength by 3 for 3 turns, and doubles health regeneration for 3 turns.
-Overcharge: Deals 12 damage to all enemies within a 3-tile radius, then increases self and allies' strength by 5 for 3 turns, and doubles health regeneration for 3 turns.
-	""",
+		"Description ID":"La Grace Fille Noël",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"All Enemies In Range","Range":3,"Damage":6,
@@ -186,10 +181,17 @@ Overcharge: Deals 12 damage to all enemies within a 3-tile radius, then increase
 }
 
 
-
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"en":{
+		"First Skill":"Restores 13 health to yourself or an ally, and removes the crit disable debuff. (Cooldown - 5)",
+		"Second Skill":"Charges your Phantasm Gauge by 1 point and also grants yourself immunity to debuffs for three turns. (Cooldown - 5)",
+		"Third Skill":"Grants herself the following buffs for one turn:\n		Invulnerability until the end of the next turn,\nIncreases strength by 3 points,\n	However, after activation, it deals 2 damage. (Skill cannot kill) (Cooldown - 6)",
+		"La Grace Fille Noël":"La Grace Fille Noël: Deals 6 damage to all enemies within a 3-tile radius, then increases self and allies' strength by 3 for 3 turns, and doubles health regeneration for 3 turns.\nOvercharge: Deals 12 damage to all enemies within a 3-tile radius, then increases self and allies' strength by 5 for 3 turns, and doubles health regeneration for 3 turns.",
+	},
+	"ru":{
+		"First Skill":"Восстанавливает 13 здоровья себе или союзнику, а также снимает дебафф отключения крита. (Куллдаун - 5)",
+		"Second Skill":"Заряжает вашу Шкалу Фантазма на 1 очко, а также дарует себе иммунитет к дебаффам на три хода. (Куллдаун - 5)",
+		"Third Skill":"Дарует себе следующие баффы на один ход:\n		Неуязвимость до конца следующего хода,\nУвеличивает силу на 3 очка,\n	Однако, после активации, наносит 2 урона. (Навык не может убить) (Куллдаун - 6)",
+		"La Grace Fille Noël":"La Grace Fille Noël: Наносит 6 урона всем врагам в радиусе 3 клеток, затем увеличивает силу себе и союзникам на 3 на 3 хода, а также удваивает регенерацию здоровья на 3 хода.\nОверчардж: Наносит 12 урона всем врагам в радиусе 3 клеток, затем увеличивает силу себе и союзникам на 5 на 3 хода, а также удваивает регенерацию здоровья на 3 хода.",
+	}
+}

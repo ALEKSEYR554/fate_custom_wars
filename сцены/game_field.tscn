@@ -1168,6 +1168,7 @@ access = 2
 use_native_dialog = true
 
 [node name="day_or_night_sprite2d" type="Sprite2D" parent="."]
+unique_name_in_owner = true
 position = Vector2(986, -111)
 texture = ExtResource("12_cqnar")
 

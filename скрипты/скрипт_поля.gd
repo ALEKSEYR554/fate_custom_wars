@@ -137,7 +137,7 @@ extends Node2D
 
 @onready var camera_2d = %Camera2D
 
-@onready var day_or_night_sprite_2d:Sprite2D = $day_or_night_sprite2d
+@onready var day_or_night_sprite_2d:Sprite2D = %day_or_night_sprite2d
 
 @onready var host_buttons = %host_buttons
 
@@ -2124,16 +2124,24 @@ func choose_unit_to_play()->bool:
 		await info_ok_button.pressed
 		return false
 	current_action="wait"
-	info_table_show(tr("CHOOSE_UNIT_TO_PLAY"))
-	await info_ok_button.pressed
-	choose_glowing_cletka_by_ids_array(kletki_with_non_played_units)
-	var choosen_kletka_id=await glow_kletka_pressed_signal
-	
 
-	
+	var choosen_kletka_id
+
+	if kletki_with_non_played_units.size()>1:
+		info_table_show(tr("CHOOSE_UNIT_TO_PLAY"))
+		await info_ok_button.pressed
+		choose_glowing_cletka_by_ids_array(kletki_with_non_played_units)
+		choosen_kletka_id=await glow_kletka_pressed_signal
+
+	else:
+		choosen_kletka_id=kletki_with_non_played_units[0]
+
+	 
 	var tmp=await get_char_info_on_kletka_id(choosen_kletka_id,false,true)
 
 	var node_choosen=tmp.get_node()
+
+
 	var unit_id_choosen=node_choosen.get_meta("unit_id")
 
 	current_unit_id=unit_id_choosen
@@ -2216,15 +2224,19 @@ func start_turn():
 	#choosing char_info to play
 	unit_ids_already_played_this_turn=[]
 	calculate_maximum_playable_units()
+	
 
-	if Globals.pu_id_player_info[Globals.self_pu_id]['units'].size()>=2:
-		
-		await choose_unit_to_play()
-		#players_handler.reduce_all_cooldowns(self_char_info)
-		#already there
-	else:
-		current_action_points=3
-		current_action_points_label.text=str(current_action_points)
+
+	await choose_unit_to_play()
+
+	#if Globals.pu_id_player_info[Globals.self_pu_id]['units'].size()>=2:
+	#	
+	#	
+	#	#players_handler.reduce_all_cooldowns(self_char_info)
+	#	#already there
+	#else:
+	#	current_action_points=3
+	#	current_action_points_label.text=str(current_action_points)
 		
 	
 	
@@ -3051,9 +3063,9 @@ func disconnect_alert_show(pu_id:String,peer_disconnected:bool,disconnect_names:
 	if pu_id==awaiting_responce_from_pu_id and peer_disconnected:
 		attack_response.emit("Disconnect")
 		if disconnect_names=="":
-			$disconnect_alert_label.text="Someone disconnected\nawaiting reconnection"
+			%disconnect_alert_label.text="Someone disconnected\nawaiting reconnection"
 		else:
-			$disconnect_alert_label.text=disconnect_names
+			%disconnect_alert_label.text=disconnect_names
 
 	%disconnect_alert_panel.visible=peer_disconnected
 

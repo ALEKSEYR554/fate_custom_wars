@@ -90,7 +90,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":7,
-	"Description":"Увеличивает свою атаку на 3, увеличивает урон по призываемым существам вдвое на три хода. (Куллдаун - 7)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -110,7 +110,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"C",
 	"Cooldown":6,
-	"Description":"Высвобождение запечатанных цепей: C - Увеличивает свой урон вдвое на один ход, а так же получает неуязвимость на одну атаку на один ход (Куллдаун - 6)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -129,7 +129,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":6,
-	"Description":"Защита конца света: В - Заряжает свою шкалу фантазма на одно очко, а также даёт себе иммунитет к дебаффам на три хода. (Куллдаун - 6)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -148,11 +148,11 @@ var skills={
 	"Type":"Weapon Change",
 	"Rank":"UNIQ",
 	"Cooldown":0,
-	"Description":"Владеет Оддом который может транформироваться в оружия (Куллдаун - 8, однако, если оружие нужно снять, то Куллдаун игнорируется)",
+	"Description ID":"Class Skill 1",
 	"free_unequip":true,
 	"weapons":{#first is base weapon
 		"Scythe":{
-			"Description":"(Стандарное) радиус 1 стандарт урон, магическая защита - 6, при получении магического урона увеличивает себе силу на 1 до конца следующего хода",
+			"Description ID":"Weapon Scythe",
 			"Is One Hit Per Turn":false,"Damage":4,"Range":1,"Buff":
 				{"Name":"Magical Damage Get + Attack",
 				"Trigger": "Magical Damage Taken",
@@ -167,7 +167,7 @@ var skills={
 				"Power":1},
 		},
 		"Hammer":{
-			"Description":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
+			"Description ID":"Weapon Hammer",
 			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
 				{"Name":"Ignore DEF Buffs",
 					"Type":"Passive",
@@ -178,7 +178,7 @@ var skills={
 			]
 		},
 		"Boomerang":{
-			"Description":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
+			"Description ID":"Weapon Boomerang",
 			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
 				{"Name":"pull enemies on attack",
 				"Type":"Passive",
@@ -186,11 +186,11 @@ var skills={
 				"Effect On Trigger":"pull enemies on attack"}
 		},
 		"Bow":{
-			"Description":"Радиус 3, урон 2",
+			"Description ID":"Weapon Bow",
 			"Is One Hit Per Turn":false,"Damage":2,"Range":2
 		},
 		"Alebard":{
-			"Description":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
+			"Description ID":"Weapon Alebard",
 			"Is One Hit Per Turn":false,"Damage":3,"Range":2,"Buff":
 				{"Name":"Agility Set",
 				"Type":"Passive",
@@ -203,9 +203,7 @@ var phantasms={
 	"Rongominiad":{
 		"Type":"Line",
 		"Rank":"A",
-		"Description":"""Ронгоминиад: - Наносит 6 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, заряжает шкалу фантазма на одно очко\n
-	Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко
-	""",
+		"Description ID":"Rongominiad",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Line","Range":5,"Damage":6,
@@ -244,9 +242,29 @@ var phantasms={
 
 
 
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"ru":{
+		"First Skill":"Увеличивает свою атаку на 3, увеличивает урон по призываемым существам вдвое на три хода. (Куллдаун - 7)",
+		"Second Skill":"Высвобождение запечатанных цепей: C - Увеличивает свой урон вдвое на один ход, а так же получает неуязвимость на одну атаку на один ход (Куллдаун - 6)",
+		"Third Skill":"Защита конца света: В - Заряжает свою шкалу фантазма на одно очко, а также даёт себе иммунитет к дебаффам на три хода. (Куллдаун - 6)",
+		"Class Skill 1":"Владеет Оддом который может транформироваться в оружия (Куллдаун - 8, однако, если оружие нужно снять, то Куллдаун игнорируется)",
+		"Weapon Scythe":"(Стандарное) радиус 1 стандарт урон, магическая защита - 6, при получении магического урона увеличивает себе силу на 1 до конца следующего хода",
+		"Weapon Hammer":"радиус 1, урон 6, пробивает защиту и защитные баффы, но за ход можно будет проводить только одну атаку.",
+		"Weapon Boomerang":"Радиус 5, урон 0, но возможно повысить баффами, при успешной атаке может притянуть к себе противников на любое количество клеток",
+		"Weapon Bow":"Радиус 3, урон 2",
+		"Weapon Alebard":"Радиус 2, урон 3, при владении алебардой, ловкость Грей считается B++",
+		"Rongominiad":"Ронгоминиад: - Наносит 6 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, заряжает шкалу фантазма на одно очко\n	Оверчардж: Наносит 12 урона всем противникам на одной линии в радиусе 5 игнорируя защиту и неуязвимость, после понижает им защиту на 2 на три хода, заряжает себе шкалу фантазма на одно очко"
+	},
+	"en":{
+		"First Skill":"Increases own attack by 3, doubles damage against summoned creatures for three turns. (Cooldown - 7)",
+		"Second Skill":"Unsealing Chains: C - Doubles own damage for one turn, and also gains invincibility to one attack for one turn (Cooldown - 6)",
+		"Third Skill":"Apocalypse Protection: B - Charges own NP gauge by one point, and also grants self debuff immunity for three turns. (Cooldown - 6)",
+		"Class Skill 1":"Possesses an Odd that can transform into weapons (Cooldown - 8, however, if the weapon needs to be removed, the Cooldown is ignored)",
+		"Weapon Scythe":"(Standard) radius 1 standard damage, magic defense - 6, upon taking magic damage increases own strength by 1 until the end of the next turn",
+		"Weapon Hammer":"radius 1, damage 6, penetrates defense and defensive buffs, but only one attack can be performed per turn.",
+		"Weapon Boomerang":"Radius 5, damage 0, but can be increased by buffs, upon a successful attack can pull opponents towards self by any number of cells",
+		"Weapon Bow":"Radius 3, damage 2",
+		"Weapon Alebard":"Radius 2, damage 3, when wielding the halberd, Gray's Agility is considered B++",
+		"Rongominiad":"Rhongomyniad: - Deals 6 damage to all opponents in a straight line within a radius of 5, ignoring defense and invincibility, charges the NP gauge by one point\n	Overcharge: Deals 12 damage to all opponents in a straight line within a radius of 5, ignoring defense and invincibility, then reduces their defense by 2 for three turns, charges own NP gauge by one point"
+	}
+}
