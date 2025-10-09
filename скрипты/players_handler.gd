@@ -178,26 +178,6 @@ func get_uniqq_id_from_host()->String:
 	return output
 
 
-func get_fully_translated_servant_script(servant_path:String,servant_name_just_name:String)->String:
-	#load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd")
-	var script_full_path=Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"
-	var script_folder=script_full_path.get_base_dir()
-	FileAccess.open(script_full_path, FileAccess.READ)
-	var keys_to_translate=["Description"]
-	var dir = DirAccess.open(script_folder)
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir():
-			print("Found file: " + file_name)
-			if file_name.get_extension()=="json" and file_name.get_basename().get_file().length()==2:
-				var lang_script=load(script_folder+'/'+file_name)
-				var lang=lang_script.new()
-
-		file_name = dir.get_next()
-	return ""
-
-
 func add_servants_translations_for_servant_name(servant_node:Node2D,servant_path:String,servant_name_just_name:String)->void:
 	var servant_folder=Globals.user_folder+"/servants/"+str(servant_path)
 
@@ -220,7 +200,10 @@ func apply_all_translation_codes(servant_node:Node2D)->void:
 	
 	_recursive_merge_descriptions(servant_node.skills, servant_node.translation)
 	_recursive_merge_descriptions(servant_node.phantasms, servant_node.translation)
-	_recursive_merge_descriptions(servant_node.passive_skills, servant_node.translation)
+	if "passive_skills" in servant_node:
+		_recursive_merge_descriptions(servant_node.passive_skills, servant_node.translation)
+	
+	print_debug("_recursive_merge_descriptions skills=",servant_node.skills)
 
 
 func _recursive_merge_descriptions(data, translations_map):
@@ -744,7 +727,7 @@ func turns_loop() -> void:
 
 	rpc("alert_end_game")
 
-	$"../GUI/host_buttons/finish_button".visible=true
+	%finish_button.visible=true
 
 
 @rpc("authority","call_local","reliable")
@@ -829,6 +812,18 @@ func choose_enemie(range_to_search:int=-1)->Array:
 	return [CharInfo.new(return_pu_id,return_unit_id)]
 
 
+func get_item_description(item)->String:
+	print_debug("TranslationServer.get_locale()=",TranslationServer.get_locale())
+	var out=item.get("Description","")
+	if out:
+		if typeof(out)==TYPE_DICTIONARY:
+			if out.get(TranslationServer.get_locale(),""):
+				out=out.get(TranslationServer.get_locale())
+			else:
+				out=out.get("ru")
+		else:
+			return ""
+	return out
 
 
 func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())->void:
@@ -839,9 +834,16 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 	
 	
 	#print(servant_nod)
-	first_skill_text_edit.text=servant_skills.get("First Skill").get("Description")
-	second_skill_text_edit.text=servant_skills.get("Second Skill").get("Description")
-	third_skill_text_edit.text=servant_skills.get("Third Skill").get("Description")
+	print("servant_skills=",servant_skills)
+	print_debug("TranslationServer.get_locale()=",TranslationServer.get_locale())
+	#first_skill_text_edit.text=servant_skills.get("First Skill").get("Description").get(TranslationServer.get_locale(),"ru")
+	#second_skill_text_edit.text=servant_skills.get("Second Skill").get("Description").get(TranslationServer.get_locale(),"ru")
+	#third_skill_text_edit.text=servant_skills.get("Third Skill").get("Description").get(TranslationServer.get_locale(),"ru")
+
+	first_skill_text_edit.text=get_item_description(servant_skills.get("First Skill"))
+	second_skill_text_edit.text=get_item_description(servant_skills.get("Second Skill"))
+	third_skill_text_edit.text=get_item_description(servant_skills.get("Third Skill"))
+
 
 	#print("third_skill_text_edit.text="+str(third_skill_text_edit.text))
 	var cct=1
@@ -868,7 +870,7 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 				t_edit_new.editable=false
 				t_edit_new.name=weapon
 				t_edit_new.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
-				t_edit_new.text=skill_info["weapons"][weapon]["Description"]
+				t_edit_new.text=get_item_description(skill_info["weapons"][weapon])
 				tab_cont.add_child(t_edit_new)
 			class_skills_text_edit.add_child(tab_cont)
 		else:
@@ -876,7 +878,7 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 			t_edit.editable=false
 			t_edit.name="Class skill "+str(cct)
 			t_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
-			t_edit.text=skill_info["Description"]
+			t_edit.text=get_item_description(skill_info)
 			class_skills_text_edit.add_child(t_edit)
 		cct+=1
 	pass
@@ -908,7 +910,7 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 	servant_info_picture.texture=Globals.pu_id_player_info[pu_id]["units"][0].get_child(0).texture
 	var skill_text_to_display=""
 	for skill in peer_skills.keys():
-		skill_text_to_display+=str("\t",peer_skills[skill]["Description"],"\n")
+		skill_text_to_display+=str("\t",get_item_description(peer_skills[skill]),"\n")
 	servant_info_skills_textedit.text="Buffs:\n\t%sSkills:\n\t%s"%[display_buffs,skill_text_to_display]
 
 	#units stats:
@@ -966,7 +968,7 @@ func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
 		tt_edit.editable=false
 		tt_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
 		tt_edit.name=custom_item_name
-		tt_edit.text=custom_item["Description"]
+		tt_edit.text=get_item_description(custom_item)#.get(TranslationServer.get_locale(),"ru")
 		custom_choices_tab_container.add_child(tt_edit,true)
 		var cost={"Type":"NP","value":6}
 		
@@ -992,7 +994,7 @@ func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
 		#print("ff\n\n")
 		print_debug("custom_item="+str(custom_item))
 		custom_id_to_skill[custom_item_name]={"min_cost":cost,
-		"Type":type,"Effect":current_buff_effect,"Description":custom_item["Description"]}
+		"Type":type,"Effect":current_buff_effect,"Description":get_item_description(custom_item)}
 		print_debug(str("custom_id_to_skill=",custom_id_to_skill))
 	
 
@@ -3107,7 +3109,7 @@ func charge_np_to_char_info_by_number(char_info_dic:Dictionary,number:int,source
 	#change_phantasm_charge_on_pu_id
 	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
 		get_self_servant_node().phantasm_charge=char_info.get_node().phantasm_charge
-		$"../GUI/action/np_points_number_label".text=str(char_info.get_node().phantasm_charge)
+		%np_points_number_label.text=str(char_info.get_node().phantasm_charge)
 
 
 func get_char_info_traits(char_info:CharInfo)->Array:
@@ -3157,7 +3159,7 @@ func get_charInfo_from_pu_id_unit_id(pu_id:String,unit_id:int)->CharInfo:
 @rpc("any_peer","reliable","call_local")
 func add_to_advanced_logs(text_code:String,formats:Dictionary={}):
 	var text_to_add=text_code.format(formats)
-	$"../GUI/advanced_logs_textedit".text+=text_to_add+"\n"
+	%advanced_logs_textedit.text+=text_to_add+"\n"
 
 
 func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:Dictionary,damage_type:String="normal",special:String="regular"):
@@ -3787,8 +3789,7 @@ func _on_use_skill_button_pressed():
 	if succesfully:
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"skill_used_this_turn",1)
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"total_skill_used",1)
-	#$"../GUI/actions_buttons/Skill".disabled=false
-	$"../GUI/make_action".disabled=false
+	%MAKE_ACTION_BUTTON.disabled=false
 	field.skill_info_show_button.disabled=false
 	pass # Replace with function body.
 

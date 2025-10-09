@@ -94,7 +94,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":9,
-	"Description":"Increases your strength by 1 point, and also gives immunity to all debuffs for three turns + Gives yourself 2 dodge and increases critical attack chance for 3 turns (1 and 6 on the second die are considered critical attacks) (Cooldown - 9)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -125,7 +125,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":6,
-	"Description":"Increases your or an ally's Strength by 2 points for three turns. (Cooldown - 6)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{
@@ -144,7 +144,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A+",
 	"Cooldown":8,
-	"Description":"Increases your Phantasm gauge by 2 Phantasm points and also prevents opponents from using Presence Concealment for five turns. (Cooldown - 8)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -168,7 +168,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":15,
-	"Description":"Divinity: A - Increases own power by 3 points for five turns. (Cooldown - 15),",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 		{"Buffs":
 			[
@@ -185,7 +185,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"E",
 	"Cooldown":5,
-	"Description":"Doubles your power for one turn, but loses the ability to use skills. (Cannot be activated while skills are active) (Cooldown - 5)",
+	"Description ID":"Class Skill 2",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Madness Enhancement",
@@ -201,8 +201,7 @@ var phantasms={
 	"Great Death Claw":{
 		"Type":"Buff Granting",
 		"Rank":"A",
-		"Description":"""Great Death Claw - Deals 6 damage to one enemy, ignoring evade action.
-Overcharge: Deals 12 damage to one enemy, ignoring evade action.""",
+		"Description ID":"Great Death Claw",
 		"Overcharges":{
 		"Default":
 			{"Cost":6,"Attack Type":"Single In Range","Range":2,"Damage":6,
@@ -228,10 +227,21 @@ Overcharge: Deals 12 damage to one enemy, ignoring evade action.""",
 
 
 
-
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"en":{
+		"First Skill":"Increases your strength by 1 point, and also gives immunity to all debuffs for three turns + Gives yourself 2 dodge and increases critical attack chance for 3 turns (1 and 6 on the second die are considered critical attacks) (Cooldown - 9)",
+		"Second Skill":"Increases your or an ally's Strength by 2 points for three turns. (Cooldown - 6)",
+		"Third Skill":"Increases your Phantasm gauge by 2 Phantasm points and also prevents opponents from using Presence Concealment for five turns. (Cooldown - 8)",
+		"Class Skill 1":"Divinity: A - Increases own power by 3 points for five turns. (Cooldown - 15)",
+		"Class Skill 2":"Doubles your power for one turn, but loses the ability to use skills. (Cannot be activated while skills are active) (Cooldown - 5)",
+		"Great Death Claw":"Great Death Claw - Deals 6 damage to one enemy, ignoring evade action.\nOvercharge: Deals 12 damage to one enemy, ignoring evade action."
+	},
+	"ru":{
+		"First Skill":"Увеличивает свою силу на 1 очко, а также дает иммунитет ко всем дебаффам на три хода + Дает себе 2 уклонения и увеличивает шанс критической атаки на 3 хода (1 и 6 на втором кубике считаются критическими атаками) (Куллдаун - 9)",
+		"Second Skill":"Увеличивает Силу вашу или союзника на 2 очка на три хода. (Куллдаун - 6)",
+		"Third Skill":"Увеличивает вашу Шкалу Фантазма на 2 очка Фантазма, а также не дает противникам использовать Сокрытие Присутствия на пять ходов. (Куллдаун - 8)",
+		"Class Skill 1":"Божественность: А - Увеличивает собственную силу на 3 очка на пять ходов. (Куллдаун - 15)",
+		"Class Skill 2":"Удваивает вашу силу на один ход, но теряет возможность использовать навыки. (Не может быть активирован, пока навыки активны) (Куллдаун - 5)",
+		"Great Death Claw":"Great Death Claw - Наносит 6 урона одному врагу, игнорируя действие уклонения.\nОверчардж: Наносит 12 урона одному врагу, игнорируя действие уклонения."
+	}
+}

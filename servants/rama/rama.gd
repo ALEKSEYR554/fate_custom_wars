@@ -83,7 +83,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":9,
-	"Description":"Increases critical attack damage by three times per critical attack until the end of the next turn. (Cooldown: 9)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -101,7 +101,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":6,
-	"Description":"Increases the strength for yourself and allies by 2 points for three turns. (Cooldown: 6)",
+	"Description ID":"Second Skill",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -118,7 +118,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":6,
-	"Description":"Gives yourself one Guts (Resurrects with 8 HP) for three turns, heal health by 9 points, charge Phantasm by 2 points, and increases the chance of critical attacks (2 on the second dice counts as a critical attack) (Cooldown - 6).",
+	"Description ID":"Third Skill",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -144,7 +144,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":8,
-	"Description":"Divinity: Increases your strength by 3 points (Cooldown - 8),",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -160,9 +160,8 @@ var skills={
 var phantasms={
 	"Brahmastra":{
 		"Rank":"A",
-		"Description":"""Brahmastra: - Deals 8 damage to one enemy within six cells, if the enemy is Demonic, the damage is increased by 3 points, lowers their defense by 2 points for three turns, if the enemy is Demonic, it lowers their Phantasm gauge by one point\n
-Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demonic, the damage is increased by 3 points, lowers their defense by 2 points for five turns, if the enemy is Demonic, it lowers their Phantasm gauge by two points.
-	""",
+		"Description ID":"Brahmastra",
+		
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Line","Range":6,"Damage":8,
@@ -225,10 +224,20 @@ Overcharge: Deals 16 damage to one enemy within six cells, if the enemy is Demon
 }
 
 
+var translation={
+	"en":{
+		"First Skill":"Increases critical attack damage by three times per critical attack until the end of the next turn. (Cooldown: 9)",
+		"Second Skill":"Increases the strength for yourself and allies by 2 points for three turns. (Cooldown: 6)",
+		"Third Skill":"Gives yourself one Guts (Resurrects with 8 HP) for three turns, heal health by 9 points, charge Phantasm by 2 points, and increases the chance of critical attacks (2 on the second dice counts as a critical attack) (Cooldown - 6).",
+		"Class Skill 1":"Divinity: Increases your strength by 3 points (Cooldown - 8)",
+		"Brahmastra":"Brahmastra: - Deals 8 damage to one enemy within six cells, if the enemy is Demonic, the damage is increased by 3 points, lowers their defense by 2 points for three turns, if the enemy is Demonic, it lowers their Phantasm gauge by one point\nOvercharge: Deals 16 damage to one enemy within six cells, if the enemy is Demonic, the damage is increased by 3 points, lowers their defense by 2 points for five turns, if the enemy is Demonic, it lowers their Phantasm gauge by two points."
+	},
+	"ru":{
+		"First Skill":"Увеличивает урон критической атаки в три раза за критическую атаку до конца следующего хода. (Куллдаун: 9)",
+		"Second Skill":"Увеличивает силу себе и союзникам на 2 очка на три хода. (Куллдаун: 6)",
+		"Third Skill":"Дает себе одну Стойкость (Воскрешает с 8 HP) на три хода, лечит здоровье на 9 очков, заряжает Фантазм на 2 очка и увеличивает шанс критических атак (2 на втором кубике считается критической атакой) (Куллдаун - 6).",
+		"Class Skill 1":"Божественность: Увеличивает вашу силу на 3 очка (Куллдаун - 8)",
+		"Brahmastra":"Брахмастра: - Наносит 8 урона одному врагу в пределах шести клеток, если враг Демонический, урон увеличивается на 3 очка, понижает его защиту на 2 очка на три хода, если враг Демонический, понижает его шкалу Фантазма на одно очко\nОверчардж: Наносит 16 урона одному врагу в пределах шести клеток, если враг Демонический, урон увеличивается на 3 очка, понижает его защиту на 2 очка на пять ходов, если враг Демонический, понижает его шкалу Фантазма на два очка."
+	}
 
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+}

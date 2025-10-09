@@ -58,7 +58,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":7,
-	"Description":"Бесконечная Каштановая Паста: ЕХ - Восполняет своё здоровье по 7 очков, после чего восполняет своё здоровье на протяжении трёх ходов по 4 очка, а также увеличивает силу на 3 очка на три удара и на три хода. . (Cooldown - 7)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -91,7 +91,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"C+",
 	"Cooldown":9,
-	"Description":"Клинок Мгновенно Вылезший из Тьмы: С+ - Увеличивает свою ловкость (Выпадаемый результат при уклонении будет выше на один) на три хода, а также увеличивает шанс критических атак (1 и 6 на втором кубике считаются критической атакой) на три хода. (Куллдаун - 9)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -113,7 +113,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"C",
 	"Cooldown":7,
-	"Description":"Невидимая Рука Правителя: С - Увеличивает себе и своим союзникам силу на 2 очка на три хода, а также увеличивает им шанс критических атак (1 и 6 на втором кубике считается критической атакой) на три хода. (Куллдаун - 7)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -131,7 +131,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"C",
 	"Cooldown":15,
-	"Description":"Увеличивает силу вдвое, но теряется возможность использовать больше одного навыка. (Нельзя активировать во время активных навыков) (Куллдаун - 15)",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Madness Enhancement",
@@ -146,9 +146,7 @@ var skills={
 var phantasms={
 	"Cross Calibur":{
 		"Rank":"EX",
-		"Description":"""Кросс-Калибур: Наносит 7 урона одному противнику в радиусе трёх клеток. Если противник Сэйбер, то наносимый урон увеличивается на 3 очка. Если Противник имеет Добропорядочное Мировоззрение, то наносимый урон увеличивается на 3.
-Оверчардж: Наносит 14 урона одному противнику в радиусе трёх клеток. Если противник Сэйбер, то наносимый урон увеличивается на 3 очка. Если Противник имеет Добропорядочное Мировоззрение, то наносимый урон увеличивается на 3. 
-	""",
+		"Description ID":"Cross Calibur",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Single In Range","Range":3,"Damage":7,
@@ -178,9 +176,19 @@ var phantasms={
 
 
 
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"ru":{
+		"First Skill":"Бесконечная Каштановая Паста: ЕХ - Восполняет своё здоровье по 7 очков, после чего восполняет своё здоровье на протяжении трёх ходов по 4 очка, а также увеличивает силу на 3 очка на три удара и на три хода. . (Cooldown - 7)",
+		"Second Skill":"Клинок Мгновенно Вылезший из Тьмы: С+ - Увеличивает свою ловкость (Выпадаемый результат при уклонении будет выше на один) на три хода, а также увеличивает шанс критических атак (1 и 6 на втором кубике считаются критической атакой) на три хода. (Куллдаун - 9)",
+		"Third Skill":"Невидимая Рука Правителя: С - Увеличивает себе и своим союзникам силу на 2 очка на три хода, а также увеличивает им шанс критических атак (1 и 6 на втором кубике считается критической атакой) на три хода. (Куллдаун - 7)",
+		"Class Skill 1":"Увеличивает силу вдвое, но теряется возможность использовать больше одного навыка. (Нельзя активировать во время активных навыков) (Куллдаун - 15)",
+		"Cross Calibur":"Кросс-Калибур: Наносит 7 урона одному противнику в радиусе трёх клеток. Если противник Сэйбер, то наносимый урон увеличивается на 3 очка. Если Противник имеет Добропорядочное Мировоззрение, то наносимый урон увеличивается на 3.\nОверчардж: Наносит 14 урона одному противнику в радиусе трёх клеток. Если противник Сэйбер, то наносимый урон увеличивается на 3 очка. Если Противник имеет Добропорядочное Мировоззрение, то наносимый урон увеличивается на 3. "
+	},
+	"en":{
+		"First Skill":"Endless Chestnut Paste: EX - Restores own health by 7 points, then restores own health for three turns by 4 points, and also increases strength by 3 points for three hits and three turns. (Cooldown - 7)",
+		"Second Skill":"Blade Instantly Emerged from Darkness: C+ - Increases own Agility (The result of the roll during evasion will be higher by one) for three turns, and also increases the chance of critical attacks (1 and 6 on the second die count as a critical attack) for three turns. (Cooldown - 9)",
+		"Third Skill":"Invisible Hand of the Ruler: C - Increases the strength of self and allies by 2 points for three turns, and also increases their chance of critical attacks (1 and 6 on the second die count as a critical attack) for three turns. (Cooldown - 7)",
+		"Class Skill 1":"Doubles strength, but loses the ability to use more than one skill. (Cannot be activated while skills are active) (Cooldown - 15)",
+		"Cross Calibur":"Cross Calibur: Deals 7 damage to one opponent within a three-cell radius. If the opponent is a Saber, the damage dealt is increased by 3 points. If the opponent has a Good alignment, the damage dealt is increased by 3.\nOvercharge: Deals 14 damage to one opponent within a three-cell radius. If the opponent is a Saber, the damage dealt is increased by 3 points. If the opponent has a Good alignment, the damage dealt is increased by 3. "
+	}
+}

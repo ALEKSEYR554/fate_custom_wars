@@ -75,7 +75,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":5,
-	"Description":"Decreases the Phantasm Gauge of one enemy by 1 point, and also doubles the Phantasm power of allies for three turns. (Cooldown - 5)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{
@@ -104,7 +104,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":6,
-	"Description":"Doubles your defense until the end of the turn, and on top of that buff, doubles your defense for three turns. (Cooldown - 6)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -127,7 +127,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":7,
-	"Description":"Increases your or an ally's strength by 4 points for three turns (if the main damage is magical, then by 8) and also restores health by 9 points. Also, if opponents have healing or debuff removal skills, then their use will be redirected to this player (Cooldown - 7)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{
@@ -166,7 +166,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":NAN,#one time skill
-	"Description":"Territory Creation: Captures one cell and five cells around it. All captured cells become a territory where Magic damage ignores magical defence (but not sabes's magical resistance). Standing on these cells Caster raises his Phantasm charge by one point once per turn. This skill can be activated only once.",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Field Creation",
@@ -185,7 +185,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":8,
-	"Description":"Divinity: Increases own power by 4 points for three turns. (Cooldown - 8)",
+	"Description":"Class Skill 2",
 	"Effect":[
 		{"Buffs":
 			[
@@ -202,14 +202,7 @@ var skills={
 var phantasms={
 	"Suiten Nikkō Amaterasu Yano Shizu-Ishi":{
 		"Rank":"A",
-		"Description":"""Suiten Nikkō Amaterasu Yano Shizu-Ishi - Activates the following buffs for the entire team:
-Decreases self and allies' skill cooldowns by 1,
-Restores 13 HP,
-Increases Phantasm Gauge by 3 points.\n
-Overcharge: Activates the following buffs for the entire team:
-Decreases self and allies' skill cooldowns by 2,
-Restores 22 HP,
-Increases Phantasm Gauge by 6 points.
+		"Description":"""
 	""",
 		"Overcharges":
 			{"Default":
@@ -257,10 +250,21 @@ Increases Phantasm Gauge by 6 points.
 }
 
 
-
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"en":{
+		"First Skill":"Decreases the Phantasm Gauge of one enemy by 1 point, and also doubles the Phantasm power of allies for three turns. (Cooldown - 5)",
+		"Second Skill":"Doubles your defense until the end of the turn, and on top of that buff, doubles your defense for three turns. (Cooldown - 6)",
+		"Third Skill":"Increases your or an ally's strength by 4 points for three turns (if the main damage is magical, then by 8) and also restores health by 9 points. Also, if opponents have healing or debuff removal skills, then their use will be redirected to this player (Cooldown - 7)",
+		"Class Skill 1":"Territory Creation: Captures one cell and five cells around it. All captured cells become a territory where Magic damage ignores magical defence (but not sabes's magical resistance). Standing on these cells Caster raises his Phantasm charge by one point once per turn. This skill can be activated only once.",
+		"Class Skill 2":"Divinity: Increases own power by 4 points for three turns. (Cooldown - 8)",
+		"Suiten Nikkō Amaterasu Yano Shizu-Ishi":"Suiten Nikkō Amaterasu Yano Shizu-Ishi - Activates the following buffs for the entire team:\nDecreases self and allies' skill cooldowns by 1,\nRestores 13 HP,\nIncreases Phantasm Gauge by 3 points.\n		Overcharge: Activates the following buffs for the entire team:\nDecreases self and allies' skill cooldowns by 2,\nRestores 22 HP,\nIncreases Phantasm Gauge by 6 points."
+	},
+	"ru":{
+		"First Skill":"Понижает Шкалу Фантазма одного врага на 1 очко, а также удваивает силу Фантазма союзников на три хода. (Куллдаун - 5)",
+		"Second Skill":"Удваивает вашу защиту до конца хода, а также поверх этого баффа удваивает вашу защиту на три хода. (Куллдаун - 6)",
+		"Third Skill":"Увеличивает силу вашу или союзника на 4 очка на три хода (если основной урон магический, то на 8), а также восстанавливает здоровье на 9 очков. Также, если у противников есть навыки лечения или снятия дебаффов, то их использование будет перенаправлено на этого игрока (Куллдаун - 7)",
+		"Class Skill 1":"Создание Территории: Захватывает одну клетку и пять клеток вокруг нее. Все захваченные клетки становятся территорией, где Магический урон игнорирует магическую защиту (но не магическое сопротивление Сэйберов). Стоя на этих клетках Кастер повышает свой заряд Фантазма на одно очко раз в ход. Этот навык можно активировать только один раз.",
+		"Class Skill 2":"Божественность: Увеличивает собственную силу на 4 очка на три хода. (Куллдаун - 8)",
+		"Suiten Nikkō Amaterasu Yano Shizu-Ishi":"Suiten Nikkō Amaterasu Yano Shizu-Ishi - Активирует следующие баффы для всей команды:\nПонижает куллдаун навыков себе и союзникам на 1,\nВосстанавливает 13 HP,\nУвеличивает Шкалу Фантазма на 3 очка.\n		Оверчардж: Активирует следующие баффы для всей команды:\nПонижает куллдаун навыков себе и союзникам на 2,\nВосстанавливает 22 HP,\nУвеличивает Шкалу Фантазма на 6 очков."
+	}
+}
