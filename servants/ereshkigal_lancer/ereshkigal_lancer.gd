@@ -83,8 +83,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":6,
-	"Description":"Grants self immunity to all debuffs until end of next turn, immunity to Instant Death until end of next turn, and grants invinsibility until end of next turn (Cooldown - 6)",
-	
+	"Description ID":"First Skill",
 	"Effect":[
 		{"Buffs":[
 			{
@@ -108,7 +107,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A+",
 	"Cooldown":6,
-	"Description":"Increases your power by 3 points for one turn and increases your Phantasm Gauge by 3 points. Reduce skills cooldown for self (Cooldown - 6)",
+	"Description ID":"Second Skill",
 	
 	"Effect":[
 		{
@@ -135,11 +134,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":8,
-	"Description":"Grants herself and allies the Blessing of Kur buff for three turns. Also grants the following buffs:
-Doubles defence,
-Increase NP Gain (Upon a successful attack, you gain 2 phantasm points instead of 1),
-Increase Maximum HP by 10,
-(Cooldown - 8)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -170,7 +165,7 @@ Increase Maximum HP by 10,
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":9,
-	"Description":"Goddess' Essence: Increases own power by 3 points for three turns. (Cooldown - 9)",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 		{"Buffs":
 			[
@@ -189,14 +184,7 @@ var phantasms={
 	"Kur Ki Gal Irkalla":{
 		"Type":"Buff Granting",
 		"Rank":"A",
-		"Description":"""Kur Ki Gal Irkalla - Deals 7 damage to all enemies within a three-cell radius, then grants all allies with the Blessing of Kur the following buffs for 3 turns:
-Debuff Immunity,
-Instant Death Immunity,
-Increases Strength by 3 points,
-Overcharge: Deals 14 damage to all enemies within a three-cell radius, then grants itself and allies the following debuffs for 5 turns:
-Debuff Immunity,
-Instant Death Immunity,
-Increases Strength by 5 points,""",
+		"Description ID":"Kur Ki Gal Irkalla",
 		"Overcharges":{
 		"Default":
 			{"Cost":6,"Attack Type":"All Enemies In Range","Range":3,"Damage":7,
@@ -260,8 +248,41 @@ Increases Strength by 5 points,""",
 
 
 
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"en":{
+		"First Skill":"Grants self immunity to all debuffs until end of next turn, immunity to Instant Death until end of next turn, and grants invinsibility until end of next turn (Cooldown - 6)",
+		"Second Skill":"Increases your power by 3 points for one turn and increases your Phantasm Gauge by 3 points. Reduce skills cooldown for self (Cooldown - 6)",
+		"Third Skill":"Grants herself and allies the Blessing of Kur buff for three turns. Also grants the following buffs:
+		Doubles defence,
+		Increase NP Gain (Upon a successful attack, you gain 2 phantasm points instead of 1),
+		Increase Maximum HP by 10,
+		(Cooldown - 8)",
+		"Class Skill 1":"Goddess' Essence: Increases own power by 3 points for three turns. (Cooldown - 9)",
+		"Kur Ki Gal Irkalla":"Kur Ki Gal Irkalla - Deals 7 damage to all enemies within a three-cell radius, then grants all allies with the Blessing of Kur the following buffs for 3 turns:
+		Debuff Immunity,
+		Instant Death Immunity,
+		Increases Strength by 3 points,
+		Overcharge: Deals 14 damage to all enemies within a three-cell radius, then grants itself and allies the following debuffs for 5 turns:
+		Debuff Immunity,
+		Instant Death Immunity,
+		Increases Strength by 5 points"
+	},
+	"ru":{
+		"First Skill":"Дает себе иммунитет ко всем дебаффам до конца следующего хода, иммунитет к Мгновенной Смерти до конца следующего хода и дает неуязвимость до конца следующего хода (Куллдаун - 6)",
+		"Second Skill":"Увеличивает вашу силу на 3 очка на один ход и увеличивает вашу Шкалу Фантазма на 3 очка. Сокращает время перезарядки навыков для себя (Куллдаун - 6)",
+		"Third Skill":"Дарует себе и союзникам бафф Благословения Кур на три хода. Также дарует следующие баффы:
+		Удваивает защиту,
+		Увеличивает Прирост Фантазма (При успешной атаке вы получаете 2 очка фантазма вместо 1),
+		Увеличивает Максимальное Здоровье на 10,
+		(Куллдаун - 8)",
+		"Class Skill 1":"Сущность Богини: Увеличивает собственную силу на 3 очка на три хода. (Куллдаун - 9)",
+		"Kur Ki Gal Irkalla":"Kur Ki Gal Irkalla - Наносит 7 урона всем врагам в радиусе трех клеток, затем дарует всем союзникам с Благословением Кур следующие баффы на 3 хода:
+		Иммунитет к Дебаффам,
+		Иммунитет к Мгновенной Смерти,
+		Увеличивает Силу на 3 очка,
+		Оверчардж: Наносит 14 урона всем врагам в радиусе трех клеток, затем дарует себе и союзникам следующие дебаффы на 5 ходов:
+		Иммунитет к Дебаффам,
+		Иммунитет к Мгновенной Смерти,
+		Увеличивает Силу на 5 очков"
+	}
+}

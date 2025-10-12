@@ -120,7 +120,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":5,
-	"Description":"Увеличивает свою силу на 3 очка урона на три хода, а также увеличивает шанс критических атак (1 и 6 на втором кубике считаются критической атакой) на три хода) (Куллдаун 5)",
+	"Description ID":"First Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -141,7 +141,8 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":7,
-	"Description":"Заряжает свою Шкалу Фантазма на 3 очка, восполняет своё здоровье на 8 очков, увеличивает урон от своего фантазма вдвое на три хода, а также даёт себе одно уклонение. (Куллдаун - 7)",
+	"Description ID":"Second Skill",
+
 	"Effect":[
 		{"Buffs":[
 			{"Name":"NP Charge",
@@ -166,7 +167,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B+",
 	"Cooldown":6,
-	"Description":"Запоминает свой последний бросок кубиков. На протяжении трёх ходов будет выпадать только тот результат который был последним у БиБи до активации навыка. (Куллдаун - 8)",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -182,7 +183,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":8,
-	"Description":"Создание Территории: Биби может захватывать или перестраивать клетки под себя и вокруг себя в радиусе трёх клеток. (Максимальное количество захваченных/перстроенных клеток: 3) Захваченные клетки поднимают все характеристики на один ранг выше, если Биби стоит на них. Перестраивая клетки Биби может перекрывать пути на поле или вовсе их обрезать другим слугам, чтобы они не могли свободно перемещаться.\nИзменённые клетки возвращаются к норме через 4 хода. (Куллдаун - 8).",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Field Manipulation",
@@ -200,9 +201,7 @@ var phantasms={
 	"CCC":{
 		#"Type":"All Enemies In Range",
 		"Rank":"A",
-		"Description":"""Cursed Cutting Crater (ССС): Наносит всем противникам в радиусе четырёх клеток 5 урона, после чего понижает их Шкалу Фантазма на 2 очко.
-Оверчардж: Наносит всем противникам в радиусе четырёх клеток 10 урона, после чего понижает их Шкалу Фантазма на 4 очка.
-(Если сила фантазма увеличена вдвое, то при активации ССС Шкала Фантазма противников будет понижаться вдвое больше) 
+		"Description":"""
 """,
 		"Overcharges":
 			{"Default":
@@ -230,10 +229,20 @@ var phantasms={
 }
 
 
-
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"ru":{
+		"First Skill":"Увеличивает свою силу на 3 очка урона на три хода, а также увеличивает шанс критических атак (1 и 6 на втором кубике считаются критической атакой) на три хода) (Куллдаун 5)",
+		"Second Skill":"Заряжает свою Шкалу Фантазма на 3 очка, восполняет своё здоровье на 8 очков, увеличивает урон от своего фантазма вдвое на три хода, а также даёт себе одно уклонение. (Куллдаун - 7)",
+		"Third Skill":"Запоминает свой последний бросок кубиков. На протяжении трёх ходов будет выпадать только тот результат который был последним у БиБи до активации навыка. (Куллдаун - 8)",
+		"Class Skill 1":"Создание Территории: Биби может захватывать или перестраивать клетки под себя и вокруг себя в радиусе трёх клеток. (Максимальное количество захваченных/перстроенных клеток: 3) Захваченные клетки поднимают все характеристики на один ранг выше, если Биби стоит на них. Перестраивая клетки Биби может перекрывать пути на поле или вовсе их обрезать другим слугам, чтобы они не могли свободно перемещаться.\nИзменённые клетки возвращаются к норме через 4 хода. (Куллдаун - 8).",
+		"CCC":"Cursed Cutting Crater (ССС): Наносит всем противникам в радиусе четырёх клеток 5 урона, после чего понижает их Шкалу Фантазма на 2 очко.
+		Оверчардж: Наносит всем противникам в радиусе четырёх клеток 10 урона, после чего понижает их Шкалу Фантазма на 4 очка.\n(Если сила фантазма увеличена вдвое, то при активации ССС Шкала Фантазма противников будет понижаться вдвое больше) "
+	},
+	"en":{
+		"First Skill":"Increases own strength by 3 damage points for three turns, and also increases the chance of critical attacks (1 and 6 on the second die count as a critical attack) for three turns) (Cooldown 5)",
+		"Second Skill":"Charges own Phantasm Gauge by 3 points, restores own health by 8 points, doubles the damage from own Phantasm for three turns, and also grants self one evade. (Cooldown - 7)",
+		"Third Skill":"Memorizes own last dice roll. For three turns, only the result that was BB's last before skill activation will be rolled. (Cooldown - 8)",
+		"Class Skill 1":"Territory Creation: BB can capture or reconstruct cells for herself and around herself within a radius of three cells. (Maximum number of captured/reconstructed cells: 3) Captured cells raise all characteristics one rank higher if BB stands on them. By reconstructing cells, BB can block paths on the field or completely cut them off to other servants so they cannot move freely.\nAltered cells return to normal after 4 turns. (Cooldown - 8).",
+		"CCC":"Cursed Cutting Crater (CCC): Deals 5 damage to all opponents within a radius of four cells, then lowers their Phantasm Gauge by 2 points.\nOvercharge: Deals 10 damage to all opponents within a radius of four cells, then lowers their Phantasm Gauge by 4 points.\n(If Phantasm strength is doubled, then upon CCC activation, opponents' Phantasm Gauge will be lowered twice as much) "
+	}
+}
