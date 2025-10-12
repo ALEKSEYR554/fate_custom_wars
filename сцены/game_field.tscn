@@ -595,12 +595,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -375.5
-offset_top = -18.0
-offset_right = 375.5
-offset_bottom = 18.0
+offset_left = -412.0
+offset_top = -19.5
+offset_right = 412.0
+offset_bottom = 19.5
 grow_horizontal = 2
 grow_vertical = 2
+alignment = 1
 metadata/_edit_lock_ = true
 
 [node name="regular_damage_button" type="Button" parent="GUI/type_of_damage_choose_buttons_box"]
@@ -1051,21 +1052,22 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/custom_main_VBoxContainer"]
-visible = false
+[node name="Custom_info_buttons_hbox" type="HBoxContainer" parent="GUI/custom_main_VBoxContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 80
 
-[node name="info_but_choose_1" type="Button" parent="GUI/custom_main_VBoxContainer/HBoxContainer"]
+[node name="info_but_choose_1" type="Button" parent="GUI/custom_main_VBoxContainer/Custom_info_buttons_hbox"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme = ExtResource("7_q4657")
 text = "manipulate"
 metadata/_edit_use_anchors_ = true
 
-[node name="info_ok_button" type="Button" parent="GUI/custom_main_VBoxContainer/HBoxContainer"]
+[node name="info_ok_button" type="Button" parent="GUI/custom_main_VBoxContainer/Custom_info_buttons_hbox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -1073,8 +1075,9 @@ theme = ExtResource("7_q4657")
 text = "OK"
 metadata/_edit_use_anchors_ = true
 
-[node name="info_but_choose_2" type="Button" parent="GUI/custom_main_VBoxContainer/HBoxContainer"]
+[node name="info_but_choose_2" type="Button" parent="GUI/custom_main_VBoxContainer/Custom_info_buttons_hbox"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme = ExtResource("7_q4657")
 text = "Capture"
@@ -1233,7 +1236,7 @@ texture = ExtResource("12_cqnar")
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/Betray_team_button" to="players_handler" method="_on_betray_team_button_pressed"]
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/ally_team_button" to="players_handler" method="_on_ally_button_pressed"]
 [connection signal="pressed" from="GUI/teams_margin/teams_panel_container/teams_main_hboxcontainer/teams_options_vbox/team_actions_vbox/neutral_team_button" to="players_handler" method="_on_neutral_button_pressed"]
-[connection signal="pressed" from="GUI/custom_main_VBoxContainer/HBoxContainer/info_ok_button" to="." method="_on_info_ok_button_pressed"]
+[connection signal="pressed" from="GUI/custom_main_VBoxContainer/Custom_info_buttons_hbox/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="pressed" from="GUI/char_choose_main_VBoxContainer/char_choose_button" to="." method="_on_char_choose_button_pressed"]
 [connection signal="pressed" from="GUI/cheats_show_button" to="." method="_on_cheats_show_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
