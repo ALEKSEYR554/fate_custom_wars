@@ -30,8 +30,10 @@ func _ready():
 		Globals.user_folder="res:/"
 	
 	var folders_in_user=DirAccess.open(use_folder).get_directories()
-	
-	$Label.text=str("folder in\n"+Globals.user_folder+"\n debug="+str(folders_in_user))
+	if OS.has_feature("editor"):
+		$Label.text=str("folder in\n"+Globals.user_folder+"\n debug="+str(folders_in_user))
+	else:
+		$Label.visible=false
 	#$Label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	if !folders_in_user.has("servants") and !OS.has_feature("editor"):
 		self.visible=false
