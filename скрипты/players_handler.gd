@@ -1303,6 +1303,8 @@ func calculate_char_info_attack_against_char_info(attacker_char_info:CharInfo,ta
 			push_error("Wrong damage type while calculate_pu_id_attack_against_pu_id, damage_type=",damage_type)
 			attack_total=1
 	
+	rpc("add_to_advanced_logs",str("calculate_char_info_attack_against_char_info attack_total_start=",attack_total))
+
 	var taker_servant
 	var taker_traits
 	var taker_gender
@@ -1805,7 +1807,8 @@ func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_curren
 	await chosen_allie
 	var choosen_allie_return_value_node = choosen_allie_return_value
 	#return choosen_allie_return_value_node.get_meta("CharInfoDic")
-	return [choosen_allie_return_value_node.get_meta("CharInfoDic")]
+	var charInfo_to_return=CharInfo.from_dictionary(choosen_allie_return_value_node.get_meta("CharInfoDic"))
+	return [charInfo_to_return]
 
 func check_if_hp_is_bigger_than_max_hp_for_char_info(char_info:CharInfo)->void:
 	var max_hp=get_char_info_maximun_hp(char_info)
@@ -2088,12 +2091,15 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 					for cast_single in cast:
 						new_cast=cast_single.to_dictionary()
 					rpc("add_buff",new_cast,single_skill_info)
+					usage_successful=true
 				_:#default/else
 					var new_cast=[]
 					for cast_single in cast:
 						new_cast=cast_single.to_dictionary()
 					rpc("add_buff",new_cast,single_skill_info)
+					usage_successful=true
 		was_skill_used=true
+		print_debug("remove_currency=",remove_currency," usage_successful=",usage_successful)
 		if remove_currency and usage_successful:
 			var curr=skill_info_hash["Cost"].get("Currency","")
 			var amount=skill_info_hash["Cost"].get("Amount",0)
@@ -3157,12 +3163,13 @@ func get_charInfo_from_pu_id_unit_id(pu_id:String,unit_id:int)->CharInfo:
 
 
 @rpc("any_peer","reliable","call_local")
-func add_to_advanced_logs(text_code:String,formats:Dictionary={}):
+func add_to_advanced_logs(text_code:String,formats:Dictionary={}):	
+	text_code=tr(text_code)
 	var text_to_add=text_code.format(formats)
 	%advanced_logs_textedit.text+=text_to_add+"\n"
 
 
-func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:Dictionary,damage_type:String="normal",special:String="regular"):
+func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:Dictionary,damage_type:String=DAMAGE_TYPE.PHYSICAL,special:String="regular"):
 	#damage_type="normal"/"Magical"
 	#special is to half the damage bc evade or defence
 	print("calculating damage to take\n\n")
@@ -3197,7 +3204,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	var additional_buffs=[]
 
 	
-	if damage_type=="Magical":
+	if damage_type==DAMAGE_TYPE.MAGICAL:
 		#damage_to_take=Globals.pu_id_player_info[attacker_pu_id]["servant_node"].magic["Power"]
 		damage_to_take=get_char_info_magical_attack(attacker_char_info)
 		rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_ATTACKER_MAGICAL_ATTACK")
@@ -3220,7 +3227,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 		damage_to_take=get_char_info_attack_power(attacker_char_info)
 
 	
-	if damage_type=="Phantasm":
+	if damage_type==DAMAGE_TYPE.PHANTASM:
 		if !field.recieved_phantasm_config.is_empty():#for phantasm damage
 			damage_to_take=field.recieved_phantasm_config["Damage"]
 			rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_PHANTASM_ATTACK")
@@ -3244,7 +3251,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 
 	#damage_to_take=get_peer_id_attack_power(attacker_peer_id,damage_type,[],additional_buffs)
 
-	damage_to_take=calculate_char_info_attack_against_char_info(attacker_char_info,self_char_attacked,damage_type)
+	damage_to_take=calculate_char_info_attack_against_char_info(attacker_char_info,self_char_attacked,damage_type,field.recieved_phantasm_config)
 
 	rpc("add_to_advanced_logs",
 		"ADVANCED_LOG_CALCULATE_DAMAGE_AFTER_ATTACKER_BUFFS",	{"damage_to_take":damage_to_take}
@@ -3405,7 +3412,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			{"damage_to_take":damage_to_take}
 		)
 	
-	if damage_type=="Magical":
+	if damage_type==DAMAGE_TYPE.MAGICAL:
 		if not is_field_ignore_magic_defence:
 			var self_magic_res=get_char_info_magical_defence(self_char_attacked)
 			damage_to_take-=self_magic_res

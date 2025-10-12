@@ -199,8 +199,8 @@ signal movement_finished
 var current_open_window=""
 
 
-var damage_type="physical"#"magic"
-var recieved_damage_type="physical"
+var damage_type=players_handler.DAMAGE_TYPE.PHYSICAL#"magic"
+var recieved_damage_type=players_handler.DAMAGE_TYPE.PHYSICAL
 var recieved_phantasm_config={}
 
 
@@ -1218,8 +1218,13 @@ func info_table_show(text="someone forgot to set this, contact anyone, SCREAM"):
 	#disable_every_button(true)
 	info_label.text=text
 	custom_main_VBoxContainer.visible=true
+	
+	info_but_choose_1.visible=false
+	info_but_choose_2.visible=false
 	info_label_panel.visible=true
 	info_ok_button.visible=true
+
+	
 
 func _on_info_ok_button_pressed():
 	custom_main_VBoxContainer.visible=false
@@ -1841,9 +1846,9 @@ func _on_evade_button_pressed():
 				return
 			systemlog_message(str(get_char_info_nick(char_info_attacked)," counter attacking"))
 			var player_has_magic_attack=players_handler.get_char_info_magical_attack(get_current_self_char_info())
-			var damage_type_new="Physical"
+			var damage_type_new=players_handler.DAMAGE_TYPE.PHYSICAL
 			if player_has_magic_attack:
-				damage_type_new=await choose_between_two("Choose damage type","Physical","Magical")
+				damage_type_new=await choose_between_two("Choose damage type",players_handler.DAMAGE_TYPE.PHYSICAL,players_handler.DAMAGE_TYPE.MAGICAL)
 			await attack_player_on_kletka_id(attacker_kletka_id,damage_type_new,false)
 	
 	attack_answered.emit()
@@ -2072,7 +2077,7 @@ func _on_regular_damage_button_pressed():
 		type_of_damage_choose_buttons_box.visible=false
 		return
 	print(kk)
-	damage_type="Physical"
+	damage_type=players_handler.DAMAGE_TYPE.PHYSICAL
 	choose_glowing_cletka_by_ids_array(kk)
 	type_of_damage_choose_buttons_box.visible=false
 
@@ -2082,7 +2087,7 @@ func _on_magical_damage_button_pressed():
 	if kk.size()==0:
 		type_of_damage_choose_buttons_box.visible=false
 		return
-	damage_type="Magical"
+	damage_type=players_handler.DAMAGE_TYPE.MAGICAL
 	choose_glowing_cletka_by_ids_array(kk)
 
 	type_of_damage_choose_buttons_box.visible=false
@@ -2174,7 +2179,6 @@ func choose_unit_to_play()->bool:
 	%current_hp_value_label.text=str(node_choosen.hp)
 	%peer_id_label.text=str(node_choosen.name)
 
-	players_handler.reduce_all_cooldowns(get_current_self_char_info())
 
 	rpc("get_additional_actions_for_char_info_from_mount",get_current_self_char_info().to_dictionary())
 	return true
@@ -2311,6 +2315,8 @@ func start_turn():
 	#
 	#players_handler.reduce_buffs_cooldowns(self_char_info)
 	#players_handler.rpc("reduce_buffs_cooldowns",self_char_info)
+	players_handler.reduce_all_cooldowns(get_current_self_char_info())
+
 	players_handler.trigger_buffs_on(self_char_info,"Turn Started")
 	players_handler.check_if_hp_is_bigger_than_max_hp_for_char_info(self_char_info)
 	#removing and adding skill in case it got remove by something
@@ -2445,6 +2451,7 @@ func choose_between_two(question:String,first:String,second:String)->String:
 	info_but_choose_1.visible=true
 	info_but_choose_2.visible=true
 	info_label_panel.visible=true
+	info_ok_button.visible=false
 	
 	out=await choose_two
 	custom_main_VBoxContainer.visible=false
@@ -2789,7 +2796,7 @@ func _on_chat_hide_show_button_pressed():
 	pass # Replace with function body.
 
 func fill_are_you_sure_screen(text:String=""):
-	are_you_sure_label.text=tr("ARE_YOU_SURE_YOU_WANT_TO_QUESTION")+text
+	are_you_sure_label.text=tr("ARE_YOU_SURE_YOU_WANT_TO_QUESTION").format({"action":text})
 	are_you_sure_main_container.visible=true
 
 func _on_im_sure_button_pressed():
@@ -2878,13 +2885,14 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 	var servant_skills:Dictionary=get_current_self_char_info().get_node().skills
 	var skill_info
 
+	var skills_blocked=false
 
 	var is_skill_free_from_actions=false
 	if !my_turn:
 		skills_available=false
 	for buff in players_handler.get_self_servant_node().buffs:
 		if buff["Name"]=="Skill Seal":
-			skills_available=false
+			skills_blocked=true
 			break
 
 
@@ -2923,7 +2931,7 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 		is_skill_free_from_actions=true
 
 
-	if (skill_cooldown==0 or is_skill_free_from_actions) and current_action_points>0 and skills_available:
+	if (skill_cooldown==0) and (current_action_points>0 or is_skill_free_from_actions) and skills_available and not skills_blocked:
 		use_skill_button.disabled=false
 	else:
 		print("Skills blocked")
