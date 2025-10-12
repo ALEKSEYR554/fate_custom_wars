@@ -16,7 +16,7 @@
     "ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF":"{Attacker_name} can not attack {Taker_name} due to debuff!",
     "ARE_YOU_SURE_AGREEMENT":"Yes",
     "ARE_YOU_SURE_DISAGREEMENT":"No",
-    "ARE_YOU_SURE_YOU_WANT_TO_QUESTION":"Are you sure you want to:%s?",
+    "ARE_YOU_SURE_YOU_WANT_TO_QUESTION":"Are you sure you want to:{action}?",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK":"Attack",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE":"Evade",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK":"Counter Attack",
@@ -187,6 +187,7 @@
     "BETRAY_PLAYER_TEAMS_BUTTON":"Betray",
     "ALLY_PLAYER_TEAMS_BUTTON":"Ally",
     "NEUTRAL_PLAYER_TEAMS_BUTTON":"Neutral",
-    "MAIN_MENU_RULES_BUTTON":"Rules"
-
+    "MAIN_MENU_RULES_BUTTON":"Rules",
+    "CONNECTING_SCREEN_CONNECTING":"Connecting...",
+    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Connected"
 }
