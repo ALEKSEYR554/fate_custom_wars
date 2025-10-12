@@ -115,6 +115,7 @@ func _on_connected_to_server():
 	
 	# Отправляем PUID и ник серверу для регистрации
 	# Используем ID 1 для отправки RPC хосту
+	connect_button.text=tr("CONNECTING_SCREEN_CONNECTED_SUCCESS")
 	host_scene.rpc_id(1, "register_player", Globals.self_pu_id, Globals.self_nickname)
 
 
@@ -268,6 +269,7 @@ func _attempt_reconnect():
 	if is_intentionally_disconnecting:
 		return
 	print("_attempt_reconnect not intentionally")
+	connect_button.text=tr("CONNECTING_SCREEN_CONNECTING")
 	if connection_attempts < Globals.MAX_RECONNECT_ATTEMPTS:
 		connection_attempts += 1
 		print("Attempting to reconnect... (Attempt %s/%s)" % [connection_attempts, Globals.MAX_RECONNECT_ATTEMPTS])
