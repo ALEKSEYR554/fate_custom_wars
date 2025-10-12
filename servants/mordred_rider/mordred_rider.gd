@@ -85,7 +85,8 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":5,
-	"Description":"Increases self damage by 3 for 3 turns. (Cooldown - 5)",
+	"Description ID":"First Skill",
+
 	"Effect":[
 		{"Buffs":[
 			{"Name":"ATK Up",
@@ -100,7 +101,8 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A+",
 	"Cooldown":7,
-	"Description":"Gives herself guaranteed evasion until the end of your next turn. Increases the chance of critical attacks (1,6 on the second dice is considered a critical attack) for three turns (Cooldown - 7).",
+	"Description":"Second Skill",
+
 	"Effect":[
 		{"Buffs":[
 			{
@@ -122,7 +124,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"EX",
 	"Cooldown":7,
-	"Description":"Gives herself one Guts (Revives with 2 HP) for three turns. Then charges her Phantasm by 2 points (Cooldown - 7).",
+	"Description ID":"Third Skill",
 	
 	"Effect":[
 		{"Buffs":[
@@ -144,9 +146,7 @@ var skills={
 var phantasms={
 	"Prydwen Tube Riding":{
 		"Rank":"A",
-		"Description":"""Prydwen Tube Riding: - Deals 6 damage to all enemies on one line in 5 range ignoring defence and defencive buffs. Then charges self NP bar by 1 point\n
-	Overcharge: Deals 12 damage to all enemies on one line in 5 range ignoring defence and defencive buffs. Then charges self NP bar by 2 points
-	""",
+		"Description ID":"Prydwen Tube Riding",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Dash","Range":5,"Damage":6,
@@ -173,10 +173,18 @@ var phantasms={
 }
 
 
+var translation={
+	"en":{
+		"First Skill":"Increases self damage by 3 for 3 turns. (Cooldown - 5)",
+		"Second Skill":"Gives herself guaranteed evasion until the end of your next turn. Increases the chance of critical attacks (1,6 on the second dice is considered a critical attack) for three turns (Cooldown - 7).",
+		"Third Skill":"Gives herself one Guts (Revives with 2 HP) for three turns. Then charges her Phantasm by 2 points (Cooldown - 7).",
+		"Prydwen Tube Riding":"Prydwen Tube Riding: - Deals 6 damage to all enemies on one line in 5 range ignoring defence and defencive buffs. Then charges self NP bar by 1 point\n	Overcharge: Deals 12 damage to all enemies on one line in 5 range ignoring defence and defencive buffs. Then charges self NP bar by 2 points",
+	},
+	"ru":{
+		"First Skill":"Увеличивает собственный урон на 3 на 3 хода. (Куллдаун - 5)",
+		"Second Skill":"Дает себе гарантированное уклонение до конца вашего следующего хода. Увеличивает шанс критических атак (1,6 на втором кубике считается критической атакой) на три хода (Куллдаун - 7).",
+		"Third Skill":"Дает себе одну Стойкость (Воскрешает с 2 HP) на три хода. Затем заряжает свой Фантазм на 2 очка (Куллдаун - 7).",
+		"Prydwen Tube Riding":"Prydwen Tube Riding: - Наносит 6 урона всем врагам на одной линии в радиусе 5, игнорируя защиту и защитные баффы. Затем заряжает себе Шкалу Фантазма на 1 очко\n	Оверчардж: Наносит 12 урона всем врагам на одной линии в радиусе 5, игнорируя защиту и защитные баффы. Затем заряжает себе Шкалу Фантазма на 2 очка",
+	}
 
-
-
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+}

@@ -79,7 +79,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":7,
-	"Description":"Проницательный Взгляд: А - Увеличивает вдвое наносимый критический урон вдвое себе или одному союзнику на три хода, а также восполняет Шкалу Фантазма на 2 очка. (Куллдаун - 7)",
+	"Description ID":"First Skill",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Critical Strength Up X",
@@ -96,7 +96,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A+",
 	"Cooldown":7,
-	"Description":"Совет Стратега: А+ - Увеличивает себе и союзникам защиту вдвое на три хода, а также понижает сверху получаемый урон на 2 очка пока действует этот навык + восполняет Шкалу Фантазма на 1 очко себе и союзникам. (Куллдаун - 7)",
+	"Description ID":"Second Skill",
 	"Effect":[
 		{"Buffs":[
 			{"Name":"Def Up X",
@@ -116,7 +116,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A+",
 	"Cooldown":7,
-	"Description":"Командование Стратега: А+ - Увеличивает себе и союзникам силу на 3 очка на три хода, а также восполняет Шкалу Фантазма на 1 очко. (Куллдаун - 7)",
+	"Description ID":"Third Skill",
 	"Effect":[
 		{"Buffs":[
 			{"Name":"ATK Up",
@@ -133,7 +133,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":NAN,
-	"Description":"Создание Территории: Захватывает одну клетку и пять клеток вокруг неё. Все захваченные клетки становятся территорией на которой Магический урон никогда не понижается. Стоя на этих клетках Кастер поднимает свою шкалу фантазма на одну единицу раз в ход. Этот навык можно активировать лишь один раз.",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Field Creation",
@@ -150,7 +150,7 @@ var skills={
 	"Type":"Potion Creating",
 	"Rank":"B",
 	"Cooldown":8,
-	"Description":"Создание Предметов: Кастер может создавать различные яды или зелья для восстановления здоровья. (Макс.количество созданных зелий/ядов: 2 штуки) (За ход можно сделать только одно зелье/яд)(Куллдаун - 8)",
+	"Description ID":"Class Skill 2",
 	"Effect":[
 		{"Buffs":[
 			{"Name":"Potion creation",
@@ -183,15 +183,12 @@ var skills={
 	}
 }
 
-	#Unreturning Formation - Понижает всем противникам Шкалу Фантазма на одно очко, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 1 урона в конце хода) на пять ходов.
-	#Оверчардж: Понижает всем противникам Шкалу Фантазма на два очка, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 2 урона в конце хода) на пять ходов.
 
 var phantasms={
 	"Unreturning Formation":{
 		"Type":"Buff Granting",
 		"Rank":"A",
-		"Description":"""Понижает всем противникам Шкалу Фантазма на одно очко, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 1 урона в конце хода) на пять ходов.\n
-		Оверчардж: Понижает всем противникам Шкалу Фантазма на два очка, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 2 урона в конце хода) на пять ходов.""",
+		"Description ID":"Unreturning Formation",
 		"Overcharges":{"Default":
 			{"Cost":6,"Attack Type":"Buff Granting","Range":0,"Damage":0,
 				"Effect":[
@@ -258,7 +255,21 @@ var phantasms={
 }
 
 
-func _on_button_pressed():
-	print(self.name)
-	print("buff="+str(buffs))
-	pass # Replace with function body.
+var translation={
+	"ru":{
+		"First Skill":"Проницательный Взгляд: А - Увеличивает вдвое наносимый критический урон вдвое себе или одному союзнику на три хода, а также восполняет Шкалу Фантазма на 2 очка. (Куллдаун - 7)",
+		"Second Skill":"Совет Стратега: А+ - Увеличивает себе и союзникам защиту вдвое на три хода, а также понижает сверху получаемый урон на 2 очка пока действует этот навык + восполняет Шкалу Фантазма на 1 очко себе и союзникам. (Куллдаун - 7)",
+		"Third Skill":"Командование Стратега: А+ - Увеличивает себе и союзникам силу на 3 очка на три хода, а также восполняет Шкалу Фантазма на 1 очко. (Куллдаун - 7)",
+		"Class Skill 1":"Создание Территории: Захватывает одну клетку и пять клеток вокруг неё. Все захваченные клетки становятся территорией на которой Магический урон никогда не понижается. Стоя на этих клетках Кастер поднимает свою шкалу фантазма на одну единицу раз в ход. Этот навык можно активировать лишь один раз.",
+		"Class Skill 2":"Создание Предметов: Кастер может создавать различные яды или зелья для восстановления здоровья. (Макс.количество созданных зелий/ядов: 2 штуки) (За ход можно сделать только одно зелье/яд)(Куллдаун - 8)",
+		"Unreturning Formation":"Понижает всем противникам Шкалу Фантазма на одно очко, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 1 урона в конце хода) на пять ходов.\nОверчардж: Понижает всем противникам Шкалу Фантазма на два очка, понижает им защиту вдвое на три хода, после чего бросает кубик вместе с другими игроками: Если у противников выпавший результат ниже чем у Вэйвера, то они парализуются на один ход и получают дебафф Проклятья (Наносит 2 урона в конце хода) на пять ходов"
+	},
+	"en":{
+		"First Skill":"Discerning Eye: A - Doubles the critical damage dealt to self or one ally for three turns, and also restores the NP gauge by 2 points. (Cooldown - 7)",
+		"Second Skill":"Strategist's Advice: A+ - Doubles the defense of self and allies for three turns, and also reduces incoming damage by 2 points while this skill is active + restores the NP gauge by 1 point to self and allies. (Cooldown - 7)",
+		"Third Skill":"Strategist's Command: A+ - Increases the strength of self and allies by 3 points for three turns, and also restores the NP gauge by 1 point. (Cooldown - 7)",
+		"Class Skill 1":"Territory Creation: Captures one cell and five cells around it. All captured cells become a territory where Magic damage is never reduced. Standing on these cells, the Caster raises their NP gauge by one unit once per turn. This skill can only be activated once.",
+		"Class Skill 2":"Item Creation: The Caster can create various poisons or health potions. (Max. number of created potions/poisons: 2 pieces) (Only one potion/poison can be made per turn) (Cooldown - 8)",
+		"Unreturning Formation":"Reduces the NP gauge of all opponents by one point, halves their defense for three turns, and then rolls a die along with other players: If the opponents' result is lower than Waver's, they are paralyzed for one turn and receive the Curse debuff (Deals 1 damage at the end of the turn) for five turns.\nOvercharge: Reduces the NP gauge of all opponents by two points, halves their defense for three turns, and then rolls a die along with other players: If the opponents' result is lower than Waver's, they are paralyzed for one turn and receive the Curse debuff (Deals 2 damage at the end of the turn) for five turns"
+	}
+}

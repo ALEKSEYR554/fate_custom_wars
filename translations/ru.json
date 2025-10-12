@@ -16,7 +16,7 @@
     "ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF":"{Attacker_name} не может атаковать {Taker_name} из-за дебаффа!",
     "ARE_YOU_SURE_AGREEMENT":"Да",
     "ARE_YOU_SURE_DISAGREEMENT":"Нет",
-    "ARE_YOU_SURE_YOU_WANT_TO_QUESTION":"Вы уверены, что хотите:%s?",
+    "ARE_YOU_SURE_YOU_WANT_TO_QUESTION":"Вы уверены, что хотите:{action}",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK":"Атаковать",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE":"Уклониться",
     "ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK":"Контратаковать",
@@ -186,5 +186,8 @@
     "TEAMS_ACTIONS":"Действия",
     "BETRAY_PLAYER_TEAMS_BUTTON":"Предать",
     "ALLY_PLAYER_TEAMS_BUTTON":"Союзник",
-    "NEUTRAL_PLAYER_TEAMS_BUTTON":"Нейтральный"
+    "NEUTRAL_PLAYER_TEAMS_BUTTON":"Нейтральный",
+    "MAIN_MENU_RULES_BUTTON":"Правила",
+    "CONNECTING_SCREEN_CONNECTING":"Подключение...",
+    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Подключено"
 }

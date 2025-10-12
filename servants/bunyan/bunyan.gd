@@ -55,7 +55,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":6,
-	"Description":"Счастливые Товарищи: А - Увеличивает силу на 3 очка себе и союзникам на три хода. (Куллдаун - 6)",
+	"Description ID":"First Skill",
 	"Effect":[
 	{"Buffs":
 		{"Name":"ATK Up",
@@ -67,7 +67,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":6,
-	"Description":"Озеро Фасолевого Супа: А - Восполняет здоровье всей команде на 8 очков. (Куллдаун - 6)",
+	"Description ID":"Second Skill",
 	"Effect":[
 		{"Buffs":[{"Name":"Heal",
 		"Duration":3,
@@ -79,7 +79,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":6,
-	"Description":"Попкорновая Снежная Буря: В - Понижает всем противника защиту вдвое на три хода, а также увеличивает себе и союзникам вдвое восполнение здоровье (Если здоровье восполняется на какое-либо значение, то это значение удваивается) на пять ходов. (Куллдаун - 6)",
+	"Description ID":"Third Skill",
 	"Effect":[
 		{"Buffs":
 			{"Name":"Def Down X",
@@ -97,7 +97,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"D",
 	"Cooldown":5,
-	"Description":"Безумное Усиление: D - Увеличивает силу вдвое на три хода, но снимает с себя все баффы и запрещает использовать навыки во время действия Безумного усиления (Куллдаун - 5)",
+	"Description ID":"Class Skill 1",
 	"Effect":[
 	{"Buffs":[
 		{"Name":"Madness Enhancement",
@@ -113,9 +113,7 @@ var phantasms={
 	"Marvelous Exploits":{
 		"Type":"Buff Granting",
 		"Rank":"C",
-		"Description":"""Чудесные Подвиги - Бунян увеличивается и на четыре хода сила умножается в три раза, радиус атаки увеличивается до четырёх клеток и повышается вдвое защита.\n
-Оверчардж: Бунян увеличивается и на семь ходов сила умножается в три раза, радиус атаки увеличивается до четырёх клеток и повышается вдвое защита. 
-""",
+		"Description ID":"Marvelous Exploits",
 		"Overcharges":{
 			"Default":
 				{"Cost":6,"Attack Type":"Buff Granting",
@@ -153,4 +151,23 @@ var phantasms={
 					},
 		}
 	}
+}
+
+var translation={
+	"ru":
+		{
+			"First Skill":"Счастливые Товарищи: А - Увеличивает силу на 3 очка себе и союзникам на три хода. (Куллдаун - 6)",
+			"Second Skill":"Озеро Фасолевого Супа: А - Восполняет здоровье всей команде на 8 очков. (Куллдаун - 6)",
+			"Third Skill":"Попкорновая Снежная Буря: В - Понижает всем противника защиту вдвое на три хода, а также увеличивает себе и союзникам вдвое восполнение здоровье (Если здоровье восполняется на какое-либо значение, то это значение удваивается) на пять ходов. (Куллдаун - 6)",
+			"Class Skill 1":"Безумное Усиление: D - Увеличивает силу вдвое на три хода, но снимает с себя все баффы и запрещает использовать навыки во время действия Безумного усиления (Куллдаун - 5)",
+			"Marvelous Exploits":"Чудесные Подвиги - Бунян увеличивается и на четыре хода сила умножается в три раза, радиус атаки увеличивается до четырёх клеток и повышается вдвое защита.\nОверчардж: Бунян увеличивается и на семь ходов сила умножается в три раза, радиус атаки увеличивается до четырёх клеток и повышается вдвое защита."
+		},
+	"en":
+		{
+			"First Skill":"Happy Comrades: A - Increases strength by 3 points to self and allies for three turns. (Cooldown - 6)",
+			"Second Skill":"Bean Soup Lake: A - Restores 8 health points to the entire team. (Cooldown - 6)",
+			"Third Skill":"Popcorn Blizzard: B - Halves the defense of all opponents for three turns, and also doubles the health restoration for self and allies (If health is restored by any value, this value is doubled) for five turns. (Cooldown - 6)",
+			"Class Skill 1":"Mad Enhancement: D - Doubles strength for three turns, but removes all buffs from self and prohibits the use of skills while Mad Enhancement is active (Cooldown - 5)",
+			"Marvelous Exploits":"Marvelous Exploits - Bunyan increases in size and strength is tripled for four turns, attack range increases up to four cells and defense is doubled.\nOvercharge: Bunyan increases in size and strength is tripled for seven turns, attack range increases up to four cells and defense is doubled."
+		}
 }
