@@ -49,7 +49,7 @@ const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
 const MAX_RECONNECT_ATTEMPTS: int = 5
 const PLAYER_DISCONNECT_TIMEOUT: float = 30.0
 
-const UUID = preload("res://скрипты/uuid/uuid.gd")
+const UUID = preload("res://scripts/uuid/uuid.gd")
 signal player_list_changed # Сигнал для UI и других систем о том, что список игроков обновился
 signal connection_status_changed(is_connected: bool) # Для клиента, чтобы знать статус соединения
 

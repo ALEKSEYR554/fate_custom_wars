@@ -148,7 +148,7 @@ extends Node2D
 
 
 var glow_array=[]
-const Glow = preload("res://сцены/glow.tscn")
+const Glow = preload("res://scenes/glow.tscn")
 var time
 var glowing_kletka_number_selected
 var is_game_started=false
@@ -199,8 +199,8 @@ signal movement_finished
 var current_open_window=""
 
 
-var damage_type=players_handler.DAMAGE_TYPE.PHYSICAL#"magic"
-var recieved_damage_type=players_handler.DAMAGE_TYPE.PHYSICAL
+var damage_type="physical"#"magic"
+var recieved_damage_type="physical"
 var recieved_phantasm_config={}
 
 
@@ -215,7 +215,8 @@ var attacking_player_on_kletka_id
 var attacking_char_info:CharInfo
 
 
-const CapturedKletkaScript = preload("res://скрипты/captured_kletka_script.gd")
+#const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
+const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
 signal glow_kletka_pressed_signal(kletka_id:int)
 var blocked_previous_iteration=[]
 
@@ -225,7 +226,7 @@ var blink_timer_node
 var done_blinking=false
 signal done_blinking_signal
 
-const cell_scene = preload("res://сцены/клетка.tscn")
+const cell_scene = preload("res://scenes/cell.tscn")
 
 var pole_generated_seed
 
@@ -597,7 +598,7 @@ func glow_cletki_intiate():
 			glow.modulate=Color(1,1,1,0)
 			
 			
-			glow_node.set_script(load("res://скрипты/скрипт glow.gd"))
+			glow_node.set_script(load("res://scripts/glow_cell_script.gd"))
 			glow_node.add_child(glow)
 			glow.set_anchors_preset(8)#PRESET_CENTER
 			glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)

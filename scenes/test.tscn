@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://76njdkfx4roi"]
 
-[ext_resource type="Script" path="res://скрипты/test.gd" id="1_jinan"]
-[ext_resource type="Script" path="res://скрипты/скрипт_камер.gd" id="2_1e068"]
+[ext_resource type="Script" path="res://scripts/test.gd" id="1_jinan"]
+[ext_resource type="Script" path="res://scripts/camera_script.gd" id="2_1e068"]
 [ext_resource type="Texture2D" uid="uid://c4aostfoor2a6" path="res://images/icon.svg" id="3_k1sna"]
-[ext_resource type="Script" path="res://скрипты/players_handler.gd" id="4_qc82w"]
+[ext_resource type="Script" path="res://scripts/players_handler.gd" id="4_qc82w"]
 
 [node name="Поле" type="Node2D"]
 position = Vector2(-10, -5)

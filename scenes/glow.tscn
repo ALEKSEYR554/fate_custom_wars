@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://fo8cxmul5tv8"]
 
-[ext_resource type="Script" path="res://скрипты/скрипт glow.gd" id="1_gds1f"]
+[ext_resource type="Script" path="res://scripts/glow_cell_script.gd" id="1_gds1f"]
 
 [node name="Button" type="Button"]
 offset_right = 8.0

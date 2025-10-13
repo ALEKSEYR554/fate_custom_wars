@@ -1,6 +1,6 @@
 extends Node2D
 @onready var file_dialog = $"../FileDialog"
-const DRAG_OBJECT = preload("res://сцены/drag_object.tscn")
+const DRAG_OBJECT = preload("res://scenes/drag_object.tscn")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -31,7 +31,7 @@ func add_image(image_data):
 	
 	#node2.add_child(image_to_add)
 	
-	#node2.set_script(load("res://скрипты/drag_script.gd"))
+	#node2.set_script(load("res://scripts/drag_script.gd"))
 	add_child(drag_img)
 	pass
 
