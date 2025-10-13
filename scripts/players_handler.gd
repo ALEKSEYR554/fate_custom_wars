@@ -135,7 +135,7 @@ const buff_ignoring=["Ignore Defence","Ignore DEF Buffs","Ignore Invincible","Su
 #endregion
 
 
-const TEAM_HOLDER = preload("res://сцены/team_holder.tscn")
+const TEAM_HOLDER = preload("res://scenes/team_holder.tscn")
 
 
 

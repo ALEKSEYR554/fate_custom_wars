@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://n3dj8jh4drb6"]
 
-[ext_resource type="Script" path="res://скрипты/main_menu.gd" id="1_t8w36"]
-[ext_resource type="PackedScene" uid="uid://cwp4u07m523wm" path="res://сцены/connect_scene.tscn" id="2_qnb14"]
-[ext_resource type="PackedScene" uid="uid://bpwt6601esmp2" path="res://сцены/host_scene.tscn" id="3_1qjf8"]
-[ext_resource type="PackedScene" uid="uid://bwad82u5xwnhb" path="res://сцены/settings_screen.tscn" id="4_1a2ow"]
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_t8w36"]
+[ext_resource type="PackedScene" uid="uid://cwp4u07m523wm" path="res://scenes/connect_scene.tscn" id="2_qnb14"]
+[ext_resource type="PackedScene" uid="uid://bpwt6601esmp2" path="res://scenes/host_scene.tscn" id="3_1qjf8"]
+[ext_resource type="PackedScene" uid="uid://bwad82u5xwnhb" path="res://scenes/settings_screen.tscn" id="4_1a2ow"]
 [ext_resource type="Texture2D" uid="uid://ddahg0i7o6kg" path="res://images/logo.png" id="4_8u1lk"]
 
 [node name="Main_Menu" type="Control"]

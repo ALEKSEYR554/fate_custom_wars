@@ -8,7 +8,7 @@ extends Node
 @onready var host_scene = $Host_scene
 @onready var start_screen = $start_screen
 @onready var back_button = $Back_button
-const GAME_FIELD = preload("res://сцены/game_field.tscn")
+const GAME_FIELD = preload("res://scenes/game_field.tscn")
 @onready var android_file_dialog:FileDialog = $android_FileDialog
 
 func _ready():
