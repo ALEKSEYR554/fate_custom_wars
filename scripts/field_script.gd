@@ -1247,7 +1247,7 @@ func alert_label_text(show=false,text=""):
 		
 
 func increase_dice_result_to_action_name_with_buffs(type:String):
-	var dice_plus_buff=players_handler.char_info_has_buff(get_current_self_char_info(),"Dice +")
+	var dice_plus_buff=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]==type:
@@ -1481,7 +1481,7 @@ func roll_a_dice():
 	
 	randomize()
 
-	var set_dices=players_handler.char_info_has_buff(get_current_self_char_info(),"Faceless Moon")
+	var set_dices=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Faceless Moon")
 	if set_dices:
 		dice_roll_result_list=set_dices.get("Dices",{})
 	
@@ -1737,13 +1737,13 @@ func _on_evade_button_pressed():
 	#dice_roll_result_list
 	#recieved_dice_roll_result
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	var enemy_has_ignore_evade=players_handler.char_info_has_buff(attacked_by_char_info,"Ignore Evade")
+	var enemy_has_ignore_evade=players_handler.char_info_has_active_buff(attacked_by_char_info,"Ignore Evade")
 
-
-	players_handler.rpc("add_to_advanced_logs",
-		"ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK",
-		{"ignore_evade_buff":enemy_has_ignore_evade}
-	)
+	if enemy_has_ignore_evade:
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK",
+			{"ignore_evade_buff":enemy_has_ignore_evade}
+		)
 
 	var dice_with_agility_bonus=min(6,dice_roll_result_list["main_dice"]+agility_bonus)
 
@@ -2276,20 +2276,20 @@ func start_turn():
 
 	print("Current_action="+str(current_action)+"\n\n")
 	if is_game_started:
-		if players_handler.char_info_has_buff(self_char_info,"Paralysis") or \
-		players_handler.char_info_has_buff(self_char_info,"Stun") or \
-		players_handler.char_info_has_buff(self_char_info,"Charm"):
+		if players_handler.char_info_has_active_buff(self_char_info,"Paralysis") or \
+		players_handler.char_info_has_active_buff(self_char_info,"Stun") or \
+		players_handler.char_info_has_active_buff(self_char_info,"Charm"):
 			paralyzed=true
 			disable_every_button()
-			if players_handler.char_info_has_buff(self_char_info,"Charm"):
+			if players_handler.char_info_has_active_buff(self_char_info,"Charm"):
 				info_table_show(tr("YOU_ARE_CHARMED"))
 			else:
 				info_table_show(tr("YOU_ARE_PARALYZED"))
 			await info_ok_button.pressed
 			end_turn_button.disabled=false
 			command_spells_button.disabled=false
-		if players_handler.char_info_has_buff(self_char_info,"Presence Concealment"):
-			var buff_info=players_handler.char_info_has_buff(self_char_info,"Presence Concealment")
+		if players_handler.char_info_has_active_buff(self_char_info,"Presence Concealment"):
+			var buff_info=players_handler.char_info_has_active_buff(self_char_info,"Presence Concealment")
 			var turns_passed=players_handler.turns_counter-buff_info["Turn Casted"]
 			var minimum_turns=buff_info["Minimum Turns"]
 			var maximum_turns=buff_info["Maximum Turns"]
@@ -2598,8 +2598,9 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 				await get_tree().create_timer(1).timeout
 				continue
 			var etmp=await attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
-			if etmp=="ERROR":
-				continue
+			if typeof(etmp)==TYPE_STRING:
+				if etmp=="ERROR":
+					continue
 			attacked_enemies.append(etmp)
 			if phantasm_config.has("effect_on_success_attack"):
 				if attack_responce_string!="evaded" or attack_responce_string!="parried":
@@ -2678,9 +2679,9 @@ func _on_make_action_pressed():
 	else:
 		#{ "Name": &"Heal Potion", "Effect": [{ "Name": "Heal", "Power": 5 }] }
 		print("players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]="+str(players_handler.unit_unique_id_to_items_owned[get_current_self_char_info().get_uniq_id()]))
-	var max_hit= players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Hits Per Turn")
+	var max_hit= players_handler.char_info_has_active_buff(get_current_self_char_info(),"Maximum Hits Per Turn")
 	
-	var maximum_skills=players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
+	var maximum_skills=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
 
 
 	if maximum_skills:
@@ -2898,7 +2899,7 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 
 
 
-	var maximum_skills=players_handler.char_info_has_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
+	var maximum_skills=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Maximum Skills Per Turn")
 
 	if maximum_skills:
 		var used_skills_this_turn=players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["skill_used_this_turn"]
@@ -2967,7 +2968,7 @@ func _on_command_spells_button_pressed():
 func _on_command_spell_heal_button_pressed():
 	hide_all_gui_windows("command_spells")
 	var char_info_to_cast_to=get_current_self_char_info()
-	if players_handler.char_info_has_buff(get_current_self_char_info(),"Code Cast"):
+	if players_handler.char_info_has_active_buff(get_current_self_char_info(),"Code Cast"):
 		char_info_to_cast_to=await players_handler.choose_allie()
 		char_info_to_cast_to=char_info_to_cast_to[0]
 	players_handler.heal_char_info(char_info_to_cast_to,0,"command_spell")
@@ -2980,7 +2981,7 @@ func _on_command_spell_heal_button_pressed():
 func _on_command_spell_np_charge_button_pressed():
 	hide_all_gui_windows("command_spells")
 	var char_info_to_cast_to=get_current_self_char_info()
-	if players_handler.char_info_has_buff(get_current_self_char_info(),"Code Cast"):
+	if players_handler.char_info_has_active_buff(get_current_self_char_info(),"Code Cast"):
 		char_info_to_cast_to=await players_handler.choose_allie()
 		char_info_to_cast_to=char_info_to_cast_to[0]
 
@@ -2993,7 +2994,7 @@ func _on_command_spell_np_charge_button_pressed():
 func _on_command_spell_add_moves_button_pressed():
 	hide_all_gui_windows("command_spells")
 	var char_info_to_cast_to=get_current_self_char_info()
-	if players_handler.char_info_has_buff(get_current_self_char_info(),"Code Cast"):
+	if players_handler.char_info_has_active_buff(get_current_self_char_info(),"Code Cast"):
 		char_info_to_cast_to=await players_handler.choose_allie()
 		char_info_to_cast_to=char_info_to_cast_to[0]
 	#Globals.self_servant_node.additional_moves+=3

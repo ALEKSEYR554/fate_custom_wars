@@ -412,6 +412,8 @@ func initiate_game_locally():
 func _on_spin_box_value_changed(value: float):
 	# Эта функция теперь должна просто обновить видимость слотов,
 	# не меняя данные в Globals.pu_id_player_info
+	if %amount_of_teams_SpinBox.value>value:
+		%amount_of_teams_SpinBox.value=value
 	var max_visible_slots = int(value)
 	for i in range(container_slots.size()):
 		if i < max_visible_slots:
@@ -439,3 +441,11 @@ func _on_spin_box_value_changed(value: float):
 			container_slots[i].visible = false
 	# После изменения видимости, можно вызвать update_player_list_ui для корректного заполнения
 	update_player_list_ui()
+
+
+func _on_amount_of_teams_spin_box_value_changed(value):
+	if value>spin_box_max_players.value:
+		%amount_of_teams_SpinBox.value=value-1
+	
+	Globals.start_teams_amount=%amount_of_teams_SpinBox.value
+	pass # Replace with function body.

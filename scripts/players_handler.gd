@@ -551,9 +551,10 @@ func sync_pu_id_player_info(pu_id_player_info_temp:Dictionary):
 	Globals.pu_id_player_info=pu_id_player_info_temp
 
 @rpc("authority","call_local","reliable")
-func set_teams_and_turns_order(shiffled_players_array,turn_order):
-	var len_=shiffled_players_array.size()/2
-	teams_by_pu_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
+func set_teams_and_turns_order(teams_array,turn_order):
+	#var len_=shiffled_players_array.size()/2
+	#teams_by_pu_id=[shiffled_players_array.slice(0,len_),shiffled_players_array.slice(len_)]
+	teams_by_pu_id=teams_array
 	print("teams="+str(teams_by_pu_id))
 
 
@@ -603,7 +604,7 @@ func sent_that_loading_done(_pu_id):
 
 
 @rpc("authority","call_local","reliable")
-func starting_loading(sh1,sh2,pu_id_to_unit_uniq:Dictionary):
+func starting_loading(teams_array,turns_order,pu_id_to_unit_uniq:Dictionary):
 	print("\n START SELF PEER_ID=",Globals.get_self_peer_id(), " =", multiplayer.get_unique_id())
 
 	for pu_id in Globals.pu_id_player_info.keys():
@@ -618,15 +619,24 @@ func starting_loading(sh1,sh2,pu_id_to_unit_uniq:Dictionary):
 		#rpc_id(peer_id,"set_player_node",inst_to_dict(node_to_add))
 	print("\nright after loading servants pu_id_player_info="+str(Globals.pu_id_player_info))
 	
-	print_debug("set_teams_and_turns_order=",sh1,sh2)
-	set_teams_and_turns_order(sh1,sh2)
+	print_debug("set_teams_and_turns_order=",teams_array,turns_order)
+	set_teams_and_turns_order(teams_array,turns_order)
 	
 	initialise_start_variables(get_all_char_infos())
 	rpc("sent_that_loading_done",Globals.self_pu_id)
 
 
 
-
+func split_teams(array:Array,amount_of_teams:int)->Array:
+	if amount_of_teams>array.size():
+		return [array]
+	var out_array=[]
+	out_array.resize(amount_of_teams)
+	for i in amount_of_teams:
+		out_array[i]=[]
+	for i in array.size():
+		out_array[i%amount_of_teams].append(array[i])
+	return out_array
 
 func start():
 	#выдаем каждому игроку свой NODE слуги
@@ -634,9 +644,12 @@ func start():
 	sync_pu_id_player_info(Globals.pu_id_player_info.duplicate(true))
 	var temp_pl=Globals.pu_id_player_info.keys()
 	temp_pl.shuffle()
-	var sh1=temp_pl
+	print("temp_pl=",temp_pl,"Globals.start_teams_amount=",Globals.start_teams_amount)
+	var teams_array=split_teams(temp_pl,Globals.start_teams_amount)
+
+	print("teams_array=",teams_array)
 	temp_pl.shuffle()
-	var sh2=temp_pl
+	var turns_order=temp_pl
 	print("temp_pl+"+str(temp_pl))
 	
 
@@ -650,7 +663,7 @@ func start():
 	
 
 	print("\n\ninfo before loading=",Globals.pu_id_player_info)
-	rpc("starting_loading",sh1,sh2,pu_id_to_unit_uniq)
+	rpc("starting_loading",teams_array,turns_order,pu_id_to_unit_uniq)
 	await everyone_loaded
 
 	#первоначальное выставление слуг на поле
@@ -743,6 +756,7 @@ func update_current_player_turn(cur_player_turn_pu_id:String):
 func turn_update(turn) -> void:
 	%turns_label.text=str("Turn: ",turn)
 	turns_counter=turn
+	field.update_field_icon()
 
 #endregion
 
@@ -1236,7 +1250,7 @@ func check_condition_wrapper(condition:Dictionary):
 			"Luck":
 				stat_to_check=get_char_info_luck(char_info)
 			"Buff Name":
-				if char_info_has_buff(char_info,exact):
+				if char_info_has_active_buff(char_info,exact):
 					rpc("add_to_advanced_logs",
 						"ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME",
 						{"buff":exact}
@@ -1583,7 +1597,7 @@ func _on_phantasm_pressed()->void:
 		use_custom_button.disabled=true
 		pass
 	
-	if char_info_has_buff(field.get_current_self_char_info(),"NP Seal"):
+	if char_info_has_active_buff(field.get_current_self_char_info(),"NP Seal"):
 		custom_choices_tab_container.visible=false
 		use_custom_but_label_container.visible=false
 		field.info_table_show(tr("NP_IS_SEALED_BY_DEBUFF"))
@@ -1609,7 +1623,7 @@ func _on_phantasm_pressed()->void:
 
 func get_maximum_overcharge_name_available(phantasms_config: Dictionary) -> String:
 
-	var overcharge_up_buff=char_info_has_buff(field.get_current_self_char_info(),"Overcharge Up")
+	var overcharge_up_buff=char_info_has_active_buff(field.get_current_self_char_info(),"Overcharge Up")
 
 	var sorted_by_cost = []
 	for phantasm_name in phantasms_config:
@@ -1728,8 +1742,9 @@ func bomb_phantasm(phantasm_config):
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
 		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
-		if etmp=="ERROR":
-			continue
+		if typeof(etmp)==TYPE_STRING:
+			if etmp=="ERROR":
+				continue
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -1756,8 +1771,9 @@ func phantasm_in_range(phantasm_config,type="Single"):
 	await field.hide_dice_rolls_with_timeout(1)
 	for kletka in kletki_to_attack_array:
 		var etmp=await field.attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
-		if etmp=="ERROR":
-			continue
+		if typeof(etmp)==TYPE_STRING:
+			if etmp=="ERROR":
+				continue
 		attacked_enemies.append(etmp)
 		if field.attack_responce_string!="evaded" or field.attack_responce_string!="parried":
 			if phantasm_config.has("effect_on_success_attack"):
@@ -2618,7 +2634,7 @@ func get_char_info_class(char_info:CharInfo)->String:
 	var peer_node=char_info.get_node()
 	var default_peer_class=peer_node.servant_class
 	
-	var class_buff=char_info_has_buff(char_info,"Class Change")
+	var class_buff=char_info_has_active_buff(char_info,"Class Change")
 	var buffs_class:String
 	if class_buff:
 		buffs_class = class_buff.get("Class","")
@@ -2699,7 +2715,7 @@ func char_info_can_get_buff(char_info:CharInfo, buff_info:Dictionary)->bool:
 
 func buffs_removal(char_info: CharInfo, buff_info: Dictionary) -> void:
 	var buff_types_to_remove: Array = buff_info.get("Types To Remove", [])
-	var is_buff_removal_resist=char_info_has_buff(char_info,"Buff Removal Resist")
+	var is_buff_removal_resist=char_info_has_active_buff(char_info,"Buff Removal Resist")
 	if is_buff_removal_resist:
 		if "Buff Positive Effect" in buff_types_to_remove:
 			buff_types_to_remove.erase("Buff Positive Effect")
@@ -2787,7 +2803,7 @@ func buffs_removal(char_info: CharInfo, buff_info: Dictionary) -> void:
 func get_absorbs_buffs()->Array:
 	var output=[]
 	for char_info in get_all_char_infos():
-		var ubsb=char_info_has_buff(char_info,"Absorb Buffs")
+		var ubsb=char_info_has_active_buff(char_info,"Absorb Buffs")
 		if ubsb:
 			output.append({"Buffs Names":ubsb.get("Buffs Names",[]),"char_info":char_info})
 	return output
@@ -3275,7 +3291,8 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 	rpc("add_to_advanced_logs","ADVANCED_LOG_CALCULATE_DAMAGE_IGNORE_BUFFS")
 	
 	for buff in buff_ignoring:
-		if char_info_has_buff(attacker_char_info, buff):
+		var buff_infoo=char_info_has_active_buff(attacker_char_info, buff)
+		if buff_infoo:
 			match buff:
 				"Ignore Defence":
 					buff_types_to_ignore.append("Defence")
@@ -3432,7 +3449,7 @@ func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:D
 			)
 
 		if get_char_info_class(self_char_attacked)=="Saber":
-			if char_info_has_buff(self_char_attacked,"Magic Resistance"):
+			if char_info_has_active_buff(self_char_attacked,"Magic Resistance"):
 				damage_to_take=floor(damage_to_take/2)
 				print(str("Saber resistance", "damage_to_take=",damage_to_take))
 				rpc("add_to_advanced_logs",
@@ -3532,7 +3549,7 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 	
 	var node_died = char_info_died.get_node()
 	
-	var guts_buff=char_info_has_buff(char_info_died,"Guts")
+	var guts_buff=char_info_has_active_buff(char_info_died,"Guts")
 	if guts_buff:
 		var hp_to_recover=guts_buff.get("HP To Recover",1)
 
@@ -3804,6 +3821,16 @@ func char_info_has_buff(char_info:CharInfo,buff_name:String):
 	#for buff in Globals.pu_id_player_info[pu_id]["servant_node"].buffs:
 	for buff in char_info.get_node().buffs:
 		if buff["Name"].to_lower()==buff_name.to_lower():
+			return buff
+	return false
+
+func char_info_has_active_buff(char_info:CharInfo,buff_name:String):
+	var buff=char_info_has_buff(char_info,buff_name)
+	var condition_true=true
+	if buff:
+		if buff.has("Condition"):
+			condition_true=check_condition_wrapper(buff.get("Condition",{}))#
+		if condition_true:
 			return buff
 	return false
 
