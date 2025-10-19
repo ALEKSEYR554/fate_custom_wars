@@ -30,28 +30,41 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 50
 text = "HOST"
 
-[node name="players_count_SpinBox" type="SpinBox" parent="."]
-unique_name_in_owner = true
-layout_mode = 0
-anchor_left = 0.833984
-anchor_top = 0.416667
-anchor_right = 0.915101
-anchor_bottom = 0.457031
-min_value = 2.0
-max_value = 6.0
-value = 2.0
-allow_greater = true
+[node name="game_settings_vbox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.8125
+anchor_top = 0.289063
+anchor_right = 0.892578
+anchor_bottom = 0.398438
 metadata/_edit_use_anchors_ = true
 
-[node name="number_of_players_info_Label" type="Label" parent="players_count_SpinBox"]
-layout_mode = 0
-offset_left = -3.0
-offset_top = -52.0
-offset_right = 78.0
-offset_bottom = -3.0
+[node name="number_of_players_info_Label" type="Label" parent="game_settings_vbox"]
+layout_mode = 2
 text = "Number
  of players"
 horizontal_alignment = 1
+
+[node name="players_count_SpinBox" type="SpinBox" parent="game_settings_vbox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 2.0
+max_value = 6.0
+value = 2.0
+metadata/_edit_use_anchors_ = true
+
+[node name="amout_of_teams_Label" type="Label" parent="game_settings_vbox"]
+layout_mode = 2
+text = "Amount of 
+teams"
+horizontal_alignment = 1
+
+[node name="amount_of_teams_SpinBox" type="SpinBox" parent="game_settings_vbox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 2.0
+max_value = 6.0
+value = 2.0
 
 [node name="game_start_button" type="Button" parent="."]
 unique_name_in_owner = true
@@ -186,5 +199,6 @@ max_length = 20
 metadata/_edit_use_anchors_ = true
 
 [connection signal="button_up" from="host_Button" to="." method="_on_create_server_button_button_up"]
-[connection signal="value_changed" from="players_count_SpinBox" to="." method="_on_spin_box_value_changed"]
+[connection signal="value_changed" from="game_settings_vbox/players_count_SpinBox" to="." method="_on_spin_box_value_changed"]
+[connection signal="value_changed" from="game_settings_vbox/amount_of_teams_SpinBox" to="." method="_on_amount_of_teams_spin_box_value_changed"]
 [connection signal="button_up" from="game_start_button" to="." method="_on_game_start_button_button_up"]
