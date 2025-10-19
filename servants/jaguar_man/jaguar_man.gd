@@ -199,7 +199,6 @@ var skills={
 
 var phantasms={
 	"Great Death Claw":{
-		"Type":"Buff Granting",
 		"Rank":"A",
 		"Description ID":"Great Death Claw",
 		"Overcharges":{

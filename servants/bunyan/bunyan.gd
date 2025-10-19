@@ -111,7 +111,6 @@ var skills={
 		#Оверчардж: Бунян увеличивается и на семь ходов сила умножается в три раза, радиус атаки увеличивается до четырёх клеток и повышается вдвое защита. 
 var phantasms={
 	"Marvelous Exploits":{
-		"Type":"Buff Granting",
 		"Rank":"C",
 		"Description ID":"Marvelous Exploits",
 		"Overcharges":{

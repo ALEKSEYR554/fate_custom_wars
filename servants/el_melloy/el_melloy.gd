@@ -186,7 +186,6 @@ var skills={
 
 var phantasms={
 	"Unreturning Formation":{
-		"Type":"Buff Granting",
 		"Rank":"A",
 		"Description ID":"Unreturning Formation",
 		"Overcharges":{"Default":

@@ -201,7 +201,6 @@ var skills={
 }
 var phantasms={
 	"Rongominiad":{
-		"Type":"Line",
 		"Rank":"A",
 		"Description ID":"Rongominiad",
 		"Overcharges":
