@@ -171,7 +171,6 @@ var skills={
 }
 var phantasms={
 	"Void Record":{
-		#"Type":"Line",
 		"Rank":"EX",
 		"Description ID":'Void Record',
 		"Overcharges":

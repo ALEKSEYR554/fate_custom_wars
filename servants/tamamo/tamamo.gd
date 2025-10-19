@@ -185,7 +185,7 @@ var skills={
 	"Type":"Buff Granting",
 	"Rank":"B",
 	"Cooldown":8,
-	"Description":"Class Skill 2",
+	"Description ID":"Class Skill 2",
 	"Effect":[
 		{"Buffs":
 			[
@@ -202,8 +202,7 @@ var skills={
 var phantasms={
 	"Suiten Nikkō Amaterasu Yano Shizu-Ishi":{
 		"Rank":"A",
-		"Description":"""
-	""",
+		"Description ID":"Suiten Nikkō Amaterasu Yano Shizu-Ishi",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"Buff Granting","Range":0,"Damage":0,

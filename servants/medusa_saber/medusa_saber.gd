@@ -85,11 +85,9 @@ var passive_skills=[
 
 var skills={
 "First Skill":{
-	"Type":"Buff Granting",
 	"Rank":"A",
 	"Cooldown":7,
 	"Description ID":"First Skill",
-	
 	"Effect":[
 		{
 			"Buffs":[

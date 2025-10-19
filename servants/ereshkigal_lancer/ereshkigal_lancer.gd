@@ -182,7 +182,6 @@ var skills={
 
 var phantasms={
 	"Kur Ki Gal Irkalla":{
-		"Type":"Buff Granting",
 		"Rank":"A",
 		"Description ID":"Kur Ki Gal Irkalla",
 		"Overcharges":{

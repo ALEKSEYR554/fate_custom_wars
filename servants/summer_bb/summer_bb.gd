@@ -201,8 +201,7 @@ var phantasms={
 	"CCC":{
 		#"Type":"All Enemies In Range",
 		"Rank":"A",
-		"Description":"""
-""",
+		"Description ID":"CCC",
 		"Overcharges":
 			{"Default":
 				{"Cost":6,"Attack Type":"All Enemies In Range","Range":4,"Damage":5,

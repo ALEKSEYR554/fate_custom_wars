@@ -286,7 +286,6 @@ var phantasms={
 	"My Red Mead: My Dear Honey Wine":{
 		"Rank":"C",
 		"Description ID":"My Red Mead: My Dear Honey Wine",
-		
 		"Overcharges":
 			{"Default":
 				{"Cost":12,"Attack Type":"Buff Granting","Range":0,"Damage":0,
@@ -314,7 +313,6 @@ var phantasms={
 	"Conchobar My Love":{
 		"Rank":"C",
 		"Description ID":"Conchobar My Love",
-
 		"Overcharges":
 			{"Default":
 				{"Cost":5,"Attack Type":"Buff Granting","Range":0,"Damage":0,
