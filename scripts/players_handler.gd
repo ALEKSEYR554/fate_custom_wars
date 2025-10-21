@@ -827,7 +827,7 @@ func choose_enemie(range_to_search:int=-1)->Array:
 
 
 func get_item_description(item)->String:
-	print_debug("TranslationServer.get_locale()=",TranslationServer.get_locale())
+	#print_debug("TranslationServer.get_locale()=",TranslationServer.get_locale())
 	var out=item.get("Description","")
 	if out:
 		if typeof(out)==TYPE_DICTIONARY:
@@ -1034,6 +1034,7 @@ func _on_use_custom_button_pressed()->void:
 	var custom_id=custom_choices_tab_container.get_current_tab_control().name
 	custom_choices_tab_container.visible=false
 	use_custom_but_label_container.visible=false
+	field.hide_all_gui_windows("use_custom")
 	
 	print_debug("custom_id_to_skill[custom_id]="+str(custom_id_to_skill))
 	match custom_id_to_skill[custom_id]["Type"]:
@@ -1705,6 +1706,7 @@ func use_phantasm(phantasm_info):
 		"All Field Enemies":
 			pass
 	
+	await field.sleep(0.1)
 	if overcharge_use.has("effect_after_attack"):
 		print("effect_after_attack=true")
 		await use_skill(overcharge_use["effect_after_attack"],attacked_by_phantasm)
@@ -2561,21 +2563,26 @@ func remove_all_expired_captured_kletki():
 							captured.queue_free()
 
 func roll_dice_for_result(skill_info:Dictionary,cast:Array):
-	
+	await field.sleep(0.5)
 	var dice_result=await field.await_dice_roll()
 	var is_casted=null
-	field.systemlog_message(str(Globals.nickname," thowing to decide bad status"))
+	field.rpc("systemlog_message",str(Globals.nickname," thowing to decide bad status"))
+	print("roll_dice_for_result skill_info=",skill_info," cast=",cast)
 	for char_info in cast:
 		is_casted=null
 		var pu_peer_id=Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"]
+		print("pu_peer_id=",pu_peer_id)
 		while true:
-			field.rpc_id(pu_peer_id,"receice_dice_roll_results",dice_result)
-			field.rpc_id(pu_peer_id,"set_action_status",field.get_current_self_char_info().to_dictionary(),"roll_dice_for_result")
+			#await field.sleep(0.2)
+			#field.rpc_id(pu_peer_id,"receice_dice_roll_results",dice_result)
+			await field.sleep(0.2)
+			field.rpc_id(pu_peer_id,"set_action_status",field.get_current_self_char_info().to_dictionary(),"roll_dice_for_result",char_info.to_dictionary(),dice_result)
 
 			var status= await field.attack_response
+			print("Status dice roll result=",status)
 			match status:
 				"OK":
-					pass
+					pass					
 				"Disconnect":
 					field.attack_responce_string="Getting bad status"
 					field.rpc("systemlog_message",str(Globals.nickname," disconnected, applying effect"))
@@ -2588,6 +2595,7 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 				"Getting bad status":
 					for single_skill in skill_info["Buff To Add"]:#shit
 						rpc("add_buff",[char_info.to_dictionary()],single_skill)
+						await field.sleep(0.1)
 					is_casted=true
 			if is_casted!=null:
 				break
@@ -3183,6 +3191,7 @@ func add_to_advanced_logs(text_code:String,formats:Dictionary={}):
 	text_code=tr(text_code)
 	var text_to_add=text_code.format(formats)
 	%advanced_logs_textedit.text+=text_to_add+"\n"
+	print(text_to_add+"\n")
 
 
 func calculate_damage_to_take(attacker_char_info:CharInfo,enemies_dice_results:Dictionary,damage_type:String=DAMAGE_TYPE.PHYSICAL,special:String="regular"):

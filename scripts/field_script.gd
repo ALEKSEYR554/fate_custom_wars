@@ -1352,9 +1352,9 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 	rpc_id(peer_id_to_attack,"receice_dice_roll_results",dice_roll_result_list)
 	
 	if attack_responce_string!="parried":
-		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),attack_type,phantasm_config)
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
 	else:#ignore this
-		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),attack_type,phantasm_config)
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
 	
 	
 	
@@ -1519,7 +1519,10 @@ func _roll_dices_button_pressed():
 
 
 @rpc("any_peer","call_local","reliable")
-func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacked_dic:Dictionary,attack_type="Physical",phantasm_config={}):
+func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacked_dic:Dictionary,recieved_dice_roll_result_temp:Dictionary,attack_type="Physical",phantasm_config={}):
+	print("set_action_status status=",status," by_whom_char_info_dic=",by_whom_char_info_dic)
+	recieved_dice_roll_result=recieved_dice_roll_result_temp
+	
 	char_info_attacked=CharInfo.from_dictionary(char_info_attacked_dic)
 	
 	await get_tree().create_timer(0.2).timeout
@@ -1535,9 +1538,6 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 
 	if by_whom_char_info.pu_id == self_char_info.pu_id:
 		self_unit_hit = true
-		
-	
-
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
 	
 	recieved_damage_type=attack_type
@@ -1990,6 +1990,7 @@ func answer_attack(status):
 
 @rpc("any_peer","call_local","reliable")
 func receice_dice_roll_results(recieved_dice_roll_result_temp):
+	print("receice_dice_roll_results=",recieved_dice_roll_result_temp)
 	recieved_dice_roll_result=recieved_dice_roll_result_temp.duplicate()
 	
 func new_turn():
