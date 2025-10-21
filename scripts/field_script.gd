@@ -280,6 +280,8 @@ signal attack_answered
 
 signal dismounted
 
+signal attacker_finished_attack(char_info_dic)
+
 func _ready():
 	
 	
@@ -1443,6 +1445,9 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 		end_turn_button.disabled=false
 	alert_label_text(false)
 	
+	if attack_type != "Phantasm":
+		players_handler.rpc("finish_attack",get_current_self_char_info().to_dictionary())
+	
 	return enemy_char_info
 	
 	
@@ -1630,7 +1635,7 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 			roll_dice_optional_label.visible=true
 			await await_dice_roll()
 			roll_dice_optional_label.visible=false
-			if dice_roll_result_list["main_dice"]>recieved_dice_roll_result["main_dice"]:
+			if dice_roll_result_list["main_dice"]>recieved_dice_roll_result["main_dice"] or dice_roll_result_list["main_dice"]==6:
 				rpc_id(attacked_by_peer_id,"answer_attack","Evaded bad status")
 				rpc("systemlog_message",str(self_char_info.get_node().name, " evaded bad status"))
 			elif dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]:
@@ -1827,7 +1832,11 @@ func _on_evade_button_pressed():
 
 	dices_main_VBoxContainer.visible=false
 
-
+	var char_info_dic={}
+	while char_info_dic != attacked_by_char_info.to_dictionary():
+		char_info_dic = await attacker_finished_attack
+		print("attacker_finished_attack char_info_dic=",char_info_dic)
+	
 	if counter_attack:
 		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
 		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
@@ -2365,7 +2374,8 @@ func show_char_info_servant_node(char_info_dic:Dictionary,visible_loc:bool):
 
 func _on_cancel_pressed():
 	if current_action_points>=1:
-		pass
+		current_action="wait"
+		blinking_glow_button=false
 
 
 func _on_move_pressed(unmounting=false):

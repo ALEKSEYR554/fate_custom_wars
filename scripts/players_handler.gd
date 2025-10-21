@@ -1714,8 +1714,14 @@ func use_phantasm(phantasm_info):
 	
 	rpc("charge_np_to_char_info_by_number",field.get_current_self_char_info().to_dictionary(),-overcharge_use["Cost"])
 	#for effect in 
+	rpc("finish_attack",field.get_current_self_char_info().to_dictionary())
 	
 	pass
+
+@rpc("any_peer","call_local","reliable")
+func finish_attack(char_info_dic):
+	field.attacker_finished_attack.emit(char_info_dic)
+
 
 func get_char_info_kletka_number(char_info:CharInfo)->int:
 	var servant_name=char_info.get_node().name
@@ -1765,6 +1771,7 @@ func phantasm_in_range(phantasm_config,type="Single"):
 	match type:
 		"Single":
 			tmp=await choose_single_in_range(range)
+			tmp.erase(field.get_current_self_char_info())
 		"All enemies":
 			tmp=await get_all_enemies_in_range(range)
 	for char_info in tmp:
@@ -2564,7 +2571,7 @@ func remove_all_expired_captured_kletki():
 
 func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 	await field.sleep(0.5)
-	var dice_result=await field.await_dice_roll()
+	var dice_result
 	var is_casted=null
 	field.rpc("systemlog_message",str(Globals.nickname," thowing to decide bad status"))
 	print("roll_dice_for_result skill_info=",skill_info," cast=",cast)
@@ -2573,6 +2580,7 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 		var pu_peer_id=Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"]
 		print("pu_peer_id=",pu_peer_id)
 		while true:
+			
 			#await field.sleep(0.2)
 			#field.rpc_id(pu_peer_id,"receice_dice_roll_results",dice_result)
 			await field.sleep(0.2)
@@ -2591,7 +2599,8 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 				"Evaded bad status":
 					is_casted=false
 				"Even dice rolls, reroll for status":
-					pass
+					field.roll_dice_optional_label.text=tr("DICE_ROLL_RESULT_REROLL_DICES")
+					dice_result = await field.await_dice_roll()
 				"Getting bad status":
 					for single_skill in skill_info["Buff To Add"]:#shit
 						rpc("add_buff",[char_info.to_dictionary()],single_skill)
@@ -3824,6 +3833,7 @@ func _on_use_skill_button_pressed():
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"total_skill_used",1)
 	%MAKE_ACTION_BUTTON.disabled=false
 	field.skill_info_show_button.disabled=false
+	rpc("finish_attack",field.get_current_self_char_info().to_dictionary())
 	pass # Replace with function body.
 
 func char_info_has_buff(char_info:CharInfo,buff_name:String):
