@@ -189,5 +189,6 @@
     "NEUTRAL_PLAYER_TEAMS_BUTTON":"Нейтральный",
     "MAIN_MENU_RULES_BUTTON":"Правила",
     "CONNECTING_SCREEN_CONNECTING":"Подключение...",
-    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Подключено"
+    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Подключено",
+    "DICE_ROLL_RESULT_REROLL_DICES":"Противник выкинул тоже число, переброс"
 }

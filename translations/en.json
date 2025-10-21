@@ -189,5 +189,6 @@
     "NEUTRAL_PLAYER_TEAMS_BUTTON":"Neutral",
     "MAIN_MENU_RULES_BUTTON":"Rules",
     "CONNECTING_SCREEN_CONNECTING":"Connecting...",
-    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Connected"
+    "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Connected",
+    "DICE_ROLL_RESULT_REROLL_DICES":"Enemy rolled the same dice, reroll to retry"
 }
