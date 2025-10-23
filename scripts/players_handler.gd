@@ -879,7 +879,7 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 			tab_cont.name="Weapon change"
 			tab_cont.tab_alignment=TabBar.ALIGNMENT_CENTER
 			
-			for weapon in char_info.skills[class_skill_name]["weapons"]:
+			for weapon in char_info.get_node().skills[class_skill_name]["weapons"]:
 				var t_edit_new=TextEdit.new()
 				t_edit_new.editable=false
 				t_edit_new.name=weapon
@@ -3877,18 +3877,18 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		if typeof(buff_array_to_remove)!=TYPE_ARRAY:
 			buff_array_to_remove=[buff_array_to_remove]
 		for buff in buff_array_to_remove:
-			rpc("remove_buff",[field.get_current_self_char_info().to_dictionary],buff["Name"],true)
+			rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],buff["Name"],true)
 	print("weapon_name_to_change_to="+str(weapon_name_to_change_to))
 	
 	get_self_servant_node().current_weapon=weapon_name_to_change_to
 	var folderr=""
 	if OS.has_feature("editor"):
-		folderr="res"
+		folderr="res:/"
 	else:
-		folderr="user"
+		folderr="user:/"
 	
 	rpc("change_char_info_sprite",field.get_current_self_char_info().to_dictionary(),
-	str(folderr)+"://servants/"+field.get_current_self_char_info().get_servant_name()+
+	str(folderr)+field.get_current_self_char_info().get_node().get_meta("servant_path")+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
 	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
