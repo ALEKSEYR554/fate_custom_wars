@@ -264,7 +264,7 @@ var nickname:String
 var debug_mode:bool=false
 var pu_id_to_nickname:Dictionary={}
 
-var user_folder="user://"
+var user_folder="user:/"
 # Called when the node enters the scene tree for the first time.
 
 const ranks:Array = [

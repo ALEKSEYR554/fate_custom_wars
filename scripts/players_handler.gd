@@ -228,7 +228,32 @@ func _recursive_merge_descriptions(data, translations_map):
 			for item in data:
 				_recursive_merge_descriptions(item, translations_map)
 
+func apply_initial_weapon_buffs(player_node: Node2D) -> void:
+	for skill_name in player_node.skills:
+		var skill = player_node.skills[skill_name]
+		if skill.get("Type") == "Weapon Change":
+			
+			var weapons = skill.get("weapons", {})
+			if weapons.is_empty():
+				continue
+				
+			var base_weapon_name = weapons.keys()[0]
+			var base_weapon = weapons[base_weapon_name]
+			
+			# If weapon has buff, add it with unique ID
+			if base_weapon.has("Buff"):
+				var weapon_buffs = base_weapon["Buff"].duplicate(true)
+				if typeof(weapon_buffs) != TYPE_ARRAY:
+					weapon_buffs = [weapon_buffs]
 
+				
+				var weapon_uniq_id = get_uniq_string_from_object(base_weapon)
+				print("adding group_uniq_id to weapon buffs from weapon desc=",base_weapon, " weapon_uniq_id=",weapon_uniq_id)
+				
+				# Add unique ID to each buff
+				for buff in weapon_buffs:
+					buff["group_uniq_id"] = weapon_uniq_id
+					player_node.buffs.append(buff)
 
 @rpc("call_local","any_peer","reliable")
 func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_summon:bool=false,summon_buff_info:Dictionary={}):
@@ -263,7 +288,8 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
 	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
 
-		
+	
+
 	player_textureRect.texture=ImageTexture.create_from_image(img)
 	effect_layer.texture=load("res://images/white.png")
 	
@@ -460,6 +486,8 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 
 
 	apply_all_translation_codes(player)
+
+	apply_initial_weapon_buffs(player)
 
 	unit_unique_id_to_items_owned[get_id_from_hostt]={}
 	unit_uniq_id_player_game_stat_info[get_id_from_hostt]=DEFAULT_GAME_STAT.duplicate(true)
@@ -2825,6 +2853,13 @@ func get_absorbs_buffs()->Array:
 			output.append({"Buffs Names":ubsb.get("Buffs Names",[]),"char_info":char_info})
 	return output
 
+
+@rpc("any_peer","reliable","call_local")
+func add_buff_array(cast_array,skill_info_array:Array):
+	for skill_info in skill_info_array:
+		await add_buff(cast_array,skill_info)
+	pass
+
 @rpc("any_peer","reliable","call_local")
 func add_buff(cast_array,skill_info:Dictionary):
 	if typeof(cast_array)!=TYPE_ARRAY:
@@ -2894,6 +2929,24 @@ func add_buff(cast_array,skill_info:Dictionary):
 	pass
 
 
+func get_uniq_string_from_object(object_tmp)->String:
+	var object=object_tmp.duplicate()
+	if typeof(object) == TYPE_DICTIONARY:
+		if object.get("Description",""):
+			object["Description"]={}
+
+	var buff_info_stringify=str(object)
+	var ctx = HashingContext.new()
+	var buffer = buff_info_stringify.to_utf8_buffer()
+	ctx.start(HashingContext.HASH_MD5)
+	ctx.update(buffer)
+	var unique_id_trait = ctx.finish()
+	unique_id_trait=unique_id_trait.hex_encode()
+
+	return unique_id_trait
+
+
+
 
 func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 
@@ -2924,13 +2977,7 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 		push_error("Summon Name is not specifyed, aborting")
 		return
 
-	var buff_info_stringify=str(summon_buff_info)
-	var ctx = HashingContext.new()
-	var buffer = buff_info_stringify.to_utf8_buffer()
-	ctx.start(HashingContext.HASH_MD5)
-	ctx.update(buffer)
-	var unique_id_trait = ctx.finish()
-	unique_id_trait=unique_id_trait.hex_encode()
+	var unique_id_trait=get_uniq_string_from_object(summon_buff_info)
 
 
 	var limit=summon_buff_info.get("Limit", 3)
@@ -3045,6 +3092,7 @@ func effect_on_buff(char_info_buff_given_to:CharInfo,buff_name)->void:
 func remove_buff(cast_array:Array,skill_name:String,remove_passive=false,remove_only_passive_one=false):
 	#remove SINGLE BUFF
 	#if need to remove bath then await buff_removed to sync
+	# OR remove_buff_array
 	for who_to_remove_buff_char_info_dic in cast_array:
 		var who_to_remove_buff_char_info=CharInfo.from_dictionary(who_to_remove_buff_char_info_dic)
 		var i=0
@@ -3052,6 +3100,7 @@ func remove_buff(cast_array:Array,skill_name:String,remove_passive=false,remove_
 			if buff["Name"]==skill_name:
 				var buf_type=buff.get("Type","")
 				if buf_type=="Status":
+					i+=1
 					continue
 				if buf_type=="Passive":
 					if remove_passive: 
@@ -3870,14 +3919,36 @@ func change_char_info_sprite(char_info_dic:Dictionary,image_path:String)->void:
 	#player_textureRect.texture=ImageTexture.create_from_image(img)
 	char_info.get_node().get_child(0).texture=ImageTexture.create_from_image(img)
 
+@rpc("any_peer","call_remote","reliable")
+func remove_char_info_buffs_by_uniq_id(char_info_dic:Dictionary,buff_uniq_id:String,remove_passive:bool=false,remove_only_passive:bool=false)->void:
+	var char_info=CharInfo.from_dictionary(char_info_dic)
+	var buffs_array=get_char_info_buffs(char_info)
+	print("remove_char_info_buffs_by_uniq_id called buff_uniq_id="+str(buff_uniq_id))
+	for buff in buffs_array:
+		print("group_uniq_id="+str(buff.get("group_uniq_id","")))
+		if buff.get("group_uniq_id","") == buff_uniq_id:
+			print("removing buff="+str(buff))
+			remove_buff([char_info_dic],buff["Name"],remove_passive,remove_only_passive)
+
 func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	var weapons_array=get_self_servant_node().skills["Class Skill "+str(class_skill_number)]["weapons"]
-	if weapons_array[get_self_servant_node().current_weapon].has("Buff"):
-		var buff_array_to_remove=weapons_array[get_self_servant_node().current_weapon]["Buff"]
-		if typeof(buff_array_to_remove)!=TYPE_ARRAY:
-			buff_array_to_remove=[buff_array_to_remove]
-		for buff in buff_array_to_remove:
-			rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],buff["Name"],true)
+	var current_weapon_description=weapons_array[get_self_servant_node().current_weapon]
+	if current_weapon_description.has("Buff"):
+		var current_weapon_buffs = current_weapon_description["Buff"]
+		if typeof(current_weapon_buffs) != TYPE_ARRAY:
+			current_weapon_buffs = [current_weapon_buffs]
+
+
+		var weapon_uniq_id = get_uniq_string_from_object(current_weapon_description)
+
+		print("removing group_uniq_id to weapon buffs from weapon desc=",current_weapon_description, " weapon_uniq_id=",weapon_uniq_id)
+		
+		remove_char_info_buffs_by_uniq_id(field.get_current_self_char_info().to_dictionary(), weapon_uniq_id, true, true)
+		rpc("remove_char_info_buffs_by_uniq_id", field.get_current_self_char_info().to_dictionary(), weapon_uniq_id, true, true)
+		
+		
+		print("previous weapon buffs removed")
+	
 	print("weapon_name_to_change_to="+str(weapon_name_to_change_to))
 	
 	get_self_servant_node().current_weapon=weapon_name_to_change_to
@@ -3885,28 +3956,36 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	if OS.has_feature("editor"):
 		folderr="res:/"
 	else:
-		folderr="user:/"
+		folderr=Globals.user_folder
 	
+	print("change_char_info_sprite")
 	rpc("change_char_info_sprite",field.get_current_self_char_info().to_dictionary(),
 	str(folderr)+field.get_current_self_char_info().get_node().get_meta("servant_path")+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
-	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
-	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
+	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),
+		"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
+	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),
+		"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
 	
-	if weapons_array[weapon_name_to_change_to]["Is One Hit Per Turn"]:
+	if weapons_array[weapon_name_to_change_to].get("Is One Hit Per Turn",false):
 		rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],"Maximum Hits Per Turn",true,true)
-		rpc("add_buff",[field.get_current_self_char_info().to_dictionary()],{"Name":"Maximum Hits Per Turn","Duration":"Passive", "Power":1})
+		rpc("add_buff",[field.get_current_self_char_info().to_dictionary()],{"Name":"Maximum Hits Per Turn","Type":"Passive", "Power":1})
 	else:
 		rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],"Maximum Hits Per Turn",true,true)
 	
-	
+	print("adding new weapon buff")
 	if weapons_array[weapon_name_to_change_to].has("Buff"):
-		var buff_array_to_add=weapons_array[weapon_name_to_change_to]["Buff"]
-		if typeof(buff_array_to_add)!=TYPE_ARRAY:
-			buff_array_to_add=[buff_array_to_add]
-		for buff in buff_array_to_add:
-			rpc("add_buff",[field.get_current_self_char_info().to_dictionary()],buff)
+		var new_weapon_buffs = weapons_array[weapon_name_to_change_to]["Buff"].duplicate(true)
+		if typeof(new_weapon_buffs) != TYPE_ARRAY:
+			new_weapon_buffs = [new_weapon_buffs]
+			
+		var new_weapon_uniq_id = get_uniq_string_from_object(weapons_array[weapon_name_to_change_to])
+
+		for i in range(new_weapon_buffs.size()):
+			new_weapon_buffs[i]["group_uniq_id"] = new_weapon_uniq_id
+
+		rpc("add_buff_array", [field.get_current_self_char_info().to_dictionary()], new_weapon_buffs)
 
 
 
