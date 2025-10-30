@@ -193,6 +193,7 @@ anchor_right = 0.053
 anchor_bottom = 0.921875
 offset_top = -0.256042
 offset_right = 307.728
+theme_override_font_sizes/font_size = 30
 text = "Host"
 placeholder_text = "YOU NICKNAME"
 max_length = 20
