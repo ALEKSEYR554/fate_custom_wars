@@ -66,17 +66,7 @@ var magic #["C",0,3]
 var traits=[]
 var strength
 var gender
-var buffs=[{"Name":"Magical Damage Get + Attack",
-				"Trigger": "Magical Damage Taken",
-				"Effect On Trigger":
-					{"Buffs":[
-						{"Name":"ATK Up",
-							"Duration":2,
-							"Power":1}
-						],
-						"Cast":"Self"},
-				"Type":"Passive",
-				"Power":1}]
+var buffs=[]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
 var additional_moves=0
@@ -94,13 +84,17 @@ var skills={
 	
 	"Effect":[
 		{"Buffs":[
-			{"Name":"ATK Up",
+			{
+				"Name":"ATK Up",
 				"Duration":3,
-				"Power":3},
-			{"Name":"ATK UP X Against Trait",
+				"Power":3
+			},
+			{
+				"Name":"ATK UP X Against Trait",
 				"Duration":3,
 				"Power":2,
-				"Trait":"Summonable"}
+				"Trait":"Summonable"
+			}
 			],
 			"Cast":"Self"}
 		]
@@ -113,14 +107,19 @@ var skills={
 	"Description ID":"Second Skill",
 	
 	"Effect":[
-		{"Buffs":[
-			{"Name":"ATK Up X",
-				"Duration":1,
-				"Power":2},
-			{"Name":"Invincible",
-				"Duration":1,
-				"Hit Times":1}
-				],
+		{
+			"Buffs":[
+				{
+					"Name":"ATK Up X",
+					"Duration":1,
+					"Power":2
+				},
+				{
+					"Name":"Invincible",
+					"Duration":1,
+					"Hit Times":1
+				}
+			],
 		"Cast":"Self"}
 		]
 },
@@ -132,13 +131,18 @@ var skills={
 	"Description ID":"Third Skill",
 	
 	"Effect":[
-		{"Buffs":[
-			{"Name":"Charge NP",
-				"Duration":1,
-				"Power":1},
-			{"Name":"Debuff Immune",
-				"Duration":1,
-				"Power":3}
+		{
+			"Buffs":[
+				{
+					"Name":"Charge NP",
+					"Duration":1,
+					"Power":1
+				},
+				{
+					"Name":"Debuff Immune",
+					"Duration":1,
+					"Power":3
+				}
 			],
 			"Cast":"Self"}
 		]
@@ -153,48 +157,75 @@ var skills={
 	"weapons":{#first is base weapon
 		"Scythe":{
 			"Description ID":"Weapon Scythe",
-			"Is One Hit Per Turn":false,"Damage":4,"Range":1,"Buff":
-				{"Name":"Magical Damage Get + Attack",
-				"Trigger": "Magical Damage Taken",
-				"Effect On Trigger":
-					{"Buffs":[
-						{"Name":"ATK Up",
-							"Duration":2,
-							"Power":1}
-						],
-						"Cast":"Self"},
-				"Type":"Passive",
-				"Power":1},
+			"Is One Hit Per Turn":false,
+			"Damage":4,
+			"Range":1,
+			"Buff":
+				{
+					"Name":"Magical Damage Get + Attack",
+					"Trigger": "Magical Damage Taken",
+					"Effect On Trigger":
+						{
+							"Buffs":[
+								{
+									"Name":"ATK Up",
+									"Duration":2,
+									"Power":1
+								}
+							],
+							"Cast":"Self"},
+					"Type":"Passive",
+					"Power":1
+				},
 		},
 		"Hammer":{
 			"Description ID":"Weapon Hammer",
-			"Is One Hit Per Turn":true,"Damage":6,"Range":1,"Buff":[
-				{"Name":"Ignore DEF Buffs",
+			"Is One Hit Per Turn":true,
+			"Damage":6,
+			"Range":1,
+			"Buff":[
+				{
+					"Name":"Ignore DEF Buffs",
 					"Type":"Passive",
-					"Power":1},
-				{"Name":"Ignore Defence",
+					"Power":1
+				},
+				{
+					"Name":"Ignore Defence",
 					"Type":"Passive",
-					"Power":1},
+					"Power":1
+				},
 			]
 		},
 		"Boomerang":{
 			"Description ID":"Weapon Boomerang",
-			"Is One Hit Per Turn":false,"Damage":0,"Range":5,"Buff":
-				{"Name":"pull enemies on attack",
-				"Type":"Passive",
-				"Trigger":"Success Attack",
-				"Effect On Trigger":"pull enemies on attack"}
+			"Is One Hit Per Turn":false,
+			"Damage":0,
+			"Range":5,
+			"Buff":
+				{
+					"Name":"pull enemies on attack",
+					"Type":"Passive",
+					"Trigger":"Success Attack",
+					"Effect On Trigger":"pull enemies on attack"
+				}
 		},
 		"Bow":{
 			"Description ID":"Weapon Bow",
-			"Is One Hit Per Turn":false,"Damage":2,"Range":2
+			"Is One Hit Per Turn":false,
+			"Damage":2,
+			"Range":2
 		},
 		"Alebard":{
 			"Description ID":"Weapon Alebard",
-			"Is One Hit Per Turn":false,"Damage":3,"Range":2,"Buff":
-				{"Name":"Agility Set",
-				"Type":"Passive",
-				"Power":"B++"}
+			"Is One Hit Per Turn":false,
+			"Damage":3,
+			"Range":2,
+			"Buff":
+				{
+					"Name":"Agility Set",
+					"Type":"Passive",
+					"Power":"B++"
+				}
 		}
 	}
 }
@@ -220,17 +251,22 @@ var phantasms={
 				{"Cost":12,"Attack Type":"Line","Range":5,"Damage":12,
 				"ignore":["Defence","defensive_buffs"],
 				"effect_after_attack":[
-						{"Buffs":[
-							{"Name":"NP Charge",
-								"Duration":3,
-								"Power":2}
-						],
+						{"Buffs":
+							[
+								{
+									"Name":"NP Charge",
+									"Duration":3,
+									"Power":2
+								}
+							],
 						"Cast":"Self"},
 						
 						{"Buffs":[
-							{"Name":"Def Down",
+							{
+								"Name":"Def Down",
 								"Duration":3,
-								"Power":2}
+								"Power":2
+							}
 						],
 						"Cast":"Phantasm Attacked"},
 						]
