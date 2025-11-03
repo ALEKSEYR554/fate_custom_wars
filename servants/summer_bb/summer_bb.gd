@@ -210,7 +210,7 @@ var phantasms={
 							{"Name":"NP Discharge",
 								"Power":2}
 						],
-						"Cast":"Self"}
+						"Cast":"Phantasm Attacked"}
 						]
 					},
 			"Overcharge":
@@ -220,7 +220,7 @@ var phantasms={
 							{"Name":"NP Discharge",
 								"Power":4}
 						],
-						"Cast":"Self"}
+						"Cast":"Phantasm Attacked"}
 						]
 					},
 		}
