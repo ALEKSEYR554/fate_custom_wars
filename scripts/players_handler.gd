@@ -915,6 +915,7 @@ func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())-
 				t_edit_new.text=get_item_description(skill_info["weapons"][weapon])
 				tab_cont.add_child(t_edit_new)
 			class_skills_text_edit.add_child(tab_cont)
+			tab_cont.tab_changed.connect(field._on_weapon_change_tab_changed)
 		else:
 			var t_edit=TextEdit.new()
 			t_edit.editable=false
@@ -3823,8 +3824,8 @@ func _on_use_skill_button_pressed():
 				skill_cooldown)
 		4:
 			var class_skill_number= skill_info_tab_container.get_current_tab_control().current_tab+1
-
-			skill_consume_action= get_self_servant_node().skills["Class Skill "+str(class_skill_number)].get("Consume Action",true)
+			var skill_info= get_self_servant_node().skills["Class Skill "+str(class_skill_number)]
+			skill_consume_action= skill_info.get("Consume Action",true)
 			rpc("add_to_advanced_logs",
 				"ADVANCED_LOG_PLAYER_USING_CLASS_SKILL",
 				{
@@ -3833,12 +3834,12 @@ func _on_use_skill_button_pressed():
 				}
 			)
 
-			var skill_cooldown=get_self_servant_node().skills["Class Skill "+str(class_skill_number)]["Cooldown"]
+			var skill_cooldown=skill_info["Cooldown"]
 
 			if one_time_skills:
 				skill_cooldown=NAN
 			
-			if get_self_servant_node().skills["Class Skill "+str(class_skill_number)]["Type"]=="Weapon Change":
+			if skill_info["Type"]=="Weapon Change":
 				#print(skill_info_tab_container.get_current_tab_control().get_current_tab_control())
 				var weapon_name_to_change_to=skill_info_tab_container.get_current_tab_control().get_current_tab_control().get_current_tab_control().name
 				var tt=skill_info_tab_container.get_current_tab_control()
@@ -3847,9 +3848,17 @@ func _on_use_skill_button_pressed():
 				#var tt3=tt2.get_current_tab_control()
 				print("eee")
 				
-				rpc("set_char_info_cooldown_for_skill_id",char_info.to_dictionary(),2+class_skill_number,
-				skill_cooldown)
-				succesfully=true#idk
+				var set_cooldown=true
+				if skill_info.get("free_unequip",false):
+					print("free_unequip true")
+					if skill_info["weapons"].keys()[0]==weapon_name_to_change_to:
+						print("set_cooldown false")
+						set_cooldown=false
+
+				if set_cooldown:
+					rpc("set_char_info_cooldown_for_skill_id",char_info.to_dictionary(),2+class_skill_number,
+					skill_cooldown)
+				succesfully=true#idk how to check it properly
 				change_weapon(weapon_name_to_change_to,class_skill_number)
 
 				rpc("add_to_advanced_logs",

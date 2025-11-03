@@ -2887,6 +2887,9 @@ func _on_self_info_show_button_pressed():
 	pass # Replace with function body.
 
 
+func _on_weapon_change_tab_changed(_tab):
+	_on_skill_info_tab_container_tab_changed()
+
 func _on_class_skill_tab_changed(_tab):
 	_on_skill_info_tab_container_tab_changed()
 
@@ -2896,7 +2899,7 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 	use_skill_button.disabled=true
 	var skills_available=true
 	var servant_skills:Dictionary=get_current_self_char_info().get_node().skills
-	var skill_info
+	var skill_info={}
 
 	var skills_blocked=false
 
@@ -2922,6 +2925,8 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 			skills_available=true
 			print("max skills not reached")
 	var skill_cooldown=0
+
+	print("_on_skill_info_tab_container_tab_changed tab="+str(tab))
 	match tab:
 		0:
 			skill_cooldown=players_handler.get_self_servant_node().skill_cooldowns[0]
@@ -2934,11 +2939,28 @@ func _on_skill_info_tab_container_tab_changed(tab=-1):
 			skill_info=servant_skills.get("Third Skill")
 		3:
 			var class_skill_number=skill_info_tab_container.get_current_tab_control().current_tab+1
+
+			print("_on_skill_info_tab_container_tab_changed class_skill_number="+str(class_skill_number))
+			
 			skill_info=servant_skills.get("Class Skill "+str(class_skill_number),{})
 			if skill_info.is_empty():
 				skills_available=false
 			else:
-				skill_cooldown=players_handler.get_self_servant_node().skill_cooldowns[2+class_skill_number]
+				if skill_info["Type"]=="Weapon Change":
+					print("Weapon Change on tab changed")
+					if skill_info.get("free_unequip",false):
+						print("free_unequip on tab changed")
+						var weapon_name_to_change_to=skill_info_tab_container.get_current_tab_control().get_current_tab_control().get_current_tab_control().name
+						print('skill_info["weapons"].keys()[0]='+str(skill_info["weapons"].keys()[0]))
+						if skill_info["weapons"].keys()[0]==weapon_name_to_change_to:
+							print("set_cooldown false on tab changed")
+							skill_cooldown=0
+						else:
+							skill_cooldown=players_handler.get_self_servant_node().skill_cooldowns[2+class_skill_number]
+					else:
+						skill_cooldown=players_handler.get_self_servant_node().skill_cooldowns[2+class_skill_number]
+				else:
+					skill_cooldown=players_handler.get_self_servant_node().skill_cooldowns[2+class_skill_number]
 	
 	if not skill_info.get("Consume Action",true):
 		is_skill_free_from_actions=true

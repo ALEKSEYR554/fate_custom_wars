@@ -151,7 +151,7 @@ var skills={
 "Class Skill 1":{
 	"Type":"Weapon Change",
 	"Rank":"UNIQ",
-	"Cooldown":0,
+	"Cooldown":8,
 	"Description ID":"Class Skill 1",
 	"free_unequip":true,
 	"weapons":{#first is base weapon
