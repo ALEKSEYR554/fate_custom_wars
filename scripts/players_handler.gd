@@ -1069,7 +1069,7 @@ func _on_use_custom_button_pressed()->void:
 	match custom_id_to_skill[custom_id]["Type"]:
 		CUSTOM_TYPES.PHANTASM:
 			await use_phantasm(custom_id_to_skill[custom_id]["Effect"])
-			field.reduce_one_action_point()
+			field.reduce_one_action_point(-1,'CUSTOM_TYPES.PHANTASM used')
 		CUSTOM_TYPES.POTION_CREATING:
 			var dict={custom_id:custom_id_to_skill[custom_id]}
 			#dict.merge(custom_id_to_skill[custom_id])
@@ -1920,14 +1920,23 @@ func get_allies_char_info(char_info_to_search:CharInfo=field.get_current_self_ch
 	return output_char_infos
 	#cast self,allies, 
 
+func get_enemies_teams_char_info_uniq_ids()->Array:
+	var enemies_pu_ids=get_enemies_teams()
 
+	var output_char_infos=[]
+	for pu_id in enemies_pu_ids:
+		for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
+			var char_info=CharInfo.new(pu_id,unit_id)
+			output_char_infos.append(char_info.get_uniq_id())
+			
+	return output_char_infos
 
 func get_all_enemies_in_range(_range,char_info_to_search:CharInfo=field.get_current_self_char_info())->Array:
-	var enemies=get_enemies_teams_char_info()
+	var enemies=get_enemies_teams_char_info_uniq_ids()
 	var out=[]
 	for char_info in get_everyone_in_range(_range,char_info_to_search):
-		if char_info in enemies:
-			out+=char_info
+		if char_info.get_uniq_id() in enemies:
+			out.append(char_info)
 	return out
 
 func get_everyone_in_range(range_local:int,char_info_to_search:CharInfo=field.get_current_self_char_info())->Array:
@@ -3885,7 +3894,7 @@ func _on_use_skill_button_pressed():
 				{"result":succesfully}
 			)
 	if skill_consume_action and succesfully:
-		field.reduce_one_action_point()
+		field.reduce_one_action_point(-1,"_on_use_skill_button_pressed")
 	if succesfully:
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"skill_used_this_turn",1)
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"total_skill_used",1)
