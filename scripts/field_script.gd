@@ -729,7 +729,7 @@ func glow_cletka_pressed(glow_kletka_selected):
 			if players_handler.get_self_servant_node().additional_moves>=1 or get_current_kletka_id()==-1:
 				players_handler.rpc("reduce_additional_moves_for_char_info",get_current_self_char_info().to_dictionary())
 			else:
-				reduce_one_action_point()
+				reduce_one_action_point(-1,"movement")
 			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,get_current_kletka_id(),glowing_kletka_number_selected)
 			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),get_current_kletka_id(),glowing_kletka_number_selected)
 			await player_moved
@@ -990,11 +990,13 @@ func capture_single_kletka_sync(glowing_kletka_number_selected_temp,temp_kletka_
 	captur_klet.queue_redraw()
 	captured_kletki_nodes_dict[glowing_kletka_number_selected_temp]=captur_klet
 
-func reduce_one_action_point(amount_to_reduce=-1):
+func reduce_one_action_point(amount_to_reduce=-1,why=""):
+	print("reduce_one_action_point for self="+str(get_current_self_char_info().get_node().name)," why=",why)
 	current_action_points+=amount_to_reduce
 	current_action_points_label.text=str(current_action_points)
 	if current_action_points==0:
 		make_action_button.disabled=true
+	print("reduce_one_action_point done, current_action_points="+str(current_action_points)+"\n\n")
 
 
 func get_current_kletka_id(char_info:CharInfo=get_current_self_char_info())->int:
@@ -1426,17 +1428,18 @@ func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_
 			await players_handler.trigger_buffs_on(self_char_info,"enemy evaded",enemy_char_info)
 		
 
-	if hitted:
+	if hitted and attack_type!="Phantasm":
 		players_handler.rpc("charge_np_to_char_info_by_number",self_char_info.to_dictionary(),1)
 		players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM")
 	roll_dice_optional_label.visible=false
 	if attack_type=="Physical" and players_handler.get_char_info_attack_range(self_char_info)<=2: 
 		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),kletka_id,get_current_kletka_id(),true)
-	if attack_type!="Phantasm" or not consume_action_point:
+	if attack_type!="Phantasm" or consume_action_point:
 		if players_handler.get_self_servant_node().additional_attack>=1:
 			players_handler.rpc("reduce_additional_attacks_for_char_info",self_char_info.to_dictionary())
 		else:
-			reduce_one_action_point()
+			print("reducing action point after attack attack_type=",attack_type," consume_action_point=",consume_action_point)
+			reduce_one_action_point(-1,"attack")
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
 
 	dices_main_VBoxContainer.visible=false
