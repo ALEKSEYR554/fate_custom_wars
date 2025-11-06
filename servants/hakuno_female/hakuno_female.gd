@@ -46,7 +46,8 @@ var current_weapon#="Scythe"
 var phantasm_charge=0
 var attribute
 var gender
-# Called when the node enters the scene tree for the first time.
+var ascension_stage
+
 
 var passive_skills=[
 	{"Name":"Code Cast",

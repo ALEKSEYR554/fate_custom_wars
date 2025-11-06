@@ -72,7 +72,8 @@ var phantasm_charge=0
 var strength
 var attribute
 var gender
-# Called when the node enters the scene tree for the first time.
+var ascension_stage
+
 
 var skills={
 "First Skill":{

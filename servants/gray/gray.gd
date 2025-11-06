@@ -66,6 +66,7 @@ var magic #["C",0,3]
 var traits=[]
 var strength
 var gender
+var ascension_stage
 var buffs=[]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]

@@ -73,6 +73,7 @@ var luck
 var magic 
 var traits
 var gender
+var ascension_stage
 var buffs=[]
 # 0,1,2 - личные навыки, все далее это классовые
 var skill_cooldowns=[]
@@ -82,18 +83,18 @@ var current_weapon#="Scythe"
 var phantasm_charge=0
 var attribute
 
-# Called when the node enters the scene tree for the first time.
+
 
 var passive_skills=[
 	{
 		"Name":"Existence Outside the Domain",
 		"Type":"Status",
-		"Types":["Buff Positive Effect"],#addes as demonstration
+		"Types":["Buff Positive Effect"],
 		"Power":0
-		},
+	},
 	{
 		"Name":"Nullify Debuff",
-		"Display Name":"The One Who Swallows the Earth",#TODO
+		"Display Name":"The One Who Swallows the Earth",
 		"Type":"Status",
 		"Types To Block":["Buff Burn"]
 	},

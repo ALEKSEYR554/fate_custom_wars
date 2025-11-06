@@ -61,6 +61,7 @@ var luck
 var magic
 var traits=[]
 var gender
+var ascension_stage
 
 var buffs=[]
 var skill_cooldowns=[]
@@ -73,7 +74,7 @@ var strength
 
 var passive_skills=[
 	{"Name":"Riding",#currently useless
-		"Display Name":"Surfing",#TODO
+		"Display Name":"Surfing",
 		"Type":"Status"
 	}
 ]
