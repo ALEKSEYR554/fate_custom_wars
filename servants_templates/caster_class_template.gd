@@ -44,6 +44,7 @@ var current_weapon="Scythe"#if character doen't have weapon then dont touch it
 var phantasm_charge=0
 var attribute
 var gender
+var ascension_stage
 
 var skills={
 "First Skill":{

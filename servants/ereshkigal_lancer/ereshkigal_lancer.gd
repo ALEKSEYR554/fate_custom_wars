@@ -76,6 +76,7 @@ var phantasm_charge=0
 
 var attribute
 var gender
+var ascension_stage
 
 
 var skills={

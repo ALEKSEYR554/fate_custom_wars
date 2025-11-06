@@ -45,6 +45,7 @@ var phantasm_charge=0
 
 var attribute
 var gender
+var ascension_stage
 func _ready():
 	servant_class=default_stats["servant_class"]
 	ideology=default_stats["ideology"]
