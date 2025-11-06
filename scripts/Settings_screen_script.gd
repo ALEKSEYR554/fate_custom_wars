@@ -15,7 +15,7 @@ const resolutions=[
 "2560x1080",
 "2560x1440"
 ]
-# Called when the node enters the scene tree for the first time.
+
 func _ready():
 	for item in resolutions:
 		resolution_choice.add_item(item)
