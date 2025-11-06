@@ -101,7 +101,7 @@ func only_int_checker(text:String)->void:
 		old_text = text
 	else:
 		hp_line_edit.text = old_text
-# Called when the node enters the scene tree for the first time.
+
 func _ready():
 	hp_line_edit.text_changed.connect(only_int_checker)
 	for rank in ranks:

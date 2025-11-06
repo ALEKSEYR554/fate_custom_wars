@@ -2,7 +2,7 @@ extends Node2D
 @onready var file_dialog = $"../FileDialog"
 const DRAG_OBJECT = preload("res://scenes/drag_object.tscn")
 
-# Called when the node enters the scene tree for the first time.
+
 func _ready():
 	pass # Replace with function body.
 

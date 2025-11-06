@@ -4,7 +4,7 @@ var char_info_selected:CharInfo
 
 @onready var char_info_holder_h_box_container = $char_info_holder_HBoxContainer
 
-# Called when the node enters the scene tree for the first time.
+
 func _ready():
 	pass # Replace with function body.
 

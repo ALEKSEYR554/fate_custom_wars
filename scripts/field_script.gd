@@ -76,6 +76,8 @@ extends Node2D
 
 @onready var actions_buttons = %actions_buttons
 
+@onready var custom_choices_main_Vboxcontainer = %custom_choices_main_Vboxcontainer
+
 @onready var current_action_points_label = %current_action_points_label
 
 
@@ -282,8 +284,19 @@ signal dismounted
 
 signal attacker_finished_attack(char_info_dic)
 
+
+var gui_windows_dictionary:Dictionary={}
+
 func _ready():
-	
+	gui_windows_dictionary={"servant_info_main_container":[players_handler.servant_info_main_container],
+	"skill_info_tab_container":[%skill_info_main_VBoxContainer,skill_info_tab_container,use_skill_but_label_container],
+	"actions_buttons":[actions_buttons],
+	"use_custom":[custom_choices_main_Vboxcontainer,players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
+	"command_spells":[command_spell_choices_container],
+	"menu":[menu_vbox_container],
+	"teams":[players_handler.teams_margin],
+	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button,char_choose_main_VBoxContainer]
+	}
 	
 	Globals.someone_status_changed.connect(disconnect_alert_show)
 	
@@ -2854,20 +2867,20 @@ func _on_skill_info_show_button_pressed():
 	hide_all_gui_windows("skill_info_tab_container")
 	pass # Replace with function body.
 
+func check_if_hidable_gui_windows_active()->bool:
+	var dictio=gui_windows_dictionary
+	for key in dictio:
+		for item in dictio[key]:
+			if item.visible:
+				return true
+	return false
+
 func hide_all_gui_windows(except_name="all"):
 	if except_name!="servant_info_main_container":
 		players_handler.player_info_button_current_pu_id=""
 	print("hide_all_gui_windows= "+str(except_name))
+	var dictio=gui_windows_dictionary
 	
-	var dictio={"servant_info_main_container":[players_handler.servant_info_main_container],
-	"skill_info_tab_container":[%skill_info_main_VBoxContainer,skill_info_tab_container,use_skill_but_label_container],
-	"actions_buttons":[actions_buttons],
-	"use_custom":[%custom_choices_main_Vboxcontainer,players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
-	"command_spells":[command_spell_choices_container],
-	"menu":[menu_vbox_container],
-	"teams":[players_handler.teams_margin],
-	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button,char_choose_main_VBoxContainer]
-	}
 	var did_changed=false
 	for key in dictio:
 		if key==except_name:
@@ -2988,7 +3001,11 @@ func _on_refresh_buffs_button_pressed():
 	var buff_duration
 	for buff in buffs:
 		buff_duration=buff.get("Duration","-")
-		display_buffs+=str(buff["Name"],"(",buff_duration,")\n")
+		if buff.has("Display Name"):
+			display_buffs+=str(buff["Display Name"],"(",buff_duration,")\n")
+		else:
+			display_buffs+=str(buff["Name"],"(",buff_duration,")\n")
+		
 	$GUI/buffs_temp_container/buffs_label.text="Buffs:"+display_buffs
 	pass # Replace with function body.
 
@@ -3129,15 +3146,18 @@ func char_info_to_kletka_number(char_info:CharInfo)->int:
 	return -2
 
 
-
-
 func _input(event):
 	if event is InputEventKey:
 		if event.keycode == KEY_ESCAPE and event.pressed:
 			if OS.has_feature("editor"):
 				disconnect_button.visible=true
 				reconnect_button.visible=true
-			hide_all_gui_windows("menu")
+			if check_if_hidable_gui_windows_active():
+				hide_all_gui_windows("all")
+			if current_action!="wait":
+				current_action="wait"
+				blinking_glow_button=false
+				glow_cletki_node.visible=false
 		if event.keycode == KEY_TAB and event.pressed:
 			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
 
