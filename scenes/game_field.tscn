@@ -568,8 +568,6 @@ offset_right = 223.0
 offset_bottom = 169.5
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
 metadata/_edit_lock_ = true
 
 [node name="Current_players_ready_label" type="Label" parent="GUI/character_selection_container"]

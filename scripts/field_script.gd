@@ -441,7 +441,7 @@ func generate_cells(preset_time):
 			var cell_instance = cell_scene.instantiate()
 			kletki_holder.add_child(cell_instance,true)
 			cell_instance.position = new_position
-			cell_instance.name="клетка "+str(i)
+			cell_instance.name="cell "+str(i)
 			connected[i] = {}
 			i+=1
 	print("iiiii="+str(i))
@@ -574,10 +574,10 @@ func reset_pole(cur_time,generated_pole=true):
 		return
 	
 	for i in get_all_children(kletki_holder):
-		if i.name.contains("клетка") or i.name.contains("Line2D"):
+		if i.name.contains("cell") or i.name.contains("Line2D"):
 			kletki_holder.remove_child(i)
 	for i in get_all_children(lines_holder):
-		if i.name.contains("клетка") or i.name.contains("Line2D"):
+		if i.name.contains("cell") or i.name.contains("Line2D"):
 			lines_holder.remove_child(i)
 	#await get_tree().process_frame
 	#call_deferred()
@@ -589,6 +589,33 @@ func _on_reset_pressed():
 	time=Time.get_unix_time_from_system()
 	rpc("reset_pole",time)
 
+func add_glow_kletka_to_kletka_id(kletka_numebr:int):
+	var pos = cell_positions[int(kletka_numebr)]
+	var glow_node=Node2D.new()
+	var glow = Button.new()
+	glow_node.visible=false
+	
+	glow_node.position = pos
+	glow_node.name="glow "+str(kletka_numebr)
+	#glow.button_down.connect(glow_cletka_pressed)
+	#print(glow.name)
+	glow.button_down.connect(glow_cletka_pressed.bind(glow_node))
+	
+	glow.size=Vector2(100,100)
+	glow.modulate=Color(1,1,1,0)
+	
+	
+	glow_node.set_script(load("res://scripts/glow_cell_script.gd"))
+	glow_node.add_child(glow)
+	glow.set_anchors_preset(8)#PRESET_CENTER
+	glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
+	
+	glow_cletki_node.add_child(glow_node,true)
+	glow_array.append(glow_node)
+	print("added glow to kletka id="+str(kletka_numebr))
+
+
+
 func glow_cletki_intiate():
 	glow_array=[]
 	glow_cletki_node=Node2D.new()
@@ -596,30 +623,10 @@ func glow_cletki_intiate():
 	glow_cletki_node.name="Glow_cletki_node"
 	add_child(glow_cletki_node,true)
 	for i in get_all_children(self):
-		if str(i.name).contains("клетка"):
-			var kletka_numebr=int(i.name.trim_prefix("клетка "))
-			var pos = cell_positions[int(kletka_numebr)]
-			var glow_node=Node2D.new()
-			var glow = Button.new()
-			glow_node.visible=false
+		if str(i.name).contains("cell"):
+			var kletka_numebr=int(i.name.trim_prefix("cell "))
+			add_glow_kletka_to_kletka_id(kletka_numebr)
 			
-			glow_node.position = pos
-			glow_node.name="glow "+str(kletka_numebr)
-			#glow.button_down.connect(glow_cletka_pressed)
-			#print(glow.name)
-			glow.button_down.connect(glow_cletka_pressed.bind(glow_node))
-			
-			glow.size=Vector2(100,100)
-			glow.modulate=Color(1,1,1,0)
-			
-			
-			glow_node.set_script(load("res://scripts/glow_cell_script.gd"))
-			glow_node.add_child(glow)
-			glow.set_anchors_preset(8)#PRESET_CENTER
-			glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
-			
-			glow_cletki_node.add_child(glow_node,true)
-			glow_array.append(glow_node)
 
 func add_all_additional_nodes():
 	print("add_all_additional_nodes")
@@ -2415,6 +2422,7 @@ func _on_move_pressed(unmounting=false):
 				continue
 			if kletka_preference[i].has("Blocked"):
 				continue
+			print("glow_array="+str(glow_array))
 			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
 		pass
 		choose_glowing_cletka_by_ids_array(move_ck)
@@ -2562,7 +2570,168 @@ func capture_field_kletki(amount,config_of_kletka,owner_char_info:CharInfo):
 	
 	current_action="wait"
 	return true
+
+var kletka_to_add:Node2D
+signal new_cell_created
+
+var temp_lines_to_draw:Array=[]
+
+func create_new_cell(single_skill_info:Dictionary):
+	#var amount=single_skill_info.get("Amount",1)
+	var cell_config=single_skill_info.get("Config",{})
+
+
 	
+	for i in range(2):
+		var line = Line2D.new()
+		lines_holder.add_child(line,true)
+		line.width = 3
+		line.z_index=-1
+		line.default_color = Color.WHITE
+		temp_lines_to_draw.append(line)
+
+	cell_config["Owner"]=get_current_self_char_info().get_uniq_id()
+	
+	var new_id=connected.size()
+	kletka_to_add=cell_scene.instantiate()
+	kletki_holder.add_child(kletka_to_add,true)
+
+	kletka_to_add.name="cell "+str(new_id)
+
+	current_action="create_new_cell"
+	
+	var lines_points_array:Array=[]
+
+	
+	
+	await new_cell_created
+
+	for line in temp_lines_to_draw:
+		lines_points_array.append([line.get_point_position(0),line.get_point_position(1)])
+
+	rpc("create_new_cell_sync",kletka_to_add.position,cell_config,new_id,lines_points_array)
+	kletka_preference[new_id]=cell_config
+	
+
+	
+	
+	#connecting kletki
+	var kletki_ids_to_connect_to=get_neareset_cells_to_cell_position(kletka_to_add.position,2)
+	print("new_id="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
+	connected[new_id]={}
+	cell_positions[new_id]=kletka_to_add.position
+	
+	for kletka_id in kletki_ids_to_connect_to:
+		connected[new_id][kletka_id]=true
+		connected[kletka_id][new_id]=true
+
+	print("new_id after="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
+	
+	#adding glow kletka
+	add_glow_kletka_to_kletka_id(new_id)
+
+	
+	return true
+
+@rpc("any_peer","call_remote","reliable")
+func create_new_cell_sync(new_position:Vector2,cell_config:Dictionary,new_id:int,lines_cords_to_draw:Array):
+	var kletka_to_add=cell_scene.instantiate()
+	kletki_holder.add_child(kletka_to_add,true)
+	kletka_to_add.position=new_position
+
+	for line_cords in lines_cords_to_draw:
+		var new_line=Line2D.new()
+		new_line.add_point(line_cords[0])
+		new_line.add_point(line_cords[1])
+
+
+		new_line.width = 3
+		new_line.z_index=-1
+		new_line.default_color = Color.WHITE
+
+		lines_holder.add_child(new_line,true)
+
+	kletka_preference[new_id]=cell_config
+	connected[new_id]={}
+	
+	var kletki_ids_to_connect_to=get_neareset_cells_to_cell_position(kletka_to_add.position,2)
+	print("new_id="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
+	cell_positions[new_id]=kletka_to_add.position
+	
+	for kletka_id in kletki_ids_to_connect_to:
+		connected[new_id][kletka_id]=true
+		connected[kletka_id][new_id]=true
+	
+	#adding glow kletka
+	add_glow_kletka_to_kletka_id(new_id)
+
+	
+
+	rpc("systemlog_message",str("New cell created at ",new_position))
+
+
+func get_neareset_cells_to_cell_position(cell_position:Vector2, number_of_cells:int)->Array:
+	var nearest_cells:Array = []
+	var cell_distances:Dictionary = {}
+	
+	# Calculate distances from the given position to all cells
+	for kletka_id in cell_positions.keys():
+		var dist = cell_positions[kletka_id].distance_to(cell_position)
+		cell_distances[kletka_id] = dist
+	
+	# Sort the cell IDs by their distances
+	var sorted_keys = cell_distances.keys()
+	sorted_keys.sort_custom(func(a, b):
+		return cell_distances[a] < cell_distances[b]
+	)
+
+	for i in range(min(number_of_cells, sorted_keys.size())):
+		nearest_cells.append(sorted_keys[i])
+	
+	return nearest_cells
+
+
+func _process(delta):
+	if current_action=="create_new_cell":
+		var mouse_pos = get_global_mouse_position()
+		kletka_to_add.position=mouse_pos
+		var kletki_ids_to_draw_temp_lines_to=get_neareset_cells_to_cell_position(mouse_pos,2)
+
+		temp_lines_to_draw[0].clear_points()
+		temp_lines_to_draw[1].clear_points()
+
+
+		temp_lines_to_draw[0].add_point(mouse_pos,0)
+		temp_lines_to_draw[1].add_point(mouse_pos,0)
+		
+		temp_lines_to_draw[0].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[0]],1)
+		temp_lines_to_draw[1].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[1]],1)
+
+	pass
+
+func _input(event):
+	if event is InputEventKey:
+		if event.keycode == KEY_ESCAPE and event.pressed:
+			if OS.has_feature("editor"):
+				disconnect_button.visible=true
+				reconnect_button.visible=true
+			if check_if_hidable_gui_windows_active():
+				hide_all_gui_windows("all")
+			if current_action!="wait" and current_action!="create new cell":
+				current_action="wait"
+				blinking_glow_button=false
+				glow_cletki_node.visible=false
+		if event.keycode == KEY_TAB and event.pressed:
+			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if current_action=="create_new_cell":
+				current_action="wait"
+				kletka_to_add.position=kletka_to_add.position#.snapped(Vector2(64,64))#+Vector2(32,32)
+				temp_lines_to_draw[0].points=temp_lines_to_draw[0].points
+				temp_lines_to_draw[1].points=temp_lines_to_draw[1].points
+
+				new_cell_created.emit()
 
 func line_attack_phantasm(phantasm_config,dash:bool=false):
 	
@@ -3145,21 +3314,6 @@ func char_info_to_kletka_number(char_info:CharInfo)->int:
 
 	return -2
 
-
-func _input(event):
-	if event is InputEventKey:
-		if event.keycode == KEY_ESCAPE and event.pressed:
-			if OS.has_feature("editor"):
-				disconnect_button.visible=true
-				reconnect_button.visible=true
-			if check_if_hidable_gui_windows_active():
-				hide_all_gui_windows("all")
-			if current_action!="wait":
-				current_action="wait"
-				blinking_glow_button=false
-				glow_cletki_node.visible=false
-		if event.keycode == KEY_TAB and event.pressed:
-			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
 
 func _on_disconnect_button_pressed():
 	Globals.disconnection_request.emit()

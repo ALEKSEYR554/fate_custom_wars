@@ -256,10 +256,10 @@ func apply_initial_weapon_buffs(player_node: Node2D) -> void:
 					player_node.buffs.append(buff)
 
 @rpc("call_local","any_peer","reliable")
-func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_summon:bool=false,summon_buff_info:Dictionary={}):
+func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_summon:bool=false,summon_buff_info:Dictionary={}):
 	print("loading servant for pu_id=",pu_id)
 
-	
+	var servant_name=load_info["name"]
 	#var servant_name:String=Globals.pu_id_player_info[pu_id].get("servant_name",null)
 	if servant_name==null:
 		push_error("servant is not found while loading")
@@ -268,9 +268,12 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	
 	var img=null
 
+	#var ascentions:Array=Globals.pu_id_player_info[pu_id]["ascensions"]
+
 	for servant in Globals.characters:
 		if servant["Name"]==servant_name:
-			img=servant["image"]
+			#img=servant["image"]
+			img = servant["ascensions"][load_info["ascension"]][load_info["costume"]]
 
 	if img==null:
 		push_error("No sprite Found while loading servant")
@@ -480,6 +483,8 @@ func load_servant(pu_id:String,servant_name:String,get_id_from_hostt:String,is_s
 	player.set_meta("servant_name",servant_name)
 
 	player.set_meta("servant_name_just_name",servant_path.get_file().get_basename())
+
+	player.ascension_stage= load_info["ascension"]+1
 	
 
 	add_servants_translations_for_servant_name(player,servant_path,servant_name_just_name)
@@ -522,20 +527,21 @@ func get_self_servant_node(unit_id:int=field.current_unit_id)->Node2D:
 
 
 func get_selected_servant()->void:
-	var servant_name:String=char_select.get_current_servant()
+	var servant_ascensions:Dictionary=char_select.get_current_servant()
 	get_selected_character_button.disabled=true
-	print(servant_name)
+	print(servant_ascensions)
 	rpc("set_nickname_for_pu_id",Globals.self_pu_id,Globals.nickname)
-	rpc_id(1,"check_if_players_ready",Globals.self_pu_id,servant_name)
+	rpc_id(1,"check_if_players_ready",Globals.self_pu_id,servant_ascensions)
 
 @rpc("call_local","any_peer","reliable")
 func set_nickname_for_pu_id(pu_id:String,nickk:String):
 	Globals.pu_id_to_nickname[pu_id]=nickk
 
 @rpc("any_peer","call_local","reliable")
-func check_if_players_ready(pu_id:String,servant_name:String):
-	print("\n\n check_if_players_ready id=",pu_id," sevanntName=",servant_name)
-	Globals.pu_id_player_info[pu_id]["servant_name"]=servant_name#,"servant_node":null}
+func check_if_players_ready(pu_id:String,servant_ascensions:Dictionary):
+	print("\n\n check_if_players_ready id=",pu_id," sevanntName=",servant_ascensions)
+	Globals.pu_id_player_info[pu_id]["servant_name"]=servant_ascensions["name"]#,"servant_node":null}
+	Globals.pu_id_player_info[pu_id]["ascensions"]=servant_ascensions
 
 	print("pu_id=",pu_id, "  "+str(Globals.pu_id_player_info)+" is ready")
 	current_users_ready+=1
@@ -636,11 +642,13 @@ func starting_loading(teams_array,turns_order,pu_id_to_unit_uniq:Dictionary):
 	print("\n START SELF PEER_ID=",Globals.get_self_peer_id(), " =", multiplayer.get_unique_id())
 
 	for pu_id in Globals.pu_id_player_info.keys():
-		var servant_name_to_load = Globals.pu_id_player_info[pu_id].get("servant_name",null)
-		print("right before load servant for id=",pu_id, "name=",servant_name_to_load)
+		#var servant_name_to_load = Globals.pu_id_player_info[pu_id].get("servant_name",null)
+		var ascension=Globals.pu_id_player_info[pu_id]["ascensions"]
+		print("right before load servant for id=",pu_id, "ascension=",ascension)
 		#var node_to_add=load_servant_by_name(peer_id_player_info[peer_id]["servant_name"])
 		var un_id=pu_id_to_unit_uniq[pu_id]
-		load_servant(pu_id,servant_name_to_load,un_id)
+		
+		load_servant(pu_id,ascension,un_id)
 		#peer_id_player_info[peer_id]["servant_node"]=node_to_add
 		#add_child(node_to_add,true)
 		#print(node_to_add)
@@ -942,7 +950,10 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 			display_buffs+=str(buff)+"\n"
 	else:
 		for buff in buffs:
-			display_buffs+=str("\t",buff["Name"])
+			if buff.has("Display Name"):
+				display_buffs+=str("\t",buff["Display Name"])
+			else:
+				display_buffs+=str("\t",buff["Name"])
 			if buff.has("Power"):
 				display_buffs+=str(" lvl ",buff["Power"])
 			if buff.has("Duration"):
@@ -1271,6 +1282,8 @@ func check_condition_wrapper(condition:Dictionary):
 				stat_to_check=char_info_node.hp
 			"Gender":
 				stat_to_check=get_char_info_gender(char_info)
+			"Ascension Stage":
+				stat_to_check=char_info.get_node().ascension_stage
 			"Strength":
 				stat_to_check=get_char_info_strength(char_info)
 			"Agility":
@@ -1791,18 +1804,18 @@ func bomb_phantasm(phantasm_config):
 
 
 func phantasm_in_range(phantasm_config,type="Single"):
-	var range=phantasm_config["Range"]
+	var atk_range=phantasm_config["Range"]
 	var attacked_enemies=[]
 	var kletki_to_attack_array=[]
-	var enemies_array=get_enemies_teams()
+	#var enemies_array=get_enemies_teams()
 	var tmp
 	
 	match type:
 		"Single":
-			tmp=await choose_single_in_range(range)
+			tmp=await choose_single_in_range(atk_range)
 			tmp.erase(field.get_current_self_char_info())
 		"All enemies":
-			tmp=await get_all_enemies_in_range(range)
+			tmp=await get_all_enemies_in_range(atk_range)
 	for char_info in tmp:
 		kletki_to_attack_array.append(get_char_info_kletka_number(char_info))
 	await field.await_dice_including_rerolls("Attack")
@@ -2146,6 +2159,8 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 					usage_successful = await roll_dice_for_result(single_skill_info,cast)
 				"Summon":
 					usage_successful = await summon_someone(self_char_info,single_skill_info)
+				"Create new Cell":
+					usage_successful = await field.create_new_cell(single_skill_info)
 				"Attacking Phantasm Absorb":
 					usage_successful = absorb_attacking_phantasm_from_cast(self_char_info,cast)
 				"Attack Restrict Against Player":
@@ -2252,8 +2267,6 @@ func check_if_all_items_from_arr1_in_arr2(arr1:Array,arr2:Array)->bool:
 	return true
 
 
-
-
 func get_char_infos_satisfying_condition(cast:Array,cast_condition:Dictionary)->Array:
 	print("get_char_infos_satisfying_condition=",cast," condition=",cast_condition)
 	var condition_type=cast_condition.get("Condition","")
@@ -2264,6 +2277,8 @@ func get_char_infos_satisfying_condition(cast:Array,cast_condition:Dictionary)->
 	var class_to_check:Array=cast_condition.get("Class",[])
 	var gender_to_check:Array=cast_condition.get("Gender",[])
 	var buffs_to_check:Array=cast_condition.get("Buff",[])
+	var fields_to_check:Array=cast_condition.get("Field",[])
+
 
 	var valid=strict
 
@@ -2305,7 +2320,13 @@ func get_char_infos_satisfying_condition(cast:Array,cast_condition:Dictionary)->
 					valid = valid and check_if_all_items_from_arr1_in_arr2(buffs_to_check,char_info_buffs)
 				else:
 					valid=true
-
+		if not fields_to_check.is_empty():
+			var current_fields=get_current_fields()
+			if intersect(fields_to_check,current_fields):
+				if strict:
+					valid = valid and check_if_all_items_from_arr1_in_arr2(fields_to_check,current_fields)
+				else:
+					valid=true
 		if valid:
 			output.append(char_info)
 	return output
@@ -2346,7 +2367,6 @@ func create_potion(potions_dict):
 	await use_custom_button.pressed
 
 	return true
-	pass
 
 func reduce_all_cooldowns(char_info:CharInfo,type="Turn Started"):
 	match type:
@@ -3027,7 +3047,14 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 		summon_name=Globals.pu_id_player_info[Globals.self_pu_id]["servant_name"]+'/'+summon_name
 	var id_to_send=Globals.uniqq_ids.pick_random()
 	Globals.uniqq_ids.erase(id_to_send)
-	rpc("load_servant",Globals.self_pu_id,summon_name,id_to_send,true,summon_buff_info)
+
+	var ascention={
+		"name": summon_name,
+		"ascension": 0,
+		"costume": 0
+	}
+
+	rpc("load_servant",Globals.self_pu_id,ascention,id_to_send,true,summon_buff_info)
 	var char_info_loaded=await servant_loaded
 
 	char_info_loaded=CharInfo.from_dictionary(char_info_loaded)
