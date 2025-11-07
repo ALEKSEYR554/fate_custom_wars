@@ -145,63 +145,88 @@ func load_translation_file():
 	
 	TranslationServer.set_locale("en")
 	
+func load_character_sprites(base_path: String, folder: String) -> Array:
+	var ascensions = []
+	var stage = 1
+	
+	# Keep checking stages until we don't find any more
+	while true:
+		var stage_sprites = []
+		var base_stage_name = "sprite_stage_" + str(stage)
+		var stage_path = base_path + str(folder) + "/" + base_stage_name + ".png"
+		
+		# Try to load base stage sprite
+		if !FileAccess.file_exists(stage_path):
+			break # No more stages found
+			
+		var stage_img = Image.new()
+		if stage_img.load(stage_path) == OK:
+			stage_sprites.append(stage_img)
+			
+			# Check for costumes for this stage
+			var costume = 1
+			while true:
+				var costume_path = base_path + str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
+				if !FileAccess.file_exists(costume_path):
+					break # No more costumes for this stage
+					
+				var image = Image.new()
+				if image.load(costume_path) == OK:
+					var data = image.data
+					data["format"] = image.get_format()
 
+					var img = Image.new()
+					img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
 
-func get_locale_text(language:String)->String:
-	return ""
+					stage_sprites.append(img)
+				costume += 1
+		
+		if !stage_sprites.is_empty():
+			ascensions.append(stage_sprites)
+		stage += 1
+	
+	return ascensions
+
 
 func preload_all_servant_sprites():
-	print(str("\n\n\n EDITOR=",OS.has_feature("editor")," \n\n"))
-	#$FileDialog.root_subfolder = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+	print(str("\n\n\n EDITOR=", OS.has_feature("editor"), " \n\n"))
+	characters = []
+	
 	if !OS.has_feature("editor"):
 		print("servant selection type Compiled")
-		var count=1
-		characters =[]
-		#var dir = DirAccess.open(Globals.user_folder+"/servants/")
-		print(OS.get_user_data_dir())
-
-		#getting summons folders
-		var all_folder_with_sprites_to_load=get_all_servants_subfolders_name()
-
+		var all_folder_with_sprites_to_load = get_all_servants_subfolders_name()
+		
 		for folder in all_folder_with_sprites_to_load:
-			print("appending characters\n")
-			#var img = Image.new()
-			var path=Globals.user_folder+"/servants/"+str(folder)+"/sprite.png"
-			print("loading sprite = "+path)
-
-
-
-			var image = Image.new()
-			image.load(path)
-			var data = image.data
-			data["format"] = image.get_format()
+			print("Processing character folder: " + folder)
+			var ascensions = load_character_sprites(Globals.user_folder + "/servants/", folder)
 			
-			var img = Image.new()
-			img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
-
-			#var img=load(path)
-
-			print("img=",img)
-
-
-			#img=img.get_image()
-			#img=ImageTexture.create_from_image(img)
-			characters.append({"Name":folder,"image":img, "Text": "Character "+str(count)+" Description "})
-			print("characters="+str(characters))
+			if !ascensions.is_empty():
+				characters.append({
+					"Name": folder,
+					"ascensions": ascensions,
+					"Text": "Character " + str(folder) + " Description"
+				})
+				print("Added character " + folder + " with " + str(ascensions.size()) + " ascension stages")
 	else:
-		#editor
-		characters=[]
+		# Editor mode - using predefined list but same loading logic
 		print("servant selection type Editor")
-		for folder in ["bunyan","bunyan/horse","el_melloy","medusa_saber","gray","hakuno_female","summer_bb","tamamo","jalter_santa_lily","jaguar_man","queen_medb","queen_medb/warrior","queen_medb/druid"]:
-			#var img = Image.new()
-			print("folder=","res://servants/"+str(folder)+"/sprite.png")
-			var img=ResourceLoader.load("res://servants/"+str(folder)+"/sprite.png","Image").get_image()
-			print(img)
-			#img=ImageTexture.create_from_image(img)
+		var predefined_servants = [
+			"bunyan", "bunyan/horse", "el_melloy", "medusa_saber", "gray",
+			"hakuno_female", "summer_bb", "tamamo", "jalter_santa_lily",
+			"jaguar_man", "queen_medb", "queen_medb/warrior", "queen_medb/druid"
+		]
+		
+		for folder in predefined_servants:
+			print("Processing editor character: " + folder)
+			var ascensions = load_character_sprites("res://servants/", folder)
 			
-			#TODO different descriptions
-			characters.append({"Name":folder,"image":img, "Text": "Character "+str(folder)+" Description "})
-	pass
+			if !ascensions.is_empty():
+				characters.append({
+					"Name": folder,
+					"ascensions": ascensions,
+					"Text": "Character " + str(folder) + " Description"
+				})
+				print("Added editor character " + folder + " with " + str(ascensions.size()) + " ascension stages")
 
 func status_changed(puid:String,status:bool):
 	pass
@@ -265,7 +290,7 @@ var debug_mode:bool=false
 var pu_id_to_nickname:Dictionary={}
 
 var user_folder="user:/"
-# Called when the node enters the scene tree for the first time.
+
 
 const ranks:Array = [
 	"EX",
