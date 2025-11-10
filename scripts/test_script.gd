@@ -11,16 +11,32 @@ const RANKS = [
 	"E+++", "E++", "E+", "E", "E-"
 ]
 
+func split_array(array,amount_of_arrays)->Array:
+	if amount_of_arrays>=array.size():
+		return [array]
+	var out_array=[]
+	out_array.resize(amount_of_arrays)
+	for i in amount_of_arrays:
+		out_array[i]=[]
+	for i in array.size():
+		out_array[i%amount_of_arrays].append(array[i])
+	return out_array
 
 func _run():
-	var script_full_path="res://servants/bunyan/bunyan.gd"
-	#FileAccess.open(script_full_path, FileAccess.READ)
-	var sc=load(script_full_path)
-	#print(sc.source_code)
-	var n=sc.new()
-	n.skills={}
-	print(n.skills)
-	print(n.script.source_code)
+	#print("--- Запуск проверки всех комбинаций ловкости (версия для Godot 4) ---")
+	#for self_rank in RANKS:
+#		for attacker_rank in RANKS:
+#			var bonus = calculate_agility_bonus(self_rank, attacker_rank)
+#			if bonus > 0:
+#				print("Я: %-4s против Враг: %-4s -> Бонус: %d" % [self_rank, attacker_rank, bonus])
+#	print("--- Проверка завершена ---")
+	var player_textureRect:TextureRect = TextureRect.new()
+	player_textureRect.texture=null
+	print(player_textureRect.texture)
+	#var servant=Node2D.new()
+	##servant.set_script(load("res://servants/katsushika_hokusai/katsushika_hokusai.gd"))
+	#print(servant.default_stats)
+	##print(servant.default_stats.get("hp"))
 	pass
 
 

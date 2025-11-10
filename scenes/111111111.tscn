@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=3 uid="uid://cimj83ew0i6r8"]
 
-[ext_resource type="Texture2D" uid="uid://bnutk2ndwtnja" path="res://command_spells/comand_1.png" id="1_vm6ii"]
+[sub_resource type="Resource" id="Resource_dxn7i"]
+metadata/__load_path__ = "res://command_spells/comand_1.png"
 
 [node name="Node2D" type="Node2D"]
 position = Vector2(380, -3)
@@ -10,4 +11,4 @@ offset_left = -318.0
 offset_top = 25.0
 offset_right = 74.0
 offset_bottom = 408.0
-texture = ExtResource("1_vm6ii")
+texture = SubResource("Resource_dxn7i")

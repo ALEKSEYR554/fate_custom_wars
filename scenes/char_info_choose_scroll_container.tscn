@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cwg832bxjw8eo"]
 
-[ext_resource type="Script" path="res://scripts/char_info_choose_scroll_container.gd" id="1_8fsi2"]
+[ext_resource type="Script" uid="uid://ch6penstl0wjy" path="res://scripts/char_info_choose_scroll_container.gd" id="1_8fsi2"]
 [ext_resource type="Texture2D" uid="uid://dsxq6hgseykdj" path="res://images/1.png" id="2_2thqx"]
 
 [node name="char_info_choose_scroll_container" type="ScrollContainer"]

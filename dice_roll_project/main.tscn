@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://8gs2uc47b65p"]
 
-[ext_resource type="PackedScene" uid="uid://c7o83ekki4or0" path="res://dice/dice.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://c7o83ekki4or0" path="res://dice_roll_project/dice/dice.tscn" id="1"]
 
 [node name="Node2D" type="Node2D"]
 
