@@ -1,13 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://76njdkfx4roi"]
 
-[ext_resource type="Script" path="res://scripts/test.gd" id="1_jinan"]
-[ext_resource type="Script" path="res://scripts/camera_script.gd" id="2_1e068"]
+[ext_resource type="Script" uid="uid://6xnsppwgbmek" path="res://scripts/camera_script.gd" id="2_1e068"]
 [ext_resource type="Texture2D" uid="uid://c4aostfoor2a6" path="res://images/icon.svg" id="3_k1sna"]
-[ext_resource type="Script" path="res://scripts/players_handler.gd" id="4_qc82w"]
+[ext_resource type="Script" uid="uid://bh82p2aly2rtj" path="res://scripts/players_handler.gd" id="4_qc82w"]
+
+[sub_resource type="Resource" id="Resource_iyx0m"]
+metadata/__load_path__ = "res://scripts/test.gd"
 
 [node name="Поле" type="Node2D"]
 position = Vector2(-10, -5)
-script = ExtResource("1_jinan")
+script = SubResource("Resource_iyx0m")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1746, 983)

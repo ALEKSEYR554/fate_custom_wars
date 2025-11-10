@@ -209,7 +209,7 @@ tracks/5/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_cky5u"]
 _data = {
-"Roll": SubResource("3")
+&"Roll": SubResource("3")
 }
 
 [node name="Dice_control" type="Control"]

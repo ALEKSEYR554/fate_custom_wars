@@ -1,6 +1,6 @@
 [gd_scene load_steps=24 format=3 uid="uid://76njdkfx4roi"]
 
-[ext_resource type="Script" path="res://scripts/field_script.gd" id="1_oabkp"]
+[ext_resource type="Script" uid="uid://gac36rced45l" path="res://scripts/field_script.gd" id="1_oabkp"]
 [ext_resource type="Theme" uid="uid://paqsho4ero1j" path="res://themes/middle_top_labels.tres" id="2_x868s"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://images/empty.png" id="3_jji7v"]
 [ext_resource type="Theme" uid="uid://cxyp1rji2fm4" path="res://themes/commans_spells_choose.tres" id="4_4iwbj"]
@@ -18,15 +18,14 @@
 [ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://scenes/dice_control.tscn" id="16_v5q7i"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://images/jopa.png" id="17_ew0fu"]
 [ext_resource type="PackedScene" uid="uid://cwg832bxjw8eo" path="res://scenes/char_info_choose_scroll_container.tscn" id="18_sbdxq"]
-[ext_resource type="Script" path="res://scripts/camera_script.gd" id="19_yftqc"]
-[ext_resource type="Script" path="res://scripts/players_handler.gd" id="20_mmhri"]
-[ext_resource type="Script" path="res://scripts/rating_script.gd" id="21_kjouk"]
-[ext_resource type="Script" path="res://scripts/uploade_images.gd" id="22_ok628"]
+[ext_resource type="Script" uid="uid://6xnsppwgbmek" path="res://scripts/camera_script.gd" id="19_yftqc"]
+[ext_resource type="Script" uid="uid://bh82p2aly2rtj" path="res://scripts/players_handler.gd" id="20_mmhri"]
+[ext_resource type="Script" uid="uid://j3ksbe2nvds5" path="res://scripts/rating_script.gd" id="21_kjouk"]
+[ext_resource type="Script" uid="uid://brn0kpfeaxirh" path="res://scripts/uploade_images.gd" id="22_ok628"]
 [ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://images/sun.png" id="23_bv76b"]
 
 [node name="game_field" type="Node2D"]
 process_mode = 1
-position = Vector2(-10, -5)
 script = ExtResource("1_oabkp")
 
 [node name="GUI" type="CanvasLayer" parent="."]
@@ -385,12 +384,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 tab_alignment = 1
+current_tab = 0
 
 [node name="First_Skill_text_edit" type="TextEdit" parent="GUI/skill_info_main_VBoxContainer/Skill_info_tab_container"]
 unique_name_in_owner = true
 layout_mode = 2
 editable = false
 wrap_mode = 1
+metadata/_tab_index = 0
 
 [node name="Second Skill_text_edit" type="TextEdit" parent="GUI/skill_info_main_VBoxContainer/Skill_info_tab_container"]
 unique_name_in_owner = true
@@ -398,6 +399,7 @@ visible = false
 layout_mode = 2
 editable = false
 wrap_mode = 1
+metadata/_tab_index = 1
 
 [node name="Third Skill_text_edit" type="TextEdit" parent="GUI/skill_info_main_VBoxContainer/Skill_info_tab_container"]
 unique_name_in_owner = true
@@ -405,12 +407,14 @@ visible = false
 layout_mode = 2
 editable = false
 wrap_mode = 1
+metadata/_tab_index = 2
 
 [node name="Class Skills_text_edit" type="TabContainer" parent="GUI/skill_info_main_VBoxContainer/Skill_info_tab_container"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 tab_alignment = 1
+metadata/_tab_index = 3
 
 [node name="use_skill_but_label_container" type="VBoxContainer" parent="GUI/skill_info_main_VBoxContainer"]
 unique_name_in_owner = true
@@ -1191,8 +1195,8 @@ process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 title = "Open Image"
-size = Vector2i(338, 159)
-ok_button_text = "Открыть"
+size = Vector2i(338, 173)
+ok_button_text = "Open"
 mode_overrides_title = false
 file_mode = 0
 access = 2
@@ -1209,7 +1213,7 @@ process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 title = "Open a File"
-ok_button_text = "Открыть"
+ok_button_text = "Open"
 mode_overrides_title = false
 file_mode = 0
 access = 2

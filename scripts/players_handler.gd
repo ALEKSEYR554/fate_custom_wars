@@ -4760,4 +4760,3 @@ func sync_relations(pu_id_update_to:String,full_relations:Dictionary):
 		Globals.pu_id_to_allies=full_relations
 	else:
 		Globals.pu_id_to_allies[pu_id_update_to]=full_relations[pu_id_update_to]
-
