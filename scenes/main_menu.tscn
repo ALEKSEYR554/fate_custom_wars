@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://ddahg0i7o6kg" path="res://images/logo.png" id="4_8u1lk"]
 
 [node name="Main_Menu" type="Control"]
+process_mode = 3
 layout_mode = 3
 anchor_right = 0.998
 anchor_bottom = 0.994
@@ -49,10 +50,12 @@ theme_override_font_sizes/font_size = 60
 text = "MAIN_MENU_RULES_BUTTON"
 
 [node name="Connect_scene" parent="." instance=ExtResource("2_qnb14")]
+process_mode = 3
 visible = false
 layout_mode = 1
 
 [node name="Host_scene" parent="." instance=ExtResource("3_1qjf8")]
+process_mode = 3
 visible = false
 layout_mode = 1
 

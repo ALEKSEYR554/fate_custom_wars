@@ -212,8 +212,9 @@ func preload_all_servant_sprites():
 		print("servant selection type Editor")
 		var predefined_servants = [
 			"bunyan", "bunyan/horse", "el_melloy", "medusa_saber", "gray",
-			"hakuno_female", "summer_bb", "tamamo", "jalter_santa_lily",
-			"jaguar_man", "queen_medb", "queen_medb/warrior", "queen_medb/druid"
+			#"hakuno_female", "summer_bb", "tamamo", "jalter_santa_lily",
+			"jaguar_man", "queen_medb", "queen_medb/warrior", "queen_medb/druid",
+			"katsushika_hokusai/horse", "katsushika_hokusai", "katsushika_hokusai/obstacle",
 		]
 		
 		for folder in predefined_servants:
@@ -335,6 +336,7 @@ const buffs_types:Dictionary={
 	"Madness Enhancement":[],
 	"Presence Concealment":["Instant","Presence Concealment"],
 	"Riding":["Passive"],
+	"Additional Move":["Instant"],
 
 	"Ignore DEF Buffs":["Buff Positive Effect","Buff Increase Damage"],
 	"Ignore Defence":["Buff Positive Effect","Buff Increase Damage"],

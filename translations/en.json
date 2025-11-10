@@ -190,5 +190,8 @@
     "MAIN_MENU_RULES_BUTTON":"Rules",
     "CONNECTING_SCREEN_CONNECTING":"Connecting...",
     "CONNECTING_SCREEN_CONNECTED_SUCCESS":"Connected",
-    "DICE_ROLL_RESULT_REROLL_DICES":"Enemy rolled the same dice, reroll to retry"
+    "DICE_ROLL_RESULT_REROLL_DICES":"Enemy rolled the same dice, reroll to retry",
+    "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION":"Do you want to upload image from drive or choose other servant sprite?",
+    "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_UPLOAD":"Upload from drive",
+    "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_SPRITE":"Choose servant sprite"
 }

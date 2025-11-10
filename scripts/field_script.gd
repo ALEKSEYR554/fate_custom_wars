@@ -270,7 +270,7 @@ const SUN = preload("res://images/sun.png")
 const MOON = preload("res://images/moon.png")
 
 
-var field_status={"Default":"City","Field Buffs":[]}
+var field_status={"Default":["City"],"Field Buffs":[]}
 var awaiting_responce_from_pu_id:String
 var char_info_attacked:CharInfo
 
@@ -706,8 +706,10 @@ func glow_cletka_pressed(glow_kletka_selected):
 			
 			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
 			disable_every_button(false)
+			make_action_button.disabled=true
 			end_turn_button.disabled=true
 			await sleep(0.1)
+			my_turn=false
 			players_handler.rpc("pass_next_turn",Globals.self_pu_id)
 			
 			is_game_started=true
@@ -1860,7 +1862,7 @@ func _on_evade_button_pressed():
 		char_info_dic = await attacker_finished_attack
 		print("attacker_finished_attack char_info_dic=",char_info_dic)
 	
-	if counter_attack:
+	if counter_attack and get_current_self_char_info().get_node().get_meta("Can_Attack",true):
 		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
 		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
 		
@@ -2590,7 +2592,7 @@ func create_new_cell(single_skill_info:Dictionary):
 		line.default_color = Color.WHITE
 		temp_lines_to_draw.append(line)
 
-	cell_config["Owner"]=get_current_self_char_info().get_uniq_id()
+	#cell_config["Owner"]=get_current_self_char_info().get_uniq_id()
 	
 	var new_id=connected.size()
 	kletka_to_add=cell_scene.instantiate()
@@ -2717,7 +2719,7 @@ func _input(event):
 				reconnect_button.visible=true
 			if check_if_hidable_gui_windows_active():
 				hide_all_gui_windows("all")
-			if current_action!="wait" and current_action!="create new cell":
+			if current_action!="wait" and current_action!="Create New Field Cell":
 				current_action="wait"
 				blinking_glow_button=false
 				glow_cletki_node.visible=false

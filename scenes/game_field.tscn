@@ -714,6 +714,33 @@ size_flags_horizontal = 4
 theme = ExtResource("15_2g0je")
 text = "ARE_YOU_SURE_DECLINE_BUTTON"
 
+[node name="choose_sprite_main_VBoxContainer" type="VBoxContainer" parent="GUI"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = -1
+anchor_left = 0.177734
+anchor_top = 0.179688
+anchor_right = 0.792969
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="choose_sprite_ScrollContainer" type="ScrollContainer" parent="GUI/choose_sprite_main_VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="choose_sprite_sub_VBoxContainer" type="VBoxContainer" parent="GUI/choose_sprite_main_VBoxContainer/choose_sprite_ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="confirm_sprite_Button" type="Button" parent="GUI/choose_sprite_main_VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Confirm"
+
 [node name="dices_main_VBoxContainer" type="VBoxContainer" parent="GUI"]
 unique_name_in_owner = true
 visible = false
@@ -1160,6 +1187,9 @@ script = ExtResource("22_ok628")
 metadata/_edit_lock_ = true
 
 [node name="FileDialog" type="FileDialog" parent="."]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
 title = "Open Image"
 size = Vector2i(338, 159)
 ok_button_text = "Открыть"
@@ -1172,6 +1202,18 @@ use_native_dialog = true
 unique_name_in_owner = true
 position = Vector2(986, -111)
 texture = ExtResource("23_bv76b")
+
+[node name="sprite_choose_FileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+title = "Open a File"
+ok_button_text = "Открыть"
+mode_overrides_title = false
+file_mode = 0
+access = 2
+use_native_dialog = true
 
 [connection signal="pressed" from="GUI/Chat_hide_show_button" to="." method="_on_chat_hide_show_button_pressed"]
 [connection signal="pressed" from="GUI/left_top_corner_VBoxContainer/host_buttons/HOST_BUTTON_START" to="." method="_on_start_pressed"]
@@ -1216,6 +1258,7 @@ texture = ExtResource("23_bv76b")
 [connection signal="pressed" from="GUI/You_were_attacked_container/you_were_attacked_options_container/YOU_WERE_ATTACKED_PHANTASM_OPTION_BUTTON" to="." method="_on_phantasm_evation_button_pressed"]
 [connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_sure_button" to="." method="_on_im_sure_button_pressed"]
 [connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_not_sure_button" to="." method="_on_im_not_sure_button_pressed"]
+[connection signal="resized" from="GUI/choose_sprite_main_VBoxContainer/choose_sprite_ScrollContainer" to="players_handler" method="_on_choose_sprite_scroll_container_resized"]
 [connection signal="pressed" from="GUI/dices_main_VBoxContainer/roll_dice_control_container/roll_dices_button" to="." method="_roll_dices_button_pressed"]
 [connection signal="mouse_entered" from="GUI/Servant_info_main_container" to="Camera2D" method="mouse_entered_gui_element"]
 [connection signal="mouse_exited" from="GUI/Servant_info_main_container" to="Camera2D" method="mouse_exited_gui_element"]
@@ -1238,3 +1281,4 @@ texture = ExtResource("23_bv76b")
 [connection signal="pressed" from="GUI/char_choose_main_VBoxContainer/char_choose_button" to="." method="_on_char_choose_button_pressed"]
 [connection signal="pressed" from="GUI/cheats_show_button" to="." method="_on_cheats_show_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
+[connection signal="file_selected" from="sprite_choose_FileDialog" to="players_handler" method="_on_sprite_choose_file_dialog_file_selected"]

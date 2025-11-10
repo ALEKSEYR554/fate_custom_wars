@@ -59,7 +59,7 @@ var skills={
 	"Description ID":"First Skill",
 	"Effect":[
 	{"Buffs":
-		{"Name":"ATK Up",
+		{"Name":"Create New Field Cell",#"ATK Up",
 		"Duration":3,
 		"Power":3},
 	"Cast":"All allies"}
