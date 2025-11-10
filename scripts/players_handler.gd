@@ -5,6 +5,7 @@ extends Node2D
 
 @onready var host_buttons:VBoxContainer = %host_buttons
 
+@onready var file_dialog:FileDialog = $"../FileDialog"
 
 @onready var servant_info_main_container:VBoxContainer = %Servant_info_main_container
 @onready var servant_info_picture_and_stats_container:HBoxContainer = %servant_info_picture_and_stats_container
@@ -436,7 +437,7 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 				player.set_meta("Summon_Check",true)
 
 				if summon_buff_info.get("Starting Buffs", [])!=[]:
-					player.buffs.append(summon_buff_info.get("Starting Buffs"))
+					player.buffs.append_array(summon_buff_info.get("Starting Buffs"))
 				
 				player.traits.append("Summonable")
 
@@ -505,6 +506,9 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	print("servant_name_to_pu_id=",servant_name_to_pu_id)
 
 	print("emiting servant_loaded = ",pl_info.to_dictionary())
+
+	
+
 	await get_tree().create_timer(0.1).timeout
 	servant_loaded.emit(pl_info.to_dictionary())
 
@@ -1878,11 +1882,16 @@ func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_curren
 	return [charInfo_to_return]
 
 func check_if_hp_is_bigger_than_max_hp_for_char_info(char_info:CharInfo)->void:
+	print("\n---check_if_hp_is_bigger_than_max_hp_for_char_info name=",char_info.get_node().name)
 	var max_hp=get_char_info_maximun_hp(char_info)
+	print("max_hp=",max_hp)
 	var servant_node=char_info.get_node()
 	if servant_node.hp>max_hp:
-		servant_node.hp=servant_node.default_stats["hp"]
+		print("servant_node.hp>max_hp => hp before fix=",servant_node.hp)
+		servant_node.hp=max_hp
+	print("servant_node.hp after fix=",servant_node.hp)
 	update_hp_on_char_info(char_info.to_dictionary(),servant_node.hp)
+	print("---check_if_hp_is_bigger_than_max_hp_for_char_info name ended---\n")
 	return
 
 
@@ -2027,6 +2036,65 @@ func can_use_mandness_enhancement() -> bool:
 			return false
 	return true
 
+func replace_value_with_dice_result(replace_wrap_info:Dictionary, buff_info_array:Array)->Array:
+	var minimum=replace_wrap_info.get("Limit Minimum Value",0)
+	var maximum=replace_wrap_info.get("Limit Maximum Value",100)
+	var what_to_replace=replace_wrap_info.get("What To Replace","")
+	var dice_name=replace_wrap_info.get("Dice Name","Main")
+	var calculations=replace_wrap_info.get("Calculations",{})
+
+	if what_to_replace=="":
+		push_error("No what to replace in replace_value_with_dice_result")
+		return buff_info_array
+	
+	if not (dice_name in field.dice_roll_result_list.keys()):
+		push_error("No dice with name="+str(dice_name))
+		return buff_info_array
+	
+	var desc=replace_wrap_info.get("Description",{})
+	if desc:
+		field.roll_dice_optional_label.text=get_item_description(replace_wrap_info)
+		field.roll_dice_optional_label.visible=true
+
+	var result=await field.await_dice_roll()
+	field.roll_dice_optional_label.visible=false
+
+	var nedded_result=result[dice_name]
+
+	if calculations:
+		for calculation in calculations:
+			match calculation["Operation"]:
+				"Add":
+					nedded_result+=calculation.get("Value",0)
+				"Substract":
+					nedded_result-=calculation.get("Value",0)
+				"Multiply":
+					nedded_result*=calculation.get("Value",1)
+				"Divide":
+					nedded_result=floor(nedded_result/calculation.get("Value",1))
+
+
+	print("nedded_result=",nedded_result)
+	if nedded_result<minimum:
+		nedded_result=minimum
+
+	if nedded_result>maximum:
+		nedded_result=maximum
+	
+	print("final nedded_result=",nedded_result)
+	var out_buff_array=[]
+	for buff in buff_info_array:
+		var st=str(buff)
+	
+		if what_to_replace in st:
+			st=st.replace(str("\"",what_to_replace,"\""),str(nedded_result))
+			buff=JSON.parse_string(st)
+		
+		out_buff_array.append(buff)
+	return out_buff_array
+
+
+
 func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:CharInfo=field.get_current_self_char_info())->bool:
 	#trait_name is used if "Damange 2х Against Trait"
 	#String
@@ -2084,10 +2152,18 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 		var cast=skill_info_hash.get("Cast","self")
 		var cast_range=skill_info_hash.get("Cast Range",0)
 		var cast_condition:Dictionary=skill_info_hash.get("Cast Condition",{})
+
+		var replace_with_dice=skill_info_hash.get("Replace Value With Dice Result",[])
+
+		
 		#if typeof(cast)==TYPE_ARRAY:
 		#	range=cast[1]
 		#	cast=cast[0]
 		var skill_info_array=skill_info_hash["Buffs"]
+
+		if replace_with_dice:
+			for replace in replace_with_dice:
+				skill_info_array=await replace_value_with_dice_result(replace,skill_info_array)
 		
 		if typeof(skill_info_array)==TYPE_DICTIONARY:
 			skill_info_array=[skill_info_array]
@@ -2159,8 +2235,10 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 					usage_successful = await roll_dice_for_result(single_skill_info,cast)
 				"Summon":
 					usage_successful = await summon_someone(self_char_info,single_skill_info)
-				"Create new Cell":
+				"Create New Field Cell":
 					usage_successful = await field.create_new_cell(single_skill_info)
+				"Appearance Change":
+					usage_successful = await change_appearance_for_char_info(self_char_info,single_skill_info)
 				"Attacking Phantasm Absorb":
 					usage_successful = absorb_attacking_phantasm_from_cast(self_char_info,cast)
 				"Attack Restrict Against Player":
@@ -2187,6 +2265,116 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 	print("use skill ending was_skill_used=",was_skill_used)
 	return was_skill_used
 
+signal sprite_path_loaded(path:String)
+
+func change_appearance_for_char_info(char_info:CharInfo,_appearance_change_info:Dictionary)->bool:
+
+	var answer=await field.choose_between_two(
+						tr("CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION"),
+						tr("CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_UPLOAD"),
+						tr("CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_SPRITE")
+						)
+
+	if answer==tr("CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_UPLOAD"):
+		#upload custom
+		print("upload custom")
+		%sprite_choose_FileDialog.visible=true
+		var path = await sprite_path_loaded
+		#print("image path=",path)
+		var image = Image.new()
+		image.load(path)
+#
+		var imageData = image.data
+		imageData["format"] = image.get_format()
+		print("imageData=",imageData)
+		rpc("change_char_info_sprite_from_image_data",char_info.to_dictionary(),imageData)
+	else:
+		fill_choose_sprite_containter()
+		field.hide_all_gui_windows()
+		%choose_sprite_main_VBoxContainer.visible=true
+		await %confirm_sprite_Button.pressed
+		%choose_sprite_main_VBoxContainer.visible=false
+		#getting sprite with visible panel
+		for cont in %choose_sprite_sub_VBoxContainer.get_children():
+			for child in cont.get_children():
+				if child.get_child(0).visible==true:
+					var img_texture:ImageTexture=child.texture_normal
+					var imageData=img_texture.get_image().data
+					imageData["format"] = img_texture.get_image().get_format()
+					rpc("change_char_info_sprite_from_image_data",char_info.to_dictionary(),imageData)
+					break
+
+	print("change_appearance_for_char_info done")
+	return true
+
+func _on_sprite_choose_file_dialog_file_selected(path)->void:
+	#print("image path=",path)
+	await field.sleep(0.1)
+	sprite_path_loaded.emit(path)
+	#var image = Image.new()
+	#image.load(path)
+#
+	#var imageData = image.data
+	#imageData["format"] = image.get_format()
+	#print("imageData=",imageData)
+	#var char_info=field.get_current_self_char_info()
+	#rpc("change_char_info_sprite_from_image_data",char_info.to_dictionary(),imageData)
+	pass
+
+
+func sprite_in_choose_sprite_pressed(text_butt:TextureButton)->void:
+	for cont in %choose_sprite_sub_VBoxContainer.get_children():
+		for child in cont.get_children():
+			child.get_child(0).visible=false
+	text_butt.get_child(0).visible=true
+	pass
+
+func _on_choose_sprite_scroll_container_resized()->void:
+	fill_choose_sprite_containter()
+	pass
+
+func fill_choose_sprite_containter()->void:
+	var conta=%choose_sprite_sub_VBoxContainer
+
+	var max_size=%choose_sprite_main_VBoxContainer.size.x
+	var amount_in_line=int(floor(max_size/200))
+
+
+	for child in conta.get_children():
+		conta.remove_child(child)
+		child.queue_free()
+	
+	var all_sprites=[]
+	for character in Globals.characters:
+		var ascensions=character.get("Ascensions",[])
+		if ascensions:
+			all_sprites.append_array(ascensions)
+	var hbox=HBoxContainer.new()
+	var counter=1
+	for sprite in all_sprites:
+		var text_butt=TextureButton.new()
+		var panel_cont=PanelContainer.new()
+		text_butt.add_child(panel_cont)
+		panel_cont.visible=false
+		panel_cont.show_behind_parent=true
+		panel_cont.set_anchors_preset(15)#LayoutPreset.PRESET_FULL_RECT
+		
+		text_butt.custom_minimum_size=Vector2(200,200)
+		text_butt.ignore_texture_size=true
+		text_butt.texture_normal=ImageTexture.create_from_image(sprite)
+		text_butt.stretch_mode=TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+
+		hbox.add_child(text_butt)
+
+		text_butt.pressed.connect("sprite_in_choose_sprite_pressed",text_butt)
+
+		counter+=1
+		if counter==amount_in_line:
+			conta.add_child(hbox)
+			hbox=HBoxContainer.new()
+			counter=1
+
+	pass
 
 func absorb_attacking_phantasm_from_cast(char_info:CharInfo,cast:Array,_amount:int=-1)->bool:
 	var all_cast_phantasms:Dictionary={}
@@ -2267,68 +2455,64 @@ func check_if_all_items_from_arr1_in_arr2(arr1:Array,arr2:Array)->bool:
 	return true
 
 
-func get_char_infos_satisfying_condition(cast:Array,cast_condition:Dictionary)->Array:
-	print("get_char_infos_satisfying_condition=",cast," condition=",cast_condition)
-	var condition_type=cast_condition.get("Condition","")
-	var strict=condition_type=="All"
-	var output:Array=[]
+func get_char_infos_satisfying_condition(cast: Array, cast_condition: Dictionary) -> Array:
+	print("--get_char_infos_satisfying_condition cast_condition=",cast_condition," ---")
+	# Конфигурация для каждого типа проверки.
+	# Ключ - название условия из cast_condition.
+	# Значение - Callable, который получает данные для проверки.
+	# Для полей, не связанных с персонажем (char_info), мы игнорируем аргумент.
+	var check_configs = {
+		"Trait": func(char_info): return get_char_info_traits(char_info),
+		"Class": func(char_info): return [get_char_info_class(char_info)],
+		"Gender": func(char_info): return [get_char_info_gender(char_info)],
+		"Buff": func(char_info): return get_char_info_buffs(char_info),
+		"Field": func(_char_info): return get_current_fields()
+	}
 
-	var traits_to_check:Array=cast_condition.get("Trait",[])
-	var class_to_check:Array=cast_condition.get("Class",[])
-	var gender_to_check:Array=cast_condition.get("Gender",[])
-	var buffs_to_check:Array=cast_condition.get("Buff",[])
-	var fields_to_check:Array=cast_condition.get("Field",[])
+	var output: Array = []
+	var condition_type = cast_condition.get("Condition", "")
+	var is_strict_mode = (condition_type == "All")
 
+	# Получаем список условий, которые нужно проверить в этот раз.
+	# Это ключи из cast_condition, которые также есть в нашей конфигурации.
+	var conditions_to_check = cast_condition.keys().filter(func(key): return check_configs.has(key))
 
-	var valid=strict
+	if conditions_to_check.is_empty():
+		return cast # Если условий нет, возвращаем всех персонажей.
 
 	for char_info in cast:
-		valid=strict
-		if not traits_to_check.is_empty():
-			var peer_traits=get_char_info_traits(char_info)
-			if intersect(traits_to_check,peer_traits):
-				if strict:
-					valid = valid and check_if_all_items_from_arr1_in_arr2(traits_to_check,peer_traits)
-				else:
-					valid=true
-		if not class_to_check.is_empty():
-			var peer_class=[get_char_info_class(char_info)]
-			if intersect(class_to_check,peer_class):
-				if strict:
-					valid = valid and check_if_all_items_from_arr1_in_arr2(class_to_check,peer_class)
-				else:
-					valid=true
-		if not gender_to_check.is_empty():
-			var peer_gender=[get_char_info_gender(char_info)]
-			print("char_info_gender=",peer_gender," gender to check=",gender_to_check)
-			if intersect(gender_to_check,peer_gender):
-				print("intersects")
-				if strict:
-					print("valid before =",valid)
-					print("valid= ",valid, " and ", check_if_all_items_from_arr1_in_arr2(gender_to_check,peer_gender))
-					valid = valid and check_if_all_items_from_arr1_in_arr2(gender_to_check,peer_gender)
-					print("strict and valid=",valid)
-				else:
-					valid=true
-			else:
-				if strict:
-					valid=false
-		if not buffs_to_check.is_empty():
-			var char_info_buffs=get_char_info_buffs(char_info)
-			if intersect(buffs_to_check,char_info_buffs):
-				if strict:
-					valid = valid and check_if_all_items_from_arr1_in_arr2(buffs_to_check,char_info_buffs)
-				else:
-					valid=true
-		if not fields_to_check.is_empty():
-			var current_fields=get_current_fields()
-			if intersect(fields_to_check,current_fields):
-				if strict:
-					valid = valid and check_if_all_items_from_arr1_in_arr2(fields_to_check,current_fields)
-				else:
-					valid=true
-		if valid:
+		var is_match_found = false
+		
+		if is_strict_mode:
+			# "ALL"
+			print("is_strict_mode=true")
+			var all_conditions_met = true
+			for condition_key in conditions_to_check:
+				var required_values = cast_condition[condition_key]
+				var character_values = check_configs[condition_key].call(char_info)
+				
+				if not check_if_all_items_from_arr1_in_arr2(required_values, character_values):
+					all_conditions_met = false
+					print("Condition not met for key=",condition_key," required_values=",required_values," character_values=",character_values)
+					break 
+			
+			if all_conditions_met:
+				is_match_found = true
+		else:
+			# "ANY": 
+			print("is_strict_mode=false")
+			for condition_key in conditions_to_check:
+				var required_values = cast_condition[condition_key]
+				var character_values = check_configs[condition_key].call(char_info)
+				
+				if intersect(required_values, character_values):
+					is_match_found = true
+					print("Condition met for key=",condition_key," required_values=",required_values," character_values=",character_values)
+					break 
+
+		if is_match_found:
 			output.append(char_info)
+	print("--get_char_infos_satisfying_condition end---")
 	return output
 
 
@@ -2720,9 +2904,12 @@ func get_char_info_class(char_info:CharInfo)->String:
 	return default_peer_class
 
 func intersect(array1, array2):
+	print("--intersect= array1=",array1," array2=",array2," ---")
 	for item in array1:
 		if array2.has(item):
+			print("---intersect found item=",item," ---")
 			return true
+	print("---intersect no items found---")
 	return false
 
 func get_all_buffs_with_name_for_char_info(char_info:CharInfo, buff_name:String)->Array:
@@ -3067,6 +3254,9 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 	var glow_pressed = await field.glow_kletka_pressed_signal
 	field.rpc("move_player_from_kletka_id1_to_id2",char_info_loaded.to_dictionary(),-1,glow_pressed)
 	
+	print("checking hp buffs to get if hp is bigger than max hp for char_info_loaded")
+	check_if_hp_is_bigger_than_max_hp_for_char_info(char_info_loaded)
+
 	print("summon_someone completed returning true")
 	return true
 
@@ -3160,6 +3350,11 @@ func get_char_info_maximun_hp(char_info:CharInfo)->int:
 	for buff:Dictionary in get_char_info_buffs(char_info):
 		if buff.get("Name","")=="Max HP Plus":
 			additional_hp+=buff.get("Power",1)
+		if buff.get("Name","")=="Maximum HP Add":
+			additional_hp+=buff.get("Power",1)
+		if buff.get("Name","")=="Maximum HP Set":
+			return buff.get("Power",5)
+			
 
 	return default_max_hp+additional_hp
 
@@ -3957,12 +4152,38 @@ func change_char_info_servant_stat(char_info_dic:Dictionary,stat:String,value:in
 			char_info.get_node().attack_power=value
 
 @rpc("any_peer","call_local","reliable")
-func change_char_info_sprite(char_info_dic:Dictionary,image_path:String)->void:
+func change_char_info_sprite_from_path(char_info_dic:Dictionary,image_path:String)->void:
 	var char_info=CharInfo.from_dictionary(char_info_dic)
 	var img = Image.new()
 	img.load(image_path)
 	#player_textureRect.texture=ImageTexture.create_from_image(img)
 	char_info.get_node().get_child(0).texture=ImageTexture.create_from_image(img)
+
+@rpc("any_peer","call_local","reliable")
+func change_char_info_sprite_from_image_data(char_info_dic:Dictionary,image_data)->void:
+	print("--change_char_info_sprite_from_image_data called char_info_dic="+str(char_info_dic))
+	var char_info=CharInfo.from_dictionary(char_info_dic)
+	var data = image_data
+	var img = Image.new()
+	#FaceImg is just what I called the dictionary in the resource file
+	img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
+
+	#var texture = ImageTexture.new()
+	#texture.set_image(img)
+	var player_textureRect=char_info.get_node().get_child(0)
+	player_textureRect.texture=null
+	player_textureRect.scale=Vector2(1,1)
+	player_textureRect.size=Vector2(0,0)
+	
+	#player_textureRect.texture.set_image(img)
+	player_textureRect.texture=ImageTexture.create_from_image(img)
+	
+		
+	var sizes:Vector2=player_textureRect.texture.get_size()
+	player_textureRect.position=Vector2(-(TEXTURE_SIZE*1.0)/2,-TEXTURE_SIZE)
+	player_textureRect.scale=Vector2(TEXTURE_SIZE/sizes.x,TEXTURE_SIZE/sizes.y)
+
+	
 
 @rpc("any_peer","call_remote","reliable")
 func remove_char_info_buffs_by_uniq_id(char_info_dic:Dictionary,buff_uniq_id:String,remove_passive:bool=false,remove_only_passive:bool=false)->void:
@@ -4003,8 +4224,8 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	else:
 		folderr=Globals.user_folder
 	
-	print("change_char_info_sprite")
-	rpc("change_char_info_sprite",field.get_current_self_char_info().to_dictionary(),
+	print("change_char_info_sprite_from_path")
+	rpc("change_char_info_sprite_from_path",field.get_current_self_char_info().to_dictionary(),
 	str(folderr)+field.get_current_self_char_info().get_node().get_meta("servant_path")+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
@@ -4539,3 +4760,4 @@ func sync_relations(pu_id_update_to:String,full_relations:Dictionary):
 		Globals.pu_id_to_allies=full_relations
 	else:
 		Globals.pu_id_to_allies[pu_id_update_to]=full_relations[pu_id_update_to]
+
