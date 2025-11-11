@@ -2302,7 +2302,9 @@ func change_appearance_for_char_info(char_info:CharInfo,_appearance_change_info:
 					var imageData=img_texture.get_image().data
 					imageData["format"] = img_texture.get_image().get_format()
 					rpc("change_char_info_sprite_from_image_data",char_info.to_dictionary(),imageData)
-					break
+					
+					print("change_appearance_for_char_info done")
+					return true
 
 	print("change_appearance_for_char_info done")
 	return true
@@ -2345,12 +2347,21 @@ func fill_choose_sprite_containter()->void:
 		child.queue_free()
 	
 	var all_sprites=[]
+	print("Globals.characters=",Globals.characters)
 	for character in Globals.characters:
-		var ascensions=character.get("Ascensions",[])
+		print("character=",character)
+		var ascensions=character.get("ascensions",[])
+		print("ascensions=",ascensions)
 		if ascensions:
-			all_sprites.append_array(ascensions)
+			for ascension in ascensions:
+				for costume in ascension:
+					all_sprites.append(costume)
+			#var tmp=[]
+			#tmp.append_array(ascensions)
+			#all_sprites.append_array(tmp)
 	var hbox=HBoxContainer.new()
-	var counter=1
+	var counter=0
+	print("all_sprites=",all_sprites)
 	for sprite in all_sprites:
 		var text_butt=TextureButton.new()
 		var panel_cont=PanelContainer.new()
@@ -2366,13 +2377,15 @@ func fill_choose_sprite_containter()->void:
 
 		hbox.add_child(text_butt)
 
-		text_butt.pressed.connect("sprite_in_choose_sprite_pressed",text_butt)
+		text_butt.pressed.connect(sprite_in_choose_sprite_pressed.bind(text_butt))
 
 		counter+=1
+		print("counter=",counter," amount_in_line=",amount_in_line)
 		if counter==amount_in_line:
 			conta.add_child(hbox)
 			hbox=HBoxContainer.new()
-			counter=1
+			counter=0
+		
 
 	pass
 

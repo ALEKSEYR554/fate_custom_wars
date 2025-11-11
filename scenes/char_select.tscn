@@ -19,6 +19,7 @@ layout_mode = 2
 [node name="ascensions_TabCont" type="TabContainer" parent="_VBoxContainer_5"]
 unique_name_in_owner = true
 layout_mode = 2
+current_tab = 0
 
 [node name="character_image" type="TextureRect" parent="_VBoxContainer_5/ascensions_TabCont"]
 unique_name_in_owner = true
@@ -27,6 +28,7 @@ layout_mode = 2
 texture = ExtResource("2_buxd3")
 expand_mode = 1
 stretch_mode = 5
+metadata/_tab_index = 0
 
 [node name="character_text" type="Label" parent="_VBoxContainer_5"]
 unique_name_in_owner = true
