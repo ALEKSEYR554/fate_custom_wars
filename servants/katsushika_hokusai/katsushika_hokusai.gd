@@ -15,7 +15,7 @@ const default_stats={
 	"endurance":"D",
 	"luck":"A",
 	"magic":{"Rank":"B","Power":8,"Resistance":4},
-	"traits":["Divine", "Hominidae Servant", "Humanoid", "Servant", "Weak to Enuma Elish"]
+	"traits":["Divinity", "Existence Outside the Domain", "Hominidae Servant", "Humanoid", "Servant", "Threat to Humanity", "Weak to Enuma Elish"]
 }
 
 var ttt='''
@@ -186,123 +186,125 @@ var skills={
 		"Cooldown":10,
 		"Description ID":"Item Creation",
 		"Effect":[
-			{"Choose Buff":{
-				"Defensive Barricades":{
-					"Description ID":"Summon Barriers",
-					"Replace Value With Dice Result":[
-						{
-							"What To Replace":"UNIQ_VALUE",
-							"Dice Name":"main_dice",
-							"Description ID":"Replace Value With Dice Result for Summon Barriers",
-							"Calculations":[
-								{"Operation":"Add","Value":6},
-								{"Operation":"Multiply","Value":1},
-								{"Operation":"Substract","Value":0},
-								{"Operation":"Divide","Value":1}
-							],
-							"Limit Minimum Value":0,
-							"Limit Maximum Value":20
-						}
-					],
-					"Buffs":[
-						{
-							"Name":"Summon",
-							"Summon Name":"obstacle",#reqired
-							"Disappear After Summoner Death":false,
-							"Can Be Played":false,
-							"Can Attack":false,
-							"Can Evade":false,
-							"Can Defence":false,
-							"Can Parry":false,
-							"Move Points":0,
-							"Attack Points":0,
-							"Limit":10,
-							"Servant Data Location":"Sub",
-							"Starting Buffs":[
-								{
-									"Name":"Maximum HP Set",
-									"Power":"UNIQ_VALUE",
-									"Type":"Status"
-								}
-							]
-						}
-					],
-					"Cast":"Self"
-					
-				},
-				"Mount":{
-					"Description ID":"Summon Mount",
-					"Replace Value With Dice Result":[
-						{
-							"What To Replace":"UNIQ_VALUE",
-							"Dice Name":"main_dice",
-							"Description ID":"Replace Value With Dice Result for Summon Mount",
-							"Calculations":[
-								{"Operation":"Add","Value":6},
-								{"Operation":"Multiply","Value":1},
-								{"Operation":"Substract","Value":0},
-								{"Operation":"Divide","Value":1}
-							],
-							"Limit Minimum Value":0,
-							"Limit Maximum Value":20
-						}
-					],
-					"Buffs":[
-						{#mount example
-							"Name":"Summon",
-							"Duration":3,
-							"Summon Name":"horse",
-							"Servant":false,
-							"Skills Enabled":false,
-							"One Time Skills":false,
-							"Can Use Phantasm":false,
-							"Disappear After Summoner Death":true,
-							"Mount":true,
-							"Require Riding Skill":false,
-							"Can Be Played":false,
-							"Can Attack":false,
-							"Can Evade":true,
-							"Can Defence":true,
-							"Can Parry":false,
-							"Move Points":2,
-							"Attack Points":0,
-							"Phantasm Points Farm":false,
-							"Limit":3,
-							"Servant Data Location":"Sub",
-							"Starting Buffs":[
-								{
-									"Name":"Maximum HP Set",
-									"Power":"UNIQ_VALUE",
-									"Type":"Status"
-								}
-							]
-						}
-					],
-					"Cast":"Self"
-					
-				},
-				"Cell":{
-					"Description ID":"Add Field Cell",
-					"Buffs":[
-						{
-							"Name":"Create New Field Cell",
-							#"Min Connections":2
-						}
-					],
-					"Cast":"Self"
-					
-				},
-				"Appearance Change":{
-					"Description ID":"Appearance Change",
-					"Buffs":[
-						{
-							"Name":"Appearance Change",
-							"Duration":5
-						}
-					],
-					"Cast":"Self"
+			{
+				"Choose Buff":{
+					"Defensive Barricades":{
+						"Description ID":"Summon Barriers",
+						"Replace Value With Dice Result":[
+							{
+								"What To Replace":"UNIQ_VALUE",
+								"Dice Name":"main_dice",
+								"Description ID":"Replace Value With Dice Result for Summon Barriers",
+								"Calculations":[
+									{"Operation":"Add","Value":6},
+									{"Operation":"Multiply","Value":1},
+									{"Operation":"Substract","Value":0},
+									{"Operation":"Divide","Value":1}
+								],
+								"Limit Minimum Value":0,
+								"Limit Maximum Value":20
+							}
+						],
+						"Buffs":[
+							{
+								"Name":"Summon",
+								"Summon Name":"obstacle",#reqired
+								"Disappear After Summoner Death":false,
+								"Can Be Played":false,
+								"Can Attack":false,
+								"Can Evade":false,
+								"Can Defence":false,
+								"Can Parry":false,
+								"Move Points":0,
+								"Attack Points":0,
+								"Limit":10,
+								"Servant Data Location":"Sub",
+								"Starting Buffs":[
+									{
+										"Name":"Maximum HP Set",
+										"Power":"UNIQ_VALUE",
+										"Type":"Status"
+									}
+								]
+							}
+						],
+						"Cast":"Self"
+
+					},
+					"Mount":{
+						"Description ID":"Summon Mount",
+						"Replace Value With Dice Result":[
+							{
+								"What To Replace":"UNIQ_VALUE",
+								"Dice Name":"main_dice",
+								"Description ID":"Replace Value With Dice Result for Summon Mount",
+								"Calculations":[
+									{"Operation":"Add","Value":6},
+									{"Operation":"Multiply","Value":1},
+									{"Operation":"Substract","Value":0},
+									{"Operation":"Divide","Value":1}
+								],
+								"Limit Minimum Value":0,
+								"Limit Maximum Value":20
+							}
+						],
+						"Buffs":[
+							{#mount example
+								"Name":"Summon",
+								"Duration":3,
+								"Summon Name":"horse",
+								"Servant":false,
+								"Skills Enabled":false,
+								"One Time Skills":false,
+								"Can Use Phantasm":false,
+								"Disappear After Summoner Death":true,
+								"Mount":true,
+								"Require Riding Skill":false,
+								"Can Be Played":false,
+								"Can Attack":false,
+								"Can Evade":true,
+								"Can Defence":true,
+								"Can Parry":false,
+								"Move Points":2,
+								"Attack Points":0,
+								"Phantasm Points Farm":false,
+								"Limit":3,
+								"Servant Data Location":"Sub",
+								"Starting Buffs":[
+									{
+										"Name":"Maximum HP Set",
+										"Power":"UNIQ_VALUE",
+										"Type":"Status"
+									}
+								]
+							}
+						],
+						"Cast":"Self"
+
+					},
+					"Cell":{
+						"Description ID":"Add Field Cell",
+						"Buffs":[
+							{
+								"Name":"Create New Field Cell",
+								#"Min Connections":2
+							}
+						],
+						"Cast":"Self"
+
+					},
+					"Appearance Change":{
+						"Description ID":"Appearance Change",
+						"Buffs":[
+							{
+								"Name":"Appearance Change",
+								"Duration":5
+							}
+						],
+						"Cast":"Self"
+					}
 				}
-			}}
+			}
 		]
 	},
 
@@ -317,6 +319,7 @@ var skills={
 				"Name":"Field Creation",
 				"Amount":3,"Config":
 				{
+					"Unique ID":"Hokusai_Territory",
 					"Ignore Magical Defence":true,
 					"Additional":null}
 				}
