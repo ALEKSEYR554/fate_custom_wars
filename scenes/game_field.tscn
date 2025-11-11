@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=25 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" uid="uid://gac36rced45l" path="res://scripts/field_script.gd" id="1_oabkp"]
 [ext_resource type="Theme" uid="uid://paqsho4ero1j" path="res://themes/middle_top_labels.tres" id="2_x868s"]
@@ -23,6 +23,8 @@
 [ext_resource type="Script" uid="uid://j3ksbe2nvds5" path="res://scripts/rating_script.gd" id="21_kjouk"]
 [ext_resource type="Script" uid="uid://brn0kpfeaxirh" path="res://scripts/uploade_images.gd" id="22_ok628"]
 [ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://images/sun.png" id="23_bv76b"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1bpim"]
 
 [node name="game_field" type="Node2D"]
 process_mode = 1
@@ -718,13 +720,19 @@ size_flags_horizontal = 4
 theme = ExtResource("15_2g0je")
 text = "ARE_YOU_SURE_DECLINE_BUTTON"
 
+[node name="PanelContainer" type="PanelContainer" parent="GUI"]
+offset_left = 182.0
+offset_top = 575.0
+offset_right = 869.0
+offset_bottom = 575.0
+
 [node name="choose_sprite_main_VBoxContainer" type="VBoxContainer" parent="GUI"]
 unique_name_in_owner = true
 visible = false
 anchors_preset = -1
 anchor_left = 0.177734
 anchor_top = 0.179688
-anchor_right = 0.792969
+anchor_right = 0.848632
 anchor_bottom = 0.75
 grow_horizontal = 2
 grow_vertical = 2
@@ -1218,6 +1226,9 @@ mode_overrides_title = false
 file_mode = 0
 access = 2
 use_native_dialog = true
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_1bpim")
 
 [connection signal="pressed" from="GUI/Chat_hide_show_button" to="." method="_on_chat_hide_show_button_pressed"]
 [connection signal="pressed" from="GUI/left_top_corner_VBoxContainer/host_buttons/HOST_BUTTON_START" to="." method="_on_start_pressed"]

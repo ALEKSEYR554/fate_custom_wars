@@ -32,7 +32,8 @@ func add_image(image_data):
 	#node2.add_child(image_to_add)
 	
 	#node2.set_script(load("res://scripts/drag_script.gd"))
-	add_child(drag_img)
+	add_child(drag_img,true)
+
 	pass
 
 func _on_file_dialog_file_selected(path):
