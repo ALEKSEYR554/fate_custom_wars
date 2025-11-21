@@ -17,11 +17,21 @@ const PUID_SAVE_PATH = "user://persistent_game_id.dat"
 
 var is_game_started:bool=false
 
+signal connection_lost(status:String)#reconnecting connected failed
+
 # Информация обо всех игроках. Ключ: persistent_id
-# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "servant_node_name":str, "disconnected_more_than_timeout":bool, "units":{0:Node2D}}
+# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "current_unit_id":int, "current_action":str, "servant_node_name":str, "disconnected_more_than_timeout":bool, "units":{0:Node2D}}
 var pu_id_player_info: Dictionary = {}
 
-
+const default_pu_id_player_info_dic={
+	"nickname": "",
+	"current_peer_id": 0, 
+	"is_connected": false, 
+	"servant_name": "", 
+	"servant_node_name":"", 
+	"disconnected_more_than_timeout":false, 
+	"units":{0:"NODE2D"}
+	}
 
 ## new turn => выбор unit_id которым сейчас играть, если только один то скип этот этап => запись current_unit_id => 
 ##  => get_unit_CharInfo_from_unit_id(unit_id)->CharInfo  =>  main_CharInfo
@@ -144,8 +154,10 @@ func load_translation_file():
 		file_name = dir.get_next()
 	
 	TranslationServer.set_locale("en")
-	
-func load_character_sprites(base_path: String, folder: String) -> Array:
+
+var local_path_to_servant_sprite:Dictionary={}#/servant/bunyan/sprite_stage_1_costume_1.png => Image
+
+func load_character_sprites(servants_folder_path: String, folder: String) -> Array:
 	var ascensions = []
 	var stage = 1
 	
@@ -153,7 +165,9 @@ func load_character_sprites(base_path: String, folder: String) -> Array:
 	while true:
 		var stage_sprites = []
 		var base_stage_name = "sprite_stage_" + str(stage)
-		var stage_path = base_path + str(folder) + "/" + base_stage_name + ".png"
+		var stage_path = servants_folder_path + str(folder) + "/" + base_stage_name + ".png"
+
+		var local_path=str(folder) + "/" + base_stage_name + ".png"
 		
 		# Try to load base stage sprite
 		if !FileAccess.file_exists(stage_path):
@@ -161,12 +175,20 @@ func load_character_sprites(base_path: String, folder: String) -> Array:
 			
 		var stage_img = Image.new()
 		if stage_img.load(stage_path) == OK:
-			stage_sprites.append(stage_img)
+			local_path_to_servant_sprite[local_path]=stage_img
+			#stage_sprites.append(stage_img)
+
+			stage_sprites.append(local_path)
 			
 			# Check for costumes for this stage
 			var costume = 1
 			while true:
-				var costume_path = base_path + str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
+				#costume_path=         res://servants/katsushika_hokusai/obstacle/sprite_stage_1_costume_1.png 
+				#folder=               katsushika_hokusai/obstacle 
+				#servants_folder_path= res://servants/
+				var costume_path = servants_folder_path + str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
+				var local_costume_path=str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
+				print("costume_path=",costume_path, " folder=",folder, " servant_folder_path=",servants_folder_path)
 				if !FileAccess.file_exists(costume_path):
 					break # No more costumes for this stage
 					
@@ -177,10 +199,12 @@ func load_character_sprites(base_path: String, folder: String) -> Array:
 
 					var img = Image.new()
 					img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
-
-					stage_sprites.append(img)
+					local_path_to_servant_sprite[local_costume_path]=stage_img
+					stage_sprites.append(local_costume_path)
 				costume += 1
+
 		
+
 		if !stage_sprites.is_empty():
 			ascensions.append(stage_sprites)
 		stage += 1
@@ -203,7 +227,7 @@ func preload_all_servant_sprites():
 			if !ascensions.is_empty():
 				characters.append({
 					"Name": folder,
-					"ascensions": ascensions,
+					"ascensions": ascensions,#["katsushika_hokusai/obstacle/sprite_stage_1_costume_1.png"]
 					"Text": "Character " + str(folder) + " Description"
 				})
 				print("Added character " + folder + " with " + str(ascensions.size()) + " ascension stages")
@@ -224,7 +248,7 @@ func preload_all_servant_sprites():
 			if !ascensions.is_empty():
 				characters.append({
 					"Name": folder,
-					"ascensions": ascensions,
+					"ascensions": ascensions,#
 					"Text": "Character " + str(folder) + " Description"
 				})
 				print("Added editor character " + folder + " with " + str(ascensions.size()) + " ascension stages")

@@ -1189,6 +1189,10 @@ unique_name_in_owner = true
 script = ExtResource("20_mmhri")
 metadata/_edit_lock_ = true
 
+[node name="servants_MultiplayerSpawner" type="MultiplayerSpawner" parent="players_handler"]
+_spawnable_scenes = PackedStringArray("uid://35xccla353gw")
+spawn_path = NodePath("..")
+
 [node name="finish_screen" type="Node2D" parent="."]
 position = Vector2(648, 204)
 script = ExtResource("21_kjouk")
@@ -1295,5 +1299,6 @@ replication_config = SubResource("SceneReplicationConfig_1bpim")
 [connection signal="pressed" from="GUI/custom_main_VBoxContainer/Custom_info_buttons_hbox/info_ok_button" to="." method="_on_info_ok_button_pressed"]
 [connection signal="pressed" from="GUI/char_choose_main_VBoxContainer/char_choose_button" to="." method="_on_char_choose_button_pressed"]
 [connection signal="pressed" from="GUI/cheats_show_button" to="." method="_on_cheats_show_button_pressed"]
+[connection signal="spawned" from="players_handler/servants_MultiplayerSpawner" to="players_handler" method="_on_servants_multiplayer_spawner_spawned"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
 [connection signal="file_selected" from="sprite_choose_FileDialog" to="players_handler" method="_on_sprite_choose_file_dialog_file_selected"]

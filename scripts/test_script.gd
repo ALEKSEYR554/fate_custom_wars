@@ -21,8 +21,11 @@ func split_array(array,amount_of_arrays)->Array:
 	for i in array.size():
 		out_array[i%amount_of_arrays].append(array[i])
 	return out_array
-
+	
+	
+const BASE_SERVANT = preload("res://scenes/base_servant.tscn")
 func _run():
+	const TEXTURE_SIZE:int=200
 	#print("--- Запуск проверки всех комбинаций ловкости (версия для Godot 4) ---")
 	#for self_rank in RANKS:
 #		for attacker_rank in RANKS:
@@ -30,9 +33,11 @@ func _run():
 #			if bonus > 0:
 #				print("Я: %-4s против Враг: %-4s -> Бонус: %d" % [self_rank, attacker_rank, bonus])
 #	print("--- Проверка завершена ---")
-	var player_textureRect:TextureRect = TextureRect.new()
-	player_textureRect.texture=null
-	print(player_textureRect.texture)
+	var ch=load("res://command_spells/ass 1.png1")
+	if ch:
+		print("ch=loaded")
+	else:
+		print("ch=error")
 	#var servant=Node2D.new()
 	##servant.set_script(load("res://servants/katsushika_hokusai/katsushika_hokusai.gd"))
 	#print(servant.default_stats)

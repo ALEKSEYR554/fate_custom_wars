@@ -116,8 +116,8 @@ func _ready():
 	for pu_id in Globals.pu_id_to_nickname.keys():
 		for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
 			var nodd=Globals.pu_id_player_info[pu_id]["units"][unit_id]
-			var uniq_id=nodd.get_meta("unit_unique_id")
-			uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.get_meta("CharInfoDic"))
+			var uniq_id=nodd.unit_unique_id
+			uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.charInfoDic)
 			peer_id_to_name_label.text+=str("Id=",uniq_id," name=",nodd.name,"\n")
 	
 	
@@ -157,8 +157,8 @@ func _on_refresh_button_pressed(choose:bool=false):
 		for pu_id in Globals.pu_id_to_nickname.keys():
 			for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
 				var nodd=Globals.pu_id_player_info[pu_id]["units"][unit_id]
-				var uniq_id=nodd.get_meta("unit_unique_id")
-				uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.get_meta("CharInfoDic"))
+				var uniq_id=nodd.unit_unique_id
+				uniq_id_to_char_info[uniq_id]=CharInfo.from_dictionary(nodd.CharInfoDic)
 				peer_id_to_name_label.text+=str("Id=",uniq_id," name=",nodd.name,"\n")
 			
 				peer_id_option_button.add_item(str(uniq_id))
@@ -169,7 +169,7 @@ func _on_refresh_button_pressed(choose:bool=false):
 	if not peer_id_text.is_empty():
 		print("uniq_idd=",peer_id_text)
 		
-		#print("pu id = ",uniq_id_to_char_info[peer_id_text].get_meta("pu_id"))
+		#print("pu id = ",uniq_id_to_char_info[peer_id_text].pu_id)
 		var servant_node=uniq_id_to_char_info[peer_id_text].get_node()
 		#var servant_node=Globals.pu_id_player_info[peer_id_text]["servant_node"]
 		var stats:Dictionary={}

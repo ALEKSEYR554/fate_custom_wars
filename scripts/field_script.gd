@@ -178,14 +178,6 @@ var enemy_to_pull:CharInfo
 var temp_kletka_capture_config
 
 
-
-
-
-
-
-
-
-
 var current_action
 var current_action_points
 var paralyzed=false
@@ -217,7 +209,6 @@ var attacking_player_on_kletka_id
 var attacking_char_info:CharInfo
 
 
-#const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
 const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
 signal glow_kletka_pressed_signal(kletka_id:int)
 var blocked_previous_iteration=[]
@@ -793,16 +784,16 @@ func check_if_char_info_can_ride_mount_on_kletka_id(char_info_dic:Dictionary,kle
 		return false
 	var mount_node = occupied_kletki[kletka_id][0]
 
-	if not mount_node.get_meta("Mount",false):
+	if not mount_node.mount:
 		return false
 
 
 
-	if not mount_node.get_meta("Require_Riding_Skill",false):
+	if not mount_node.require_riding_skill:
 		can_ride=true
 	else:
 		#finding riding skill
-		if "passive_skills" in char_info.get_node():
+		if char_info.get_node().passive_skills:
 			for skill in char_info.get_node().passive_skills:
 				if skill["Name"]=="Riding":
 					can_ride=true
@@ -822,8 +813,8 @@ func sit_char_info_on_mount_on_kletka_id(char_info_dic:Dictionary,kletka_id:int)
 		push_error("Mount and charinfo are on different kletki")
 		return
 	
-	mount_node.set_meta("Mounted_by_uniq_ids_array",[char_info.get_uniq_id()])
-	char_info.get_node().set_meta("Mounts_uniq_id_array",[mount_node.get_meta('unit_unique_id')])
+	mount_node.mounted_by_uniq_ids_array=[char_info.get_uniq_id()]
+	char_info.get_node().mounts_uniq_id_array=[mount_node.unit_unique_id]
 
 
 	return
@@ -835,18 +826,18 @@ func choose_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only
 	var char_infos:Array=[]
 
 	for node in occupied_kletki[kletka_id]:
-		var unit_id=node.get_meta("unit_id")
-		var pu_id=node.get_meta("pu_id")
+		var unit_id=node.unit_id
+		var pu_id=node.pu_id
 		if mounts_only:
-			if node.get_meta("Mount",false):
+			if node.mount:
 				if playable_only:
-					if node.get_meta("Can_Be_Played",true):
+					if node.can_be_played:
 						char_infos.append(CharInfo.new(pu_id,unit_id))
 					else:
 						char_infos.append(CharInfo.new(pu_id,unit_id))
 		else:
 			if playable_only:
-				if node.get_meta("Can_Be_Played",true):
+				if node.can_be_played:
 					char_infos.append(CharInfo.new(pu_id,unit_id))
 			else:
 				char_infos.append(CharInfo.new(pu_id,unit_id))
@@ -885,13 +876,13 @@ func dismount_char_info(char_info_dic:Dictionary):
 
 	var mount_char_info = await get_char_info_on_kletka_id(get_current_kletka_id(),true)
 
-	var currently_on_mount:Array = mount_char_info.get_node().get_meta("Mounted_by_uniq_ids_array",[])
+	var currently_on_mount:Array = mount_char_info.get_node().mounted_by_uniq_ids_array
 	currently_on_mount.erase(char_info_to_dismount.get_uniq_id())
-	mount_char_info.get_node().set_meta("Mounted_by_uniq_ids_array",currently_on_mount)
+	mount_char_info.get_node().mounted_by_uniq_ids_array=currently_on_mount
 
-	var current_mounts:Array = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array",[])
+	var current_mounts:Array = char_info_to_dismount.get_node().mounts_uniq_id_array
 	current_mounts.erase(mount_char_info.get_uniq_id())
-	char_info_to_dismount.get_node().set_meta("Mounts_uniq_id_array",current_mounts)
+	char_info_to_dismount.get_node().mounts_uniq_id_array=current_mounts
 	await sleep(0.1)
 	print("emiting dismounted")
 	dismounted.emit()
@@ -952,8 +943,8 @@ func get_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only=fa
 	if occupied_kletki[kletka_id].size()==1:
 		print("kletka has just one unit")
 		var node = occupied_kletki[kletka_id][0]
-		var unit_id=node.get_meta("unit_id")
-		var pu_id=node.get_meta("pu_id")
+		var unit_id=node.unit_id
+		var pu_id=node.pu_id
 		return CharInfo.new(pu_id,unit_id)
 	else:
 		return await choose_char_info_on_kletka_id(kletka_id,mounts_only,playable_only)
@@ -972,7 +963,7 @@ func check_if_kletka_has_mount(kletka_id:int)->bool:
 		return false
 	var kletka_node = occupied_kletki[kletka_id][0]
 
-	if kletka_node.get_meta("Mount",false):
+	if kletka_node.mount:
 		return true
 
 	return false
@@ -1028,7 +1019,7 @@ func get_current_kletka_id(char_info:CharInfo=get_current_self_char_info())->int
 		print_debug("kletka_id=",kletka_id)
 		for node in occupied_kletki[kletka_id]:
 			print_debug("Node=",node)
-			if node.get_meta("unit_unique_id")==char_info.get_uniq_id():
+			if node.unit_unique_id==char_info.get_uniq_id():
 				return kletka_id
 	return -1
 
@@ -1086,15 +1077,15 @@ func move_player_from_kletka_id1_to_id2(char_info_dic:Dictionary,current_kletka_
 
 	#collecting all nodes to move (mounts)
 	var array_of_nodes_to_move:Array=[player_node_to_move]
-	if char_info.get_node().get_meta("Mounts_uniq_id_array",false):
-		var mounts_ids=char_info.get_node().get_meta("Mounts_uniq_id_array")
+	if char_info.get_node().mounts_uniq_id_array:
+		var mounts_ids=char_info.get_node().mounts_uniq_id_array
 		print("mounts_ids=",mounts_ids)
 		for mount_uniq_id in mounts_ids:
 			var mount_node = get_char_info_from_uniq_id(mount_uniq_id).get_node()
 			if not mount_node in array_of_nodes_to_move:
 				array_of_nodes_to_move.append(mount_node)
 			#getting_all_units that rides this mount
-			for unit_uniq_id in mount_node.get_meta("Mounted_by_uniq_ids_array"):
+			for unit_uniq_id in mount_node.mounted_by_uniq_ids_array:
 				var player_nodee = get_char_info_from_uniq_id(mount_uniq_id).get_node()
 				if not player_nodee in array_of_nodes_to_move:
 					array_of_nodes_to_move.append(player_nodee)
@@ -1118,8 +1109,8 @@ func move_player_from_kletka_id1_to_id2(char_info_dic:Dictionary,current_kletka_
 	if not is_partial or current_kletka_local==-1:
 		if not visually_only:
 			for node_to_move in array_of_nodes_to_move:
-				var pu_id_local=node_to_move.get_meta("pu_id")
-				var unit_id_local=node_to_move.get_meta("unit_id")
+				var pu_id_local=node_to_move.pu_id
+				var unit_id_local=node_to_move.unit_id
 				var char_info_local=CharInfo.new(pu_id_local,unit_id_local)
 				
 				if current_kletka_local!=-1:
@@ -1488,8 +1479,8 @@ func get_char_info_from_node_name(unit_name:String)->CharInfo:
 
 
 	
-	var pu_id=serv_nod.get_meta("owner_pu_id","")
-	var unit_id=serv_nod.get_meta("unit_id")
+	var pu_id=serv_nod.owner_pu_id
+	var unit_id=serv_nod.unit_id
 
 	var return_info:CharInfo=CharInfo.new(pu_id,unit_id)
 	return return_info
@@ -1592,9 +1583,9 @@ func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacke
 
 			var node_attacked=char_info_attacked.get_node()
 
-			var can_evade=node_attacked.get_meta("Can_Evade",true)
-			var can_defence=node_attacked.get_meta("Can_Defence",true)
-			var can_parry=node_attacked.get_meta("Can_Parry",true)
+			var can_evade=node_attacked.can_evade
+			var can_defence=node_attacked.can_defence
+			var can_parry=node_attacked.can_parry
 
 
 			#checking parry
@@ -1862,7 +1853,7 @@ func _on_evade_button_pressed():
 		char_info_dic = await attacker_finished_attack
 		print("attacker_finished_attack char_info_dic=",char_info_dic)
 	
-	if counter_attack and get_current_self_char_info().get_node().get_meta("Can_Attack",true):
+	if counter_attack and get_current_self_char_info().get_node().can_attack:
 		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
 		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
 		
@@ -2149,9 +2140,9 @@ func choose_unit_to_play()->bool:
 	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
 			if not unit_id in unit_ids_already_played_this_turn:
 				var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
-				print(char_info_temp.get_node().name+" Can_Be_Played=",char_info_temp.get_node().get_meta("Can_Be_Played",true))
-				if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
-				not char_info_temp.get_node().get_meta("total_dead",false):
+				print(char_info_temp.get_node().name+" Can_Be_Played=",char_info_temp.get_node().can_be_played)
+				if char_info_temp.get_node().can_be_played and\
+				not char_info_temp.get_node().total_dead:
 					kletki_with_non_played_units.append(
 						players_handler.get_char_info_kletka_number(
 							char_info_temp
@@ -2183,7 +2174,7 @@ func choose_unit_to_play()->bool:
 	var node_choosen=tmp.get_node()
 
 
-	var unit_id_choosen=node_choosen.get_meta("unit_id")
+	var unit_id_choosen=node_choosen.unit_id
 
 	current_unit_id=unit_id_choosen
 
@@ -2194,7 +2185,7 @@ func choose_unit_to_play()->bool:
 		current_action_points=3
 	else:
 		print("starting as sub servant/summon")
-		if node_choosen.get_meta("Servant",false):
+		if node_choosen.servant:
 			current_action_points_label.text=str(3)
 			current_action_points=3
 		else:
@@ -2204,12 +2195,12 @@ func choose_unit_to_play()->bool:
 		players_handler.rpc(
 			"reduce_additional_moves_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.get_meta("Move_Points", 0)
+			-node_choosen.move_points
 			)
 		players_handler.rpc(
 			"reduce_additional_attacks_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.get_meta("Attack_Points", 0)
+			-node_choosen.can_attack
 			)
 	%np_points_number_label.text=str(node_choosen.phantasm_charge)
 	%current_hp_value_label.text=str(node_choosen.hp)
@@ -2225,19 +2216,19 @@ func get_additional_actions_for_char_info_from_mount(char_info_dic:Dictionary):
 
 	var char_info_node=char_info.get_node()
 
-	for mount_uniq_id in char_info_node.get_meta("Mounts_uniq_id_array",[]):
+	for mount_uniq_id in char_info_node.mounts_uniq_id_array:
 		var mount_char_info=get_char_info_from_uniq_id(mount_uniq_id)
 		var mount_node=mount_char_info.get_node()
 
-		if mount_char_info.get_meta("Move_Points",0):
+		if mount_char_info.move_points:
 			players_handler.reduce_additional_moves_for_char_info(
 				char_info_dic,
-				-mount_node.get_meta("Move_Points", 1)
+				-mount_node.move_points
 			)
-		if mount_char_info.get_meta("Attack_Points",0):
+		if mount_char_info.attack_points:
 			players_handler.reduce_additional_attacks_for_char_info(
 				char_info_dic,
-				-mount_node.get_meta("Attack_Points", 1)
+				-mount_node.attack_points
 			)
 
 	pass
@@ -2247,8 +2238,8 @@ func calculate_maximum_playable_units():
 	var kletki_with_non_played_units:Array=[]
 	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
 		var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
-		if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
-			not char_info_temp.get_node().get_meta("total_dead",false):
+		if char_info_temp.get_node().can_be_played and\
+			not char_info_temp.get_node().total_dead:
 			kletki_with_non_played_units.append(
 				players_handler.get_char_info_kletka_number(
 					char_info_temp
@@ -2297,8 +2288,8 @@ func start_turn():
 	var self_char_info=get_current_self_char_info()
 
 	var skills_enabledd=true
-	if self_char_info.get_node().get_meta("Summon_Check",false):
-		skills_enabledd = self_char_info.get_node().get_meta("Skills_Enabled",false)
+	if self_char_info.get_node().summon_check:
+		skills_enabledd = self_char_info.get_node().skills_enabled
 
 
 	skill_info_show_button.disabled=not skills_enabledd
@@ -2416,7 +2407,7 @@ func _on_move_pressed(unmounting=false):
 			skip=false
 			if occupied_kletki.has(i):
 				for node in occupied_kletki[i]:
-					if node.get_meta("Mount",false):
+					if node.mount:
 						pass
 					else:
 						skip=true
@@ -2693,7 +2684,7 @@ func get_neareset_cells_to_cell_position(cell_position:Vector2, number_of_cells:
 	return nearest_cells
 
 
-func _process(delta):
+func _process(_delta):
 	if current_action=="create_new_cell":
 		var mouse_pos = get_global_mouse_position()
 		kletka_to_add.position=mouse_pos
@@ -2788,7 +2779,7 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 			# = players_handler.servant_name_to_pu_id[occupied_kletki[kletka].name]
 			var uniq_ids_on_kletka=[]
 			for node in occupied_kletki[kletka]:
-				uniq_ids_on_kletka.append(node.get_meta("uniq_id"))
+				uniq_ids_on_kletka.append(node.uniq_id)
 
 			# if self char uniq id is on this kletka
 			if players_handler.intersect(uniq_ids_on_kletka,[get_current_self_char_info().get_uniq_id()]):
@@ -2863,12 +2854,12 @@ func _on_make_action_pressed():
 	var phantasm_enabledd=true
 
 	var mounting_something=false
-	if cur_node.get_meta("Summon_Check",false):
-		skills_enabledd = cur_node.get_meta("Skills_Enabled",false)
-		attack_enabledd = cur_node.get_meta("Can_Attack", true)
-		phantasm_enabledd = cur_node.get_meta("Can_Use_Phantasm", false)
+	if cur_node.summon_check:
+		skills_enabledd = cur_node.skills_enabled
+		attack_enabledd = cur_node.can_attack
+		phantasm_enabledd = cur_node.can_use_phantasm
 
-	mounting_something=cur_node.get_meta("Mounts_uniq_id_array",[])!=[]
+	mounting_something=cur_node.mounts_uniq_id_array!=[]
 	
 	print(str("players_handler.unit_unique_id_to_items_owned=",players_handler.unit_unique_id_to_items_owned))
 

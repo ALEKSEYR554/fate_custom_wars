@@ -43,7 +43,7 @@ func _update_character_display():
 		
 		if ascension.size() == 1:
 			# Single sprite - add directly to ascensions tab
-			var texture = ImageTexture.create_from_image(ascension[0])
+			var texture = ImageTexture.create_from_image(Globals.local_path_to_servant_sprite[ascension[0]])
 			var texture_rect = TextureRect.new()
 			texture_rect.texture = texture
 			texture_rect.custom_minimum_size = Vector2(250, 250)
@@ -64,7 +64,7 @@ func _update_character_display():
 			costume_tab.tab_alignment = TabBar.ALIGNMENT_CENTER
 			
 			for costume_index in range(ascension.size()):
-				var texture = ImageTexture.create_from_image(ascension[costume_index])
+				var texture = ImageTexture.create_from_image(Globals.local_path_to_servant_sprite[ascension[costume_index]])
 				var texture_rect = TextureRect.new()
 				texture_rect.texture = texture
 				texture_rect.custom_minimum_size = Vector2(250, 250)

@@ -70,7 +70,7 @@ pointing/emulate_touch_from_mouse=true
 [internationalization]
 
 locale/translation_remaps={}
-locale/translations=PackedStringArray("res://translations/default/output.csv")
+locale/translations=PackedStringArray("res://translations/default/output.en.translation", "res://translations/default/output.ru.translation")
 
 [rendering]
 
