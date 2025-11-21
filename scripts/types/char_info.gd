@@ -18,14 +18,14 @@ func is_valid()->bool:
 	return pu_id!="" and unit_id>=0# and node!=null
 
 #func get_init_id()->int:
-#	return node.get_meta("unit_id")
+#	return node.unit_id
 
 func get_node()->Node2D:
 	return Globals.pu_id_player_info[pu_id]["units"][unit_id]
 
 func get_uniq_id()->String:
 
-	return get_node().get_meta("unit_unique_id")
+	return get_node().unit_unique_id
 
 func get_phantasm_charge_points()->int:
 	return get_node().phantasm_charge

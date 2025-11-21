@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://2yjoo38qx60d"]
+
+[ext_resource type="Script" uid="uid://d30htelcidxx2" path="res://servants/bunyan/bunyan.gd" id="1_2rwh7"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_a7e3a"]
+properties/0/path = NodePath(".:hp")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_2rwh7")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_a7e3a")

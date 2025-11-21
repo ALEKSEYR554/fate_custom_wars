@@ -57,7 +57,7 @@ extends Node2D
 
 
 #endregion
-
+const BASE_SERVANT = preload("res://scenes/base_servant.tscn")
 #region Usable Variables
 var custom_id_to_skill:Dictionary={}
 var turns_order_by_pu_id:Array=[]
@@ -201,7 +201,7 @@ func apply_all_translation_codes(servant_node:Node2D)->void:
 	
 	_recursive_merge_descriptions(servant_node.skills, servant_node.translation)
 	_recursive_merge_descriptions(servant_node.phantasms, servant_node.translation)
-	if "passive_skills" in servant_node:
+	if servant_node.passive_skills:
 		_recursive_merge_descriptions(servant_node.passive_skills, servant_node.translation)
 	
 	print_debug("_recursive_merge_descriptions skills=",servant_node.skills)
@@ -256,6 +256,10 @@ func apply_initial_weapon_buffs(player_node: Node2D) -> void:
 					buff["group_uniq_id"] = weapon_uniq_id
 					player_node.buffs.append(buff)
 
+
+
+
+
 @rpc("call_local","any_peer","reliable")
 func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_summon:bool=false,summon_buff_info:Dictionary={}):
 	print("loading servant for pu_id=",pu_id)
@@ -267,66 +271,68 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 		print("\n\nservant is not found while loading=",pu_id," Globals.pu_id_player_info=",Globals.pu_id_player_info)
 		return
 	
-	var img=null
+	var img_path=null
 
 	#var ascentions:Array=Globals.pu_id_player_info[pu_id]["ascensions"]
 
 	for servant in Globals.characters:
 		if servant["Name"]==servant_name:
 			#img=servant["image"]
-			img = servant["ascensions"][load_info["ascension"]][load_info["costume"]]
+			img_path = servant["ascensions"][load_info["ascension"]][load_info["costume"]]
 
-	if img==null:
+	if img_path==null:
 		push_error("No sprite Found while loading servant")
 		return
 
-	var player:Node2D=Node2D.new()
-	var player_textureRect:TextureRect = TextureRect.new()
-	var effect_layer:TextureRect = TextureRect.new()
-	var buff_name_label:Label= Label.new()
+	var player:Node2D=BASE_SERVANT.instantiate()
+	player.image_path=img_path
+	#var player_textureRect:TextureRect = player.get_node("%servant_sprite_textRect")
+	#var effect_layer:TextureRect = player.get_node("%effect_layer_textRect")
+	#var buff_name_label:Label= player.get_node("%buff_name_label")
 
 	var servant_path=servant_name
 
 	var servant_name_just_name=servant_path.get_file().get_basename()
 
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
-	player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
+	player.script_path="/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"
+	#player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
 
 	
 
-	player_textureRect.texture=ImageTexture.create_from_image(img)
-	effect_layer.texture=load("res://images/white.png")
+	#player_textureRect.texture=ImageTexture.create_from_image(Globals.local_path_to_servant_sprite[img])
+	#effect_layer.texture=load("res://images/white.png")
 	
-	var sizes:Vector2=player_textureRect.texture.get_size()
+	#var sizes:Vector2=player_textureRect.texture.get_size()
 	#texture.flat=true
 	#texture.anchors_preset=
 	#texture.button_down.connect(player_info_button_pressed.bind(peer_id))
-	player_textureRect.position=Vector2(-(TEXTURE_SIZE*1.0)/2,-TEXTURE_SIZE)
-	player_textureRect.scale=Vector2(TEXTURE_SIZE/sizes.x,TEXTURE_SIZE/sizes.y)
+	#player_textureRect.position=Vector2(-(TEXTURE_SIZE*1.0)/2,-TEXTURE_SIZE)
+	#player_textureRect.scale=Vector2(TEXTURE_SIZE/sizes.x,TEXTURE_SIZE/sizes.y)
 	
 	
-	effect_layer.size=Vector2(TEXTURE_SIZE*1.1,TEXTURE_SIZE*1.1)
-	effect_layer.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.1)
+	#effect_layer.size=Vector2(TEXTURE_SIZE*1.1,TEXTURE_SIZE*1.1)
+	#effect_layer.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.1)
 	
-	buff_name_label.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.2)
-	buff_name_label.text="FUCK"
+	#buff_name_label.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.2)
+	#buff_name_label.text="FUCK"
 	
 	
-	buff_name_label.add_theme_font_size_override("font_size",40)
-	buff_name_label.add_theme_color_override("font_outline_color",Color.WHITE)
-	buff_name_label.add_theme_constant_override("outline_size",5)
-	buff_name_label.add_theme_color_override("font_color",Color.BLACK)
-	buff_name_label.z_index=1
-	print("sizes="+str(sizes))
-	print("scale="+str(player.scale))
+	#buff_name_label.add_theme_font_size_override("font_size",40)
+	#buff_name_label.add_theme_color_override("font_outline_color",Color.WHITE)
+	#buff_name_label.add_theme_constant_override("outline_size",5)
+	#buff_name_label.add_theme_color_override("font_color",Color.BLACK)
+	#buff_name_label.z_index=1
+	#print("sizes="+str(sizes))
+	#print("scale="+str(player.scale))
 	#player.add_child(player,true)
 	player.name=servant_name
-	effect_layer.z_index=-1
-	effect_layer.modulate=Color(1, 1, 1, 0)
-	buff_name_label.modulate=Color(1, 1, 1, 0)
-	player.add_child(player_textureRect)
-	player.add_child(effect_layer)
-	player.add_child(buff_name_label)
+	#effect_layer.z_index=-1
+	#effect_layer.modulate=Color(1, 1, 1, 0)
+	#buff_name_label.modulate=Color(1, 1, 1, 0)
+	#player.add_child(player_textureRect)
+	#player.add_child(effect_layer)
+	#splayer.add_child(buff_name_label)
 	
 	
 	
@@ -335,17 +341,19 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 	#adding passive skills
 
-	if not "passive_skills" in player:
+	if not player.passive_skills:
 		print("no passive skills found for player.name="+str(player.name))
 	else:
 		var passive_buffs=player.passive_skills
+		var buffs_to_append=[]
 		for buff in passive_buffs:
 			#func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
 			#players_handler.rpc("remove_buff",[pu_id],buff["Name"],true,true)
 			#await players_handler.buff_removed
 			var buff_copy=buff.duplicate(true)
 			buff_copy["Type"]="Status"
-			player.buffs.append(buff_copy)
+			buffs_to_append.append(buff_copy)
+		player.buffs.append_array(buffs_to_append)
 
 
 	#setting charInfo
@@ -354,8 +362,8 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	if not is_summon:
 		print_debug("loading servant ",servant_name," as main servant for pu_id=",pu_id)
 		pl_info=CharInfo.new(pu_id,0)
-		player.set_meta("unit_id",0)
-		player.set_meta("Servant",true)
+		player.unit_id = 0
+		player.servant =true
 		Globals.pu_id_player_info[pu_id]["units"]={0:player}
 
 	else:
@@ -393,28 +401,27 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 
 				#player.set_meta("Duration", summon_buff_info.get("Duration", -1))
-				player.set_meta("Skills_Enabled", summon_buff_info.get("Skills Enabled", false))
-				player.set_meta("One_Time_Skills", summon_buff_info.get("One Time Skills", false))
-				player.set_meta("Can_Use_Phantasm", summon_buff_info.get("Can Use Phantasm", false))
-				player.set_meta("Disappear_After_Summoner_Death", summon_buff_info.get("Disappear After Summoner Death", true))
-				player.set_meta("Mount", summon_buff_info.get("Mount", false))
-				player.set_meta("Require_Riding_Skill", summon_buff_info.get("Require Riding Skill", false))
-				player.set_meta("Can_Attack", summon_buff_info.get("Can Attack", true))
-				player.set_meta("Can_Evade", summon_buff_info.get("Can Evade", true))
-				player.set_meta("Can_Parry", summon_buff_info.get("Can Parry", true))
-				player.set_meta("Can_Defence", summon_buff_info.get("Can Defence", true))
-				player.set_meta("Move_Points", summon_buff_info.get("Move Points", 1))
-				player.set_meta("Attack_Points", summon_buff_info.get("Attack Points", 1))
-				player.set_meta("Phantasm_Points_Farm", summon_buff_info.get("Phantasm Points Farm", false))
+				player.skills_enabled=summon_buff_info.get("Skills Enabled", false)
+				player.one_time_skills=summon_buff_info.get("One Time Skills", false)
+				player.can_use_phantasm=summon_buff_info.get("Can Use Phantasm", false)
+				player.disappear_after_summoner_death=summon_buff_info.get("Disappear After Summoner Death", true)
+				player.mount=summon_buff_info.get("Mount", false)
+				player.require_riding_skill=summon_buff_info.get("Require Riding Skill", false)
+				player.can_attack=summon_buff_info.get("Can Attack", true)
+				player.can_evade=summon_buff_info.get("Can Evade", true)
+				player.can_parry=summon_buff_info.get("Can Parry", true)
+				player.can_defence=summon_buff_info.get("Can Defence", true)
+				player.move_points=summon_buff_info.get("Move Points", 1)
+				player.attack_points=summon_buff_info.get("Attack Points", 1)
+				player.phantasm_points_farm=summon_buff_info.get("Phantasm Points Farm", false)
 
 
-				player.set_meta("Can_Be_Played", summon_buff_info.get("Can Be Played", true))
-				player.set_meta("Servant", summon_buff_info.get("Servant", false))
+				player.can_be_played=summon_buff_info.get("Can Be Played", true)
+				player.can_be_played=summon_buff_info.get("Servant", false)
 
 
 				
-				player.set_meta("Summoner_char_infodic", summon_buff_info.get("Summoner_char_infodic"))
-
+				player.summoner_char_infodic= summon_buff_info.get("Summoner_char_infodic")
 
 				if duration>0:
 					player.buffs.append({
@@ -433,8 +440,8 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 						]
 					})
 
-				player.set_meta("Skill_Uniq_Summon_Id",unique_id_trait)
-				player.set_meta("Summon_Check",true)
+				player.skill_uniq_summon_id=unique_id_trait
+				player.summon_check=true
 
 				if summon_buff_info.get("Starting Buffs", [])!=[]:
 					player.buffs.append_array(summon_buff_info.get("Starting Buffs"))
@@ -443,7 +450,7 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 
 				Globals.pu_id_player_info[pu_id]["units"][i]=player
-				player.set_meta("unit_id",i)
+				player.unit_id = i
 				break
 	
 	if pu_id==Globals.self_pu_id and not is_summon:
@@ -456,34 +463,22 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 		#print("Globals.self_servant_node=",Globals.self_servant_node)
 	self.add_child(player,true)
 
-	player.servant_class=player.default_stats["servant_class"]
-	player.ideology=player.default_stats["ideology"]
-	player.attack_range=player.default_stats["attack_range"]
-	player.attack_power=player.default_stats["attack_power"]
-	player.agility=player.default_stats["agility"]
-	player.endurance=player.default_stats["endurance"]
-	player.hp=player.default_stats["hp"]
-	player.magic=player.default_stats["magic"]
-	player.luck=player.default_stats["luck"]
-	player.traits=player.default_stats["traits"]
-	player.attribute=player.default_stats["attribute"]
-	player.gender=player.default_stats["gender"]
-	player.strength=player.default_stats["strength"]
+	
 	for i in player.skills.size():
 		player.skill_cooldowns.append(0)
 
-	player.set_meta("owner_pu_id",pu_id)
-	player.set_meta("pu_id",pu_id)
+	player.owner_pu_id = pu_id
+	player.pu_id = pu_id
 
-	player.set_meta("CharInfoDic",pl_info.to_dictionary())
+	player.charInfoDic=pl_info.to_dictionary()
 
-	player.set_meta("unit_unique_id",get_id_from_hostt)
+	player.unit_unique_id=get_id_from_hostt
 
-	player.set_meta("servant_path",str("/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd").get_base_dir())
+	player.servant_path=str("/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd").get_base_dir()
 	
-	player.set_meta("servant_name",servant_name)
+	player.servant_name=servant_name
 
-	player.set_meta("servant_name_just_name",servant_path.get_file().get_basename())
+	player.servant_name_just_name=servant_path.get_file().get_basename()
 
 	player.ascension_stage= load_info["ascension"]+1
 	
@@ -507,7 +502,25 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 	print("emiting servant_loaded = ",pl_info.to_dictionary())
 
-	
+
+	var servant_script_to_get_stats=load(Globals.user_folder+'/servants/'+player.script_path).new()
+
+	player.default_stats=servant_script_to_get_stats.default_stats.duplicate(true)
+
+
+	player.servant_class=player.default_stats["servant_class"]
+	player.ideology=player.default_stats["ideology"]
+	player.attack_range=player.default_stats["attack_range"]
+	player.attack_power=player.default_stats["attack_power"]
+	player.agility=player.default_stats["agility"]
+	player.endurance=player.default_stats["endurance"]
+	player.hp=player.default_stats["hp"]
+	player.magic=player.default_stats["magic"]
+	player.luck=player.default_stats["luck"]
+	player.traits=player.default_stats["traits"]
+	player.attribute=player.default_stats["attribute"]
+	player.gender=player.default_stats["gender"]
+	player.strength=player.default_stats["strength"]
 
 	await get_tree().create_timer(0.1).timeout
 	servant_loaded.emit(pl_info.to_dictionary())
@@ -834,8 +847,8 @@ func choose_allie(range_to_search:int=-1)->Array:
 	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
 	field.current_action="choose_allie"
 	await chosen_allie
-	var return_pu_id=choosen_allie_return_value.get_meta("owner_pu_id")
-	var return_unit_id=choosen_allie_return_value.get_meta("unit_id")
+	var return_pu_id=choosen_allie_return_value.owner_pu_id
+	var return_unit_id=choosen_allie_return_value.unit_id
 
 	return [CharInfo.new(return_pu_id,return_unit_id)]
 
@@ -860,8 +873,8 @@ func choose_enemie(range_to_search:int=-1)->Array:
 	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
 	field.current_action="choose_allie"
 	await chosen_allie
-	var return_pu_id=choosen_allie_return_value.get_meta("owner_pu_id")
-	var return_unit_id=choosen_allie_return_value.get_meta("unit_id")
+	var return_pu_id=choosen_allie_return_value.owner_pu_id
+	var return_unit_id=choosen_allie_return_value.unit_id
 
 	return [CharInfo.new(return_pu_id,return_unit_id)]
 
@@ -1878,7 +1891,7 @@ func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_curren
 	await chosen_allie
 	var choosen_allie_return_value_node = choosen_allie_return_value
 	#return choosen_allie_return_value_node.get_meta("CharInfoDic")
-	var charInfo_to_return=CharInfo.from_dictionary(choosen_allie_return_value_node.get_meta("CharInfoDic"))
+	var charInfo_to_return=CharInfo.from_dictionary(choosen_allie_return_value_node.CharInfoDic)
 	return [charInfo_to_return]
 
 func check_if_hp_is_bigger_than_max_hp_for_char_info(char_info:CharInfo)->void:
@@ -1968,8 +1981,8 @@ func get_everyone_in_range(range_local:int,char_info_to_search:CharInfo=field.ge
 	for kletka_id in field.get_kletki_ids_with_players_you_can_reach_in_steps(range_local,char_info_kletk_id):
 		if field.occupied_kletki.get(kletka_id,0):
 			for servant_node in field.occupied_kletki[kletka_id]:
-				var serv_pu_id=servant_node.get_meta("owner_pu_id")
-				var serv_unit_id=servant_node.get_meta("unit_id")
+				var serv_pu_id=servant_node.owner_pu_id
+				var serv_unit_id=servant_node.unit_id
 				out.append(CharInfo.new(serv_pu_id,serv_unit_id))
 	return out
 
@@ -2355,7 +2368,7 @@ func fill_choose_sprite_containter()->void:
 		if ascensions:
 			for ascension in ascensions:
 				for costume in ascension:
-					all_sprites.append(costume)
+					all_sprites.append(Globals.local_path_to_servant_sprite[costume])
 			#var tmp=[]
 			#tmp.append_array(ascensions)
 			#all_sprites.append_array(tmp)
@@ -3219,7 +3232,7 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]["units"].keys():
 		var node=Globals.pu_id_player_info[Globals.self_pu_id]["units"][unit_id]
 
-		if node.get_meta("Skill_Uniq_Summon_Id","")==id_to_check:
+		if node.skill_uniq_summon_id==id_to_check:
 			counter+=1
 	
 
@@ -3417,8 +3430,8 @@ func charge_np_to_char_info_by_number(char_info_dic:Dictionary,number:int,source
 	print("\n===charge_np_to_char_info_by_number===")
 	#print("unit_uniq_id_to_np_points[pu_id]="+str(unit_uniq_id_to_np_points[pu_id])+"+"+str(number))
 
-	if char_info.get_node().get_meta("Phantasm_Points_Farm",false):
-		var summoner_dic:Dictionary=char_info.get_node().get_meta("Summoner_char_infodic")
+	if char_info.get_node().phantasm_points_farm:
+		var summoner_dic:Dictionary=char_info.get_node().summoner_char_infodic
 		var summoner_char_info:CharInfo=CharInfo.from_dictionary(summoner_dic)
 		source="farm"
 		char_info=summoner_char_info
@@ -3879,7 +3892,7 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 	
 	
 
-	var summoned = node_died.get_meta("Summon_Check",false)
+	var summoned = node_died.summon_check
 
 	if pu_id_to_command_spells_int[char_info_died.pu_id]>=3 and not summoned:
 		var max_hp=node_died.default_stats["hp"]
@@ -3904,24 +3917,24 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 			turns_order_by_pu_id.erase(char_info_died.pu_id)
 		
 		trigger_buffs_on(by_whom_char_info_dic,"Total Kill",char_info_died)
-		node_died.set_meta("total_dead",true)
+		node_died.total_dead=true
 
 		#unmounting if mount
-		if node_died.get_meta("Mount",false):
+		if node_died.mount:
 			var mount_char_info=char_info_died
 			add_to_advanced_logs("ADVANCED_LOG_UNMOUNTING_DEAD_UNIT")
-			var currently_on_mount:Array = mount_char_info.get_node().get_meta("Mounted_by_uniq_ids_array",[])
+			var currently_on_mount:Array = mount_char_info.get_node().mounted_by_uniq_ids_array
 			for uniq_id in currently_on_mount:
 				var char_info_to_dismount=field.get_char_info_from_uniq_id(uniq_id)
 				currently_on_mount.erase(char_info_to_dismount.get_uniq_id())
-				mount_char_info.get_node().set_meta("Mounted_by_uniq_ids_array",currently_on_mount)
+				mount_char_info.get_node().mounted_by_uniq_ids_array=currently_on_mount
 
-				var current_mounts:Array = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array",[])
+				var current_mounts:Array = char_info_to_dismount.get_node().mounts_uniq_id_array
 				current_mounts.erase(mount_char_info.get_uniq_id())
-				char_info_to_dismount.get_node().set_meta("Mounts_uniq_id_array",current_mounts)
+				char_info_to_dismount.get_node().mounts_uniq_id_array=current_mounts
 
 		for char_info_single in get_all_char_infos():
-			var summoner=char_info_single.get_node().get_meta("Summoner_char_infodic",{})
+			var summoner=char_info_single.get_node().summoner_char_infodic
 			if not summoner.is_empty():
 				var summoner_char_info=CharInfo.from_dictionary(summoner)
 				if summoner_char_info.get_uniq_id() == char_info_died.get_uniq_id():
@@ -3933,7 +3946,7 @@ func trigger_death_to_char_info(char_info_died:CharInfo,by_whom_char_info_dic=nu
 func check_if_all_pu_id_units_dead(pu_id:String)->bool:
 	for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
 		var unit_node=Globals.pu_id_player_info[pu_id]["units"][unit_id]
-		if not unit_node.get_meta("total_dead",false):
+		if not unit_node.total_dead:
 			return false
 	return true
 
@@ -3991,8 +4004,8 @@ func _on_use_skill_button_pressed():
 
 	var one_time_skills=false
 	var cur_node=field.get_current_self_char_info().get_node()
-	if cur_node.get_meta("Summon_Check",false):
-		one_time_skills = cur_node.get_meta("One_Time_Skills",false)
+	if cur_node.summon_check:
+		one_time_skills = cur_node.one_time_skills
 
 	
 	match skill_info_tab_container.current_tab+1:
@@ -4239,7 +4252,7 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 	
 	print("change_char_info_sprite_from_path")
 	rpc("change_char_info_sprite_from_path",field.get_current_self_char_info().to_dictionary(),
-	str(folderr)+field.get_current_self_char_info().get_node().get_meta("servant_path")+
+	str(folderr)+field.get_current_self_char_info().get_node().servant_path+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
 	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),
@@ -4773,3 +4786,9 @@ func sync_relations(pu_id_update_to:String,full_relations:Dictionary):
 		Globals.pu_id_to_allies=full_relations
 	else:
 		Globals.pu_id_to_allies[pu_id_update_to]=full_relations[pu_id_update_to]
+
+
+func _on_servants_multiplayer_spawner_spawned(node: Node) -> void:
+	add_servants_translations_for_servant_name(node,node.servant_path,node.servant_name_just_name)
+	apply_all_translation_codes(node)
+	pass # Replace with function body.

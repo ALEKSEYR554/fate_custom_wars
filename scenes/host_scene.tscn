@@ -76,6 +76,7 @@ anchor_right = 0.61084
 anchor_bottom = 0.693359
 grow_horizontal = 2
 grow_vertical = 2
+disabled = true
 text = "START"
 metadata/_edit_use_anchors_ = true
 
@@ -199,7 +200,7 @@ placeholder_text = "YOU NICKNAME"
 max_length = 20
 metadata/_edit_use_anchors_ = true
 
-[connection signal="button_up" from="host_Button" to="." method="_on_create_server_button_button_up"]
-[connection signal="value_changed" from="game_settings_vbox/players_count_SpinBox" to="." method="_on_spin_box_value_changed"]
+[connection signal="pressed" from="host_Button" to="." method="_on_host_button_pressed"]
+[connection signal="value_changed" from="game_settings_vbox/players_count_SpinBox" to="." method="_on_players_count_spin_box_value_changed"]
 [connection signal="value_changed" from="game_settings_vbox/amount_of_teams_SpinBox" to="." method="_on_amount_of_teams_spin_box_value_changed"]
-[connection signal="button_up" from="game_start_button" to="." method="_on_game_start_button_button_up"]
+[connection signal="pressed" from="game_start_button" to="." method="_on_game_start_button_pressed"]

@@ -1,0 +1,147 @@
+[gd_scene load_steps=5 format=3 uid="uid://35xccla353gw"]
+
+[ext_resource type="Texture2D" uid="uid://ccjvowe6hibnn" path="res://servants/gray/sprite_stage_1.png" id="1_6uqxg"]
+[ext_resource type="Script" uid="uid://dx7v3ib6clxv5" path="res://scripts/base_servant.gd" id="1_supcg"]
+[ext_resource type="Texture2D" uid="uid://dr1uv4aclstox" path="res://images/white.png" id="2_supcg"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_supcg"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:image_path")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:servant_class")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:ideology")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:attack_range")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:attack_power")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:agility")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:endurance")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:hp")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath(".:luck")
+properties/9/spawn = true
+properties/9/replication_mode = 2
+properties/10/path = NodePath(".:magic")
+properties/10/spawn = true
+properties/10/replication_mode = 2
+properties/11/path = NodePath(".:buffs")
+properties/11/spawn = true
+properties/11/replication_mode = 2
+properties/12/path = NodePath(".:skill_cooldowns")
+properties/12/spawn = true
+properties/12/replication_mode = 2
+properties/13/path = NodePath(".:additional_moves")
+properties/13/spawn = true
+properties/13/replication_mode = 2
+properties/14/path = NodePath(".:additional_attack")
+properties/14/spawn = true
+properties/14/replication_mode = 2
+properties/15/path = NodePath(".:traits")
+properties/15/spawn = true
+properties/15/replication_mode = 2
+properties/16/path = NodePath(".:strength")
+properties/16/spawn = true
+properties/16/replication_mode = 2
+properties/17/path = NodePath(".:phantasm_charge")
+properties/17/spawn = true
+properties/17/replication_mode = 2
+properties/18/path = NodePath(".:attribute")
+properties/18/spawn = true
+properties/18/replication_mode = 2
+properties/19/path = NodePath(".:gender")
+properties/19/spawn = true
+properties/19/replication_mode = 2
+properties/20/path = NodePath(".:ascension_stage")
+properties/20/spawn = true
+properties/20/replication_mode = 2
+properties/21/path = NodePath(".:owner_pu_id")
+properties/21/spawn = true
+properties/21/replication_mode = 2
+properties/22/path = NodePath(".:unit_id")
+properties/22/spawn = true
+properties/22/replication_mode = 2
+properties/23/path = NodePath(".:pu_id")
+properties/23/spawn = true
+properties/23/replication_mode = 2
+properties/24/path = NodePath(".:CharInfoDic")
+properties/24/spawn = true
+properties/24/replication_mode = 2
+properties/25/path = NodePath(".:unit_unique_id")
+properties/25/spawn = true
+properties/25/replication_mode = 2
+properties/26/path = NodePath(".:servant_path")
+properties/26/spawn = true
+properties/26/replication_mode = 2
+properties/27/path = NodePath(".:servant_name")
+properties/27/spawn = true
+properties/27/replication_mode = 2
+properties/28/path = NodePath(".:servant_name_just_name")
+properties/28/spawn = true
+properties/28/replication_mode = 2
+properties/29/path = NodePath(".:total_dead")
+properties/29/spawn = true
+properties/29/replication_mode = 2
+properties/30/path = NodePath(".:mounted_by_uniq_ids_array")
+properties/30/spawn = true
+properties/30/replication_mode = 2
+properties/31/path = NodePath(".:script_path")
+properties/31/spawn = true
+properties/31/replication_mode = 2
+
+[node name="base_servant" type="Node2D"]
+script = ExtResource("1_supcg")
+
+[node name="servant_sprite_textRect" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1000, 1000)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -500.0
+offset_top = -1000.0
+offset_right = 500.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 3
+texture = ExtResource("1_6uqxg")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="buff_name_label" type="Label" parent="servant_sprite_textRect"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_right = 500.0
+offset_bottom = 83.75
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "fuck"
+
+[node name="effect_layer_textRect" type="TextureRect" parent="servant_sprite_textRect"]
+unique_name_in_owner = true
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_supcg")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_supcg")

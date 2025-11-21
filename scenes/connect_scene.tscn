@@ -68,4 +68,4 @@ placeholder_text = "YOU NICKNAME"
 max_length = 20
 metadata/_edit_use_anchors_ = true
 
-[connection signal="button_up" from="VBoxContainer/connect" to="." method="_on_connect_button_button_up"]
+[connection signal="pressed" from="VBoxContainer/connect" to="." method="_on_connect_pressed"]
