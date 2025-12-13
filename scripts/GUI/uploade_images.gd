@@ -39,8 +39,8 @@ func add_image(image_data):
 func _on_file_dialog_file_selected(path):
 	var image = Image.new()
 	image.load(path)
-	var imgTexture = ImageTexture.new()#idk man
-	imgTexture.set_image(image)
+	#var imgTexture = ImageTexture.new()#idk man
+	#imgTexture.set_image(image)
 	
 	var imageData = image.data
 	imageData["format"] = image.get_format()

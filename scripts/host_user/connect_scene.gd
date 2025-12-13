@@ -102,5 +102,6 @@ func connected_to_server()->void:
 
 @rpc("authority","call_local","reliable")
 func registration_complete(pu_id:String,pu_id_info:Dictionary)->void:
+	print("registration_complete=",pu_id_info)
 	Globals.pu_id_player_info[pu_id]=pu_id_info.duplicate()
 	pass

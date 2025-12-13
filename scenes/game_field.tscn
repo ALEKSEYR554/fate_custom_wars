@@ -1,17 +1,30 @@
-[gd_scene load_steps=25 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=38 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" uid="uid://gac36rced45l" path="res://scripts/field_script.gd" id="1_oabkp"]
+[ext_resource type="Script" uid="uid://c40rsjvmastjp" path="res://scripts/fsm/StateMachine.gd" id="2_h561p"]
 [ext_resource type="Theme" uid="uid://paqsho4ero1j" path="res://themes/middle_top_labels.tres" id="2_x868s"]
+[ext_resource type="Script" uid="uid://plh5s6b8uffa" path="res://scripts/fsm/states/IdleState.gd" id="3_aca2m"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://images/empty.png" id="3_jji7v"]
 [ext_resource type="Theme" uid="uid://cxyp1rji2fm4" path="res://themes/commans_spells_choose.tres" id="4_4iwbj"]
+[ext_resource type="Script" uid="uid://c1m26c8jb5j0r" path="res://scripts/fsm/states/MovingState.gd" id="4_kqtco"]
+[ext_resource type="Script" uid="uid://8by8gd1yjhb3" path="res://scripts/fsm/states/MoveSelectionState.gd" id="4_rn0lg"]
+[ext_resource type="Script" uid="uid://d3x8k37kydn8m" path="res://scripts/fsm/states/AttackingState.gd" id="5_rn0lg"]
 [ext_resource type="PackedScene" uid="uid://cx3m1fecta1u4" path="res://scenes/debug_character_control.tscn" id="5_wbafj"]
+[ext_resource type="Script" uid="uid://ljtfc2qj5vmk" path="res://scripts/fsm/states/DefendingState.gd" id="6_ju72t"]
 [ext_resource type="Theme" uid="uid://dw722h5ism3xu" path="res://themes/action_buttons.tres" id="6_kvplj"]
+[ext_resource type="Script" uid="uid://dib1a4gpf10nr" path="res://scripts/fsm/states/WaitingDefenderResponceState.gd" id="7_aa6mp"]
+[ext_resource type="Script" uid="uid://c2k7tq20qsb2d" path="res://scripts/fsm/states/ChoosingTargetState.gd" id="7_ju72t"]
 [ext_resource type="Theme" uid="uid://c5wokwnalv43k" path="res://themes/custom_buttons.tres" id="7_v2gc4"]
+[ext_resource type="Script" uid="uid://dj7oi3nlkrmth" path="res://scripts/fsm/states/EndTurnState.gd" id="7_xvrtx"]
+[ext_resource type="Script" uid="uid://br5q7od0p5eyj" path="res://scripts/fsm/states/SpectatorState.gd" id="8_aa6mp"]
 [ext_resource type="Theme" uid="uid://u7xcmb80jvax" path="res://themes/use_skill.tres" id="8_mvgku"]
 [ext_resource type="Theme" uid="uid://bs217guh5owfx" path="res://themes/left_down_buttons.tres" id="9_2fy0y"]
+[ext_resource type="Script" uid="uid://dov6n622h4t0x" path="res://scripts/fsm/states/ConfirmActionState.gd" id="10_aa6mp"]
 [ext_resource type="Theme" uid="uid://bluusd5oywrwg" path="res://themes/current_rolls.tres" id="10_rqsdo"]
 [ext_resource type="Theme" uid="uid://dtrvd4pujwke0" path="res://themes/right_down.tres" id="11_ae1m1"]
+[ext_resource type="Script" uid="uid://dwd6nslhuy7sd" path="res://scripts/fsm/states/ParryingState.gd" id="11_jd2tu"]
 [ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://scenes/char_select.tscn" id="12_45n5i"]
+[ext_resource type="Script" uid="uid://br0e5wv48c8am" path="res://scripts/fsm/states/DiceRollState.gd" id="12_qpq1n"]
 [ext_resource type="Theme" uid="uid://crsxx03sxlctt" path="res://themes/damage_type.tres" id="13_82k3h"]
 [ext_resource type="Theme" uid="uid://ismufm5d6o20" path="res://themes/you_were_attacked.tres" id="14_ke58h"]
 [ext_resource type="Theme" uid="uid://dayka6ji4lppa" path="res://themes/are_you_sure.tres" id="15_2g0je"]
@@ -20,15 +33,75 @@
 [ext_resource type="PackedScene" uid="uid://cwg832bxjw8eo" path="res://scenes/char_info_choose_scroll_container.tscn" id="18_sbdxq"]
 [ext_resource type="Script" uid="uid://6xnsppwgbmek" path="res://scripts/camera_script.gd" id="19_yftqc"]
 [ext_resource type="Script" uid="uid://bh82p2aly2rtj" path="res://scripts/players_handler.gd" id="20_mmhri"]
-[ext_resource type="Script" uid="uid://j3ksbe2nvds5" path="res://scripts/rating_script.gd" id="21_kjouk"]
-[ext_resource type="Script" uid="uid://brn0kpfeaxirh" path="res://scripts/uploade_images.gd" id="22_ok628"]
+[ext_resource type="Script" uid="uid://j3ksbe2nvds5" path="res://scripts/GUI/rating_script.gd" id="21_kjouk"]
+[ext_resource type="Script" uid="uid://brn0kpfeaxirh" path="res://scripts/GUI/uploade_images.gd" id="22_ok628"]
 [ext_resource type="Texture2D" uid="uid://bg2nqallqfsel" path="res://images/sun.png" id="23_bv76b"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1bpim"]
+properties/0/path = NodePath(".:connected")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:unit_uniq_id_to_kletki_ids_owned")
+properties/1/spawn = true
+properties/1/replication_mode = 2
 
 [node name="game_field" type="Node2D"]
 process_mode = 1
 script = ExtResource("1_oabkp")
+
+[node name="StateMachine" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_h561p")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3_aca2m")
+
+[node name="MoveSelection" type="Node" parent="StateMachine"]
+script = ExtResource("4_rn0lg")
+
+[node name="Moving" type="Node" parent="StateMachine"]
+script = ExtResource("4_kqtco")
+
+[node name="Attacking" type="Node" parent="StateMachine"]
+script = ExtResource("5_rn0lg")
+
+[node name="WaitingDefenderResponce" type="Node" parent="StateMachine"]
+script = ExtResource("7_aa6mp")
+
+[node name="ChoosingTarget" type="Node" parent="StateMachine"]
+script = ExtResource("7_ju72t")
+
+[node name="Defending" type="Node" parent="StateMachine"]
+script = ExtResource("6_ju72t")
+
+[node name="ConfirmAction" type="Node" parent="StateMachine"]
+unique_name_in_owner = true
+script = ExtResource("10_aa6mp")
+
+[node name="Parrying" type="Node" parent="StateMachine"]
+script = ExtResource("11_jd2tu")
+
+[node name="DiceRoll" type="Node" parent="StateMachine"]
+script = ExtResource("12_qpq1n")
+
+[node name="EndTurn" type="Node" parent="StateMachine"]
+script = ExtResource("7_xvrtx")
+
+[node name="Spectator" type="Node" parent="StateMachine"]
+script = ExtResource("8_aa6mp")
+
+[node name="UseSkill" type="Node" parent="StateMachine"]
+
+[node name="Death" type="Node" parent="StateMachine"]
+
+[node name="ChoosingUnit" type="Node" parent="StateMachine"]
+
+[node name="InitialSpawning" type="Node" parent="StateMachine"]
+
+[node name="Node14" type="Node" parent="StateMachine"]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_1bpim")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
@@ -1231,8 +1304,36 @@ file_mode = 0
 access = 2
 use_native_dialog = true
 
-[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
-replication_config = SubResource("SceneReplicationConfig_1bpim")
+[node name="lines_holder" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="lines_MultiplayerSpawner" type="MultiplayerSpawner" parent="lines_holder"]
+_spawnable_scenes = PackedStringArray("uid://coggj4diy8qh4")
+spawn_path = NodePath("..")
+
+[node name="kletki_holder" type="Node2D" parent="."]
+unique_name_in_owner = true
+z_index = 10
+
+[node name="kletki_MultiplayerSpawner" type="MultiplayerSpawner" parent="kletki_holder"]
+_spawnable_scenes = PackedStringArray("uid://dx87jt83y8o7n")
+spawn_path = NodePath("..")
+
+[node name="Glow_cletki_node" type="Node2D" parent="."]
+unique_name_in_owner = true
+z_index = 100
+
+[node name="glow_kletki_MultiplayerSpawner" type="MultiplayerSpawner" parent="Glow_cletki_node"]
+_spawnable_scenes = PackedStringArray("uid://yipo1si2l3sn")
+spawn_path = NodePath("..")
+
+[node name="Captured_kletki_node" type="Node2D" parent="."]
+unique_name_in_owner = true
+z_index = 30
+
+[node name="captured_kletki_MultiplayerSpawner" type="MultiplayerSpawner" parent="Captured_kletki_node"]
+_spawnable_scenes = PackedStringArray("uid://c81vgci42040v")
+spawn_path = NodePath("..")
 
 [connection signal="pressed" from="GUI/Chat_hide_show_button" to="." method="_on_chat_hide_show_button_pressed"]
 [connection signal="pressed" from="GUI/left_top_corner_VBoxContainer/host_buttons/HOST_BUTTON_START" to="." method="_on_start_pressed"]
@@ -1302,3 +1403,6 @@ replication_config = SubResource("SceneReplicationConfig_1bpim")
 [connection signal="spawned" from="players_handler/servants_MultiplayerSpawner" to="players_handler" method="_on_servants_multiplayer_spawner_spawned"]
 [connection signal="file_selected" from="FileDialog" to="uploaded_images_layer" method="_on_file_dialog_file_selected"]
 [connection signal="file_selected" from="sprite_choose_FileDialog" to="players_handler" method="_on_sprite_choose_file_dialog_file_selected"]
+[connection signal="spawned" from="kletki_holder/kletki_MultiplayerSpawner" to="." method="_on_kletki_multiplayer_spawner_spawned"]
+[connection signal="spawned" from="Glow_cletki_node/glow_kletki_MultiplayerSpawner" to="." method="_on_glow_kletki_multiplayer_spawner_spawned"]
+[connection signal="spawned" from="Captured_kletki_node/captured_kletki_MultiplayerSpawner" to="." method="_on_captured_kletki_multiplayer_spawner_spawned"]

@@ -17,11 +17,43 @@ const PUID_SAVE_PATH = "user://persistent_game_id.dat"
 
 var is_game_started:bool=false
 
+var unit_uniq_id_to_damage_type:Dictionary
+
+const ACTIONS={
+	SPECTATE="SPECTATE",
+	WAIT="WAIT",
+	MOVE="MOVE",
+	ATTACK="ATTACK",
+	USE_SKILL="USE_SKILL",
+	FIELD_CAPTURE="FIELD_CAPTURE",
+	CHOOSE_UNIT="CHOOSE_UNIT",
+	CHOOSE_ALLY="CHOOSE_ALLY"	
+	}
+
 signal connection_lost(status:String)#reconnecting connected failed
 
 # Информация обо всех игроках. Ключ: persistent_id
-# Значение: Словарь {"nickname": str, "current_peer_id": int, "is_connected": bool, "servant_name": str, "current_unit_id":int, "current_action":str, "servant_node_name":str, "disconnected_more_than_timeout":bool, "units":{0:Node2D}}
+"""
+# Значение: Словарь 
+"pu_id":{
+	"nickname": str,
+	"current_peer_id": int, 
+	"is_connected": bool, 
+	"servant_name": str, 
+	"current_unit_id":int, 
+	"current_action":str, 
+	"servant_node_name":str, 
+	"disconnected_more_than_timeout":bool, 
+	"units":{0:Node2D},
+	unit_ids_already_played_this_turn:array,
+	maximum_playable_units:int
+
+}
+
+"""
 var pu_id_player_info: Dictionary = {}
+
+var pu_id_to_action_points:Dictionary = {}
 
 const default_pu_id_player_info_dic={
 	"nickname": "",
@@ -56,6 +88,8 @@ var uniqq_ids:Array=[]
 var settings_node:Control
 #var translations:Dictionary={}
 
+var pu_id_to_current_action={}
+
 var DEFAULT_PORT = 9999
 const RECONNECT_ATTEMPT_DELAY: float = 2.0 # секунды
 const MAX_RECONNECT_ATTEMPTS: int = 5
@@ -85,6 +119,7 @@ func get_self_peer_id() -> int:
 	return multiplayer.get_unique_id()
 
 func _ready():
+	
 	self_pu_id=self_pu_id
 	someone_status_changed.connect(status_changed)
 	_load_or_generate_persistent_id()
@@ -95,10 +130,17 @@ func _ready():
 		Globals.user_folder=OS.get_executable_path().get_base_dir()
 	if OS.has_feature("editor"):
 		Globals.user_folder="res:/"
+	
+	var memory_before = OS.get_static_memory_usage()
 	preload_all_servant_sprites()
+	var memory_used = OS.get_static_memory_usage() - memory_before
+	print("globals memory_used =",memory_used)
 	generate_unique_ids()
 	load_translation_file()
 	settings_node = get_tree().get_root().get_child(1).find_child("Settings_screen")
+
+	
+	
 
 func _input(event):
 	if event is InputEventKey:
@@ -174,7 +216,12 @@ func load_character_sprites(servants_folder_path: String, folder: String) -> Arr
 			break # No more stages found
 			
 		var stage_img = Image.new()
+		var memory_before = OS.get_static_memory_usage()
+		
 		if stage_img.load(stage_path) == OK:
+			#stage_img.compress()
+			var memory_used = OS.get_static_memory_usage() - memory_before
+			print("local_path=",local_path," memory_used=",memory_used*1.0/1024/1024)
 			local_path_to_servant_sprite[local_path]=stage_img
 			#stage_sprites.append(stage_img)
 
@@ -188,7 +235,9 @@ func load_character_sprites(servants_folder_path: String, folder: String) -> Arr
 				#servants_folder_path= res://servants/
 				var costume_path = servants_folder_path + str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
 				var local_costume_path=str(folder) + "/" + base_stage_name + "_costume_" + str(costume) + ".png"
+				
 				print("costume_path=",costume_path, " folder=",folder, " servant_folder_path=",servants_folder_path)
+				
 				if !FileAccess.file_exists(costume_path):
 					break # No more costumes for this stage
 					
@@ -197,8 +246,8 @@ func load_character_sprites(servants_folder_path: String, folder: String) -> Arr
 					var data = image.data
 					data["format"] = image.get_format()
 
-					var img = Image.new()
-					img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
+					#var img = Image.new()
+					#img = Image.create_from_data(data["width"], data["height"], data["mipmaps"], data["format"], data["data"])
 					local_path_to_servant_sprite[local_costume_path]=stage_img
 					stage_sprites.append(local_costume_path)
 				costume += 1
@@ -240,6 +289,8 @@ func preload_all_servant_sprites():
 			"jaguar_man", "queen_medb", "queen_medb/warrior", "queen_medb/druid",
 			"katsushika_hokusai/horse", "katsushika_hokusai", "katsushika_hokusai/obstacle",
 		]
+		var memory_before = OS.get_static_memory_usage()
+
 		
 		for folder in predefined_servants:
 			print("Processing editor character: " + folder)
@@ -252,7 +303,8 @@ func preload_all_servant_sprites():
 					"Text": "Character " + str(folder) + " Description"
 				})
 				print("Added editor character " + folder + " with " + str(ascensions.size()) + " ascension stages")
-
+		var memory_used = OS.get_static_memory_usage() - memory_before
+		print("memory_used after sprite loaded=",memory_used)
 func status_changed(puid:String,status:bool):
 	pass
 	var string_of_timed_out=""

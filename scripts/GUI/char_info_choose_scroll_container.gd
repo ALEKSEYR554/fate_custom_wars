@@ -10,6 +10,7 @@ func _ready():
 
 func add_char_infos(char_info_array:Array):
 	for child in char_info_holder_h_box_container.get_children():
+		char_info_holder_h_box_container.remove_child(child)
 		child.queue_free()
 	print("choose char info cleared")
 	char_info_selected=char_info_array[0]

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://dljt0ecv6va5v"]
+
+[ext_resource type="Script" uid="uid://d3dgdfl46ftl8" path="res://test_folder/transl.gd" id="1_j7gj7"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_j7gj7")
+
+[node name="Label" type="Label" parent="."]
+offset_right = 350.0
+offset_bottom = 134.0
+text = "CONNECTING_SCREEN_CONNECTED_SUCCESS"

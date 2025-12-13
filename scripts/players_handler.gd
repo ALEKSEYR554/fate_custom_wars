@@ -98,7 +98,6 @@ var self_command_spell_type:String=""
 
 #Current users ready 0/?
 var current_users_ready:int=0
-var choosen_allie_return_value:Node2D
 
 var loaded_done_count:int=0
 var loaded_arr:Array
@@ -116,7 +115,7 @@ signal servant_loaded(char_info:Dictionary)
 signal everyone_loaded
 
 signal next_turn_pass
-signal chosen_allie()
+signal chosen_allie(char_info:CharInfo)
 signal buff_removed
 signal buffs_cooldown_reduced
 signal skills_cooldown_reduced
@@ -295,47 +294,12 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	var servant_name_just_name=servant_path.get_file().get_basename()
 
 	print_debug("loading script path="+str(Globals.user_folder+"/servants/"+str(servant_name)+"/"+str(servant_name)+".gd"))
-	player.script_path="/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"
-	#player.set_script(load(Globals.user_folder+"/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd"))
+	player.script_path=str(servant_path)+"/"+str(servant_name_just_name)+".gd"
 
+	print("player.script_path=",player.script_path)
 	
-
-	#player_textureRect.texture=ImageTexture.create_from_image(Globals.local_path_to_servant_sprite[img])
-	#effect_layer.texture=load("res://images/white.png")
-	
-	#var sizes:Vector2=player_textureRect.texture.get_size()
-	#texture.flat=true
-	#texture.anchors_preset=
-	#texture.button_down.connect(player_info_button_pressed.bind(peer_id))
-	#player_textureRect.position=Vector2(-(TEXTURE_SIZE*1.0)/2,-TEXTURE_SIZE)
-	#player_textureRect.scale=Vector2(TEXTURE_SIZE/sizes.x,TEXTURE_SIZE/sizes.y)
-	
-	
-	#effect_layer.size=Vector2(TEXTURE_SIZE*1.1,TEXTURE_SIZE*1.1)
-	#effect_layer.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.1)
-	
-	#buff_name_label.position=Vector2(-(TEXTURE_SIZE*1.1)/2,-TEXTURE_SIZE*1.2)
-	#buff_name_label.text="FUCK"
-	
-	
-	#buff_name_label.add_theme_font_size_override("font_size",40)
-	#buff_name_label.add_theme_color_override("font_outline_color",Color.WHITE)
-	#buff_name_label.add_theme_constant_override("outline_size",5)
-	#buff_name_label.add_theme_color_override("font_color",Color.BLACK)
-	#buff_name_label.z_index=1
-	#print("sizes="+str(sizes))
-	#print("scale="+str(player.scale))
-	#player.add_child(player,true)
 	player.name=servant_name
-	#effect_layer.z_index=-1
-	#effect_layer.modulate=Color(1, 1, 1, 0)
-	#buff_name_label.modulate=Color(1, 1, 1, 0)
-	#player.add_child(player_textureRect)
-	#player.add_child(effect_layer)
-	#splayer.add_child(buff_name_label)
-	
-	
-	
+		
 	print("pu_id==Globals.self_pu_id=",pu_id," ",Globals.self_pu_id)
 
 
@@ -347,9 +311,6 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 		var passive_buffs=player.passive_skills
 		var buffs_to_append=[]
 		for buff in passive_buffs:
-			#func remove_buff(cast_array,skill_name,remove_passive=false,remove_only_passive_one=false):
-			#players_handler.rpc("remove_buff",[pu_id],buff["Name"],true,true)
-			#await players_handler.buff_removed
 			var buff_copy=buff.duplicate(true)
 			buff_copy["Type"]="Status"
 			buffs_to_append.append(buff_copy)
@@ -376,20 +337,7 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 
 				var duration:int = summon_buff_info.get("Duration",-1)
-				#var skills_enabled:bool = summon_buff_info.get("Skills Enabled",false)
-				#var one_time_skills:bool = summon_buff_info.get("One Time Skills",false)
-				#var can_use_phantasm:bool = summon_buff_info.get("Can Use Phantasm",false)
-				#var dissapear_after_summoner_death:bool = summon_buff_info.get("Disappear After Summoner Death",true)
-				#var mount:bool = summon_buff_info.get("Mount",false)
-				#var can_attack:bool = summon_buff_info.get("Can Attack",true)
-				#var can_evade:bool = summon_buff_info.get("Can Evade",true)
-				#var can_defence:bool = summon_buff_info.get("Can Defence",true)
-				#var move_points:int = summon_buff_info.get("Move Points",1)
-				#var attack_points:int = summon_buff_info.get("Attack Points",1)
-				#var phantasm_points_farm:bool = summon_buff_info.get("Phantasm Points Farm",false)
-				#var summon_limit:int = summon_buff_info.get("Limit",3)
-
-
+				
 				var buff_info_stringify=str(summon_buff_info)
 				var ctx = HashingContext.new()
 				var buffer = buff_info_stringify.to_utf8_buffer()
@@ -458,10 +406,10 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 		#Globals.self_servant_node=player
 
-		field.current_unit_id=idd
+		Globals.pu_id_player_info[pu_id]["current_unit_id"]=idd
 
 		#print("Globals.self_servant_node=",Globals.self_servant_node)
-	self.add_child(player,true)
+	
 
 	
 	for i in player.skills.size():
@@ -470,17 +418,21 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	player.owner_pu_id = pu_id
 	player.pu_id = pu_id
 
-	player.charInfoDic=pl_info.to_dictionary()
+	player.CharInfoDic=pl_info.to_dictionary()
 
 	player.unit_unique_id=get_id_from_hostt
 
-	player.servant_path=str("/servants/"+str(servant_path)+"/"+str(servant_name_just_name)+".gd").get_base_dir()
+	player.servant_path=str(str(servant_path)+"/"+str(servant_name_just_name)+".gd").get_base_dir()
 	
 	player.servant_name=servant_name
 
 	player.servant_name_just_name=servant_path.get_file().get_basename()
 
 	player.ascension_stage= load_info["ascension"]+1
+	if load_info["costume"]>=1:
+		player.costume_stage= load_info["costume"]+1
+	else:
+		player.costume_stage=null
 	
 
 	add_servants_translations_for_servant_name(player,servant_path,servant_name_just_name)
@@ -492,7 +444,7 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 	unit_unique_id_to_items_owned[get_id_from_hostt]={}
 	unit_uniq_id_player_game_stat_info[get_id_from_hostt]=DEFAULT_GAME_STAT.duplicate(true)
-	field.kletka_owned_by_unit_uniq_id[get_id_from_hostt]=[]
+	field.unit_uniq_id_to_kletki_ids_owned[get_id_from_hostt]=[]
 
 
 	servant_name_to_pu_id[player.name]=pu_id
@@ -522,9 +474,13 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	player.gender=player.default_stats["gender"]
 	player.strength=player.default_stats["strength"]
 
+	player.char_info=pl_info
+
+	self.add_child(player,true)
 	await get_tree().create_timer(0.1).timeout
 	servant_loaded.emit(pl_info.to_dictionary())
 
+	
 	#print(rand_kletka)
 	#print(cell_positions[rand_kletka])
 	#jopa.position = cord
@@ -539,9 +495,6 @@ func get_self_servant_node(unit_id:int=field.current_unit_id)->Node2D:
 	return Globals.pu_id_player_info[Globals.self_pu_id]["units"][unit_id]
 	#push_error("no self servant found for pu_id=",Globals.self_pu_id," unit_id=",unit_id,
 	# 'Globals.pu_id_player_info[Globals.self_pu_id]["units"]=',Globals.pu_id_player_info[Globals.self_pu_id]["units"])
-
-
-
 
 func get_selected_servant()->void:
 	var servant_ascensions:Dictionary=char_select.get_current_servant()
@@ -564,7 +517,7 @@ func check_if_players_ready(pu_id:String,servant_ascensions:Dictionary):
 	current_users_ready+=1
 	rpc("update_ready_users_count",current_users_ready,Globals.pu_id_player_info.size())
 
-	rpc("sync_pu_id_player_info",Globals.pu_id_player_info.duplicate(true))
+	#rpc("sync_pu_id_player_info",Globals.pu_id_player_info.duplicate(true))
 	sync_pu_id_player_info(Globals.pu_id_player_info.duplicate(true))
 
 	#print("Globals.connected_players="+str(Globals.connected_players)+"Globals.connected_players.size()="+str(Globals.connected_players.size()))
@@ -578,18 +531,13 @@ func check_if_players_ready(pu_id:String,servant_ascensions:Dictionary):
 				rpc_id(all_peers[i],"set_uniq_unit_ids_from_host",uniq_to_send)
 
 			host_buttons.visible=true
+			
 	
 @rpc("authority","call_local","reliable")
 func set_uniq_unit_ids_from_host(uniq_id:Array):
 	Globals.uniqq_ids=uniq_id
 	return
 
-
-
-@rpc("authority","call_local","reliable")
-func inital_spawn_of_player_forwarder():
-	print()
-	field.inital_spawn_of_player()
 
 @rpc("any_peer","call_local","reliable")
 func update_ready_users_count(current_users_ready_local:int,max_players:int):
@@ -619,13 +567,12 @@ func set_teams_and_turns_order(teams_array,turn_order):
 
 @rpc("authority","call_local","reliable")
 func initialise_start_variables(char_info_list:Array):
-	field.add_all_additional_nodes()
 	for char_info in char_info_list:
 		unit_unique_id_to_items_owned[char_info.get_uniq_id()]={}
 		pu_id_to_inventory_array[char_info]=[]
 		pu_id_to_command_spells_int[char_info.pu_id]=3
 		unit_uniq_id_player_game_stat_info[char_info.get_uniq_id()]=DEFAULT_GAME_STAT.duplicate(true)
-		field.kletka_owned_by_unit_uniq_id[char_info.get_uniq_id()]=[]
+		field.unit_uniq_id_to_kletki_ids_owned[char_info.get_uniq_id()]=[]
 		Globals.pu_id_to_allies[char_info.pu_id]={"allies":[],"neutral":[]}
 		Globals.self_field_color = Color(randf(), randf(), randf())
 		
@@ -654,9 +601,8 @@ func sent_that_loading_done(_pu_id):
 		print("\n\n\n EVERYONE READY\n\n\n")
 
 
-@rpc("authority","call_local","reliable")
 func starting_loading(teams_array,turns_order,pu_id_to_unit_uniq:Dictionary):
-	print("\n START SELF PEER_ID=",Globals.get_self_peer_id(), " =", multiplayer.get_unique_id())
+	#print("\n START SELF PEER_ID=",Globals.get_self_peer_id(), " =", multiplayer.get_unique_id())
 
 	for pu_id in Globals.pu_id_player_info.keys():
 		#var servant_name_to_load = Globals.pu_id_player_info[pu_id].get("servant_name",null)
@@ -716,32 +662,26 @@ func start():
 	
 
 	print("\n\ninfo before loading=",Globals.pu_id_player_info)
-	rpc("starting_loading",teams_array,turns_order,pu_id_to_unit_uniq)
+	starting_loading(teams_array,turns_order,pu_id_to_unit_uniq)
 	await everyone_loaded
 
 	#первоначальное выставление слуг на поле
 	for pu_id in turns_order_by_pu_id: 
 		current_player_pu_id_turn=pu_id
-		var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
+		
 
 		
 		
-		rpc_id(pu_peer_id,"inital_spawn_of_player_forwarder")
+		field.inital_spawn_of_player(pu_id)
 		await next_turn_pass
 		print(pu_id)
 	rpc("sync_relations","",Globals.pu_id_to_allies)
 	turns_loop()
 
-
-
-
-
-
-
 #endregion
 
 #region Turns Handler
-@rpc("any_peer","call_local","reliable")
+@rpc("authority","call_local","reliable")
 func pass_next_turn(pu_id:String)->void:
 	if pu_id==current_player_pu_id_turn:
 		field.my_turn=false
@@ -749,7 +689,7 @@ func pass_next_turn(pu_id:String)->void:
 		
 
 
-func is_only_one_team_stand()->bool:
+func is_only_one_team_standing()->bool:
 	var pu_id_alive=turns_order_by_pu_id.duplicate(true)
 	if get_all_pu_ids().size()==1:#for debug only
 		return false
@@ -768,7 +708,7 @@ func is_only_one_team_stand()->bool:
 
 func turns_loop() -> void:
 	print("turns_loop started")
-	while !is_only_one_team_stand():
+	while !is_only_one_team_standing():
 		turn_update(turns_counter)
 		rpc("turn_update",turns_counter)
 		
@@ -783,8 +723,8 @@ func turns_loop() -> void:
 			current_player_pu_id_turn=pu_id
 			rpc("update_current_player_turn",current_player_pu_id_turn)
 
-			
-			field.rpc_id(peer_id,"start_turn")
+			Globals.pu_id_to_current_action[pu_id]="wait"
+			field.rpc_id(peer_id,"start_turn",pu_id)
 			await next_turn_pass
 		turns_counter+=1
 		turn_update(turns_counter)
@@ -801,11 +741,11 @@ func alert_end_game():
 	field.info_table_show(tr("ONLY_ONE_TEAM_STANDING"))
 
 
-@rpc("any_peer","call_local","reliable")
+@rpc("authority","call_local","reliable")
 func update_current_player_turn(cur_player_turn_pu_id:String):
 	current_player_pu_id_turn=cur_player_turn_pu_id
 
-@rpc("any_peer","reliable","call_remote")
+@rpc("authority","reliable","call_remote")
 func turn_update(turn) -> void:
 	%turns_label.text=str("Turn: ",turn)
 	turns_counter=turn
@@ -846,11 +786,11 @@ func choose_allie(range_to_search:int=-1)->Array:
 	
 	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
 	field.current_action="choose_allie"
-	await chosen_allie
-	var return_pu_id=choosen_allie_return_value.owner_pu_id
-	var return_unit_id=choosen_allie_return_value.unit_id
+	var return_char_info:CharInfo = await chosen_allie
+	#var return_pu_id=return_char_info.pu_id
+	#var return_unit_id=return_char_info.unit_id
 
-	return [CharInfo.new(return_pu_id,return_unit_id)]
+	return [return_char_info]
 
 
 func choose_enemie(range_to_search:int=-1)->Array:
@@ -872,11 +812,9 @@ func choose_enemie(range_to_search:int=-1)->Array:
 	
 	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
 	field.current_action="choose_allie"
-	await chosen_allie
-	var return_pu_id=choosen_allie_return_value.owner_pu_id
-	var return_unit_id=choosen_allie_return_value.unit_id
+	var return_char_info:CharInfo = await chosen_allie
 
-	return [CharInfo.new(return_pu_id,return_unit_id)]
+	return [return_char_info]
 
 
 func get_item_description(item)->String:
@@ -1888,11 +1826,9 @@ func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_curren
 	field.choose_glowing_cletka_by_ids_array(ketki_array)
 	print("choose_single_in_range=",ketki_array)
 	field.current_action="choose_allie"
-	await chosen_allie
-	var choosen_allie_return_value_node = choosen_allie_return_value
-	#return choosen_allie_return_value_node.get_meta("CharInfoDic")
-	var charInfo_to_return=CharInfo.from_dictionary(choosen_allie_return_value_node.CharInfoDic)
-	return [charInfo_to_return]
+	var return_char_info:CharInfo = await chosen_allie
+
+	return [return_char_info]
 
 func check_if_hp_is_bigger_than_max_hp_for_char_info(char_info:CharInfo)->void:
 	print("\n---check_if_hp_is_bigger_than_max_hp_for_char_info name=",char_info.get_node().name)
@@ -3150,7 +3086,7 @@ func add_buff(cast_array,skill_info:Dictionary):
 			"HP Drain":
 				heal_char_info(who_to_cast_char_info,-skill_info.get("Power",5),"Drain")
 			"Additional Move":
-				reduce_additional_moves_for_char_info(who_to_cast_char_info.to_dictionary(),-skill_info.get("Power",1))
+				reduce_additional_moves_for_char_info(who_to_cast_char_info,-skill_info.get("Power",1))
 			"Delayed Effect":
 				skill_info["Turn Casted"]=turns_counter
 				who_to_cast_char_info.get_node().buffs.append(skill_info)
@@ -3278,7 +3214,7 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 	var kletka_to_initial_spawn=field.get_unoccupied_kletki()
 	field.choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
 	var glow_pressed = await field.glow_kletka_pressed_signal
-	field.rpc("move_player_from_kletka_id1_to_id2",char_info_loaded.to_dictionary(),-1,glow_pressed)
+	field.rpc("move_player_from_kletka_id1_to_id2",char_info_loaded,-1,glow_pressed)
 	
 	print("checking hp buffs to get if hp is bigger than max hp for char_info_loaded")
 	check_if_hp_is_bigger_than_max_hp_for_char_info(char_info_loaded)
@@ -3962,9 +3898,8 @@ func _on_texture_rect_gui_input(event)->void:
 		print(event)
 	pass # Replace with function body.
 
-@rpc("any_peer","reliable","call_local")
-func reduce_additional_moves_for_char_info(char_info_dic:Dictionary,amount:int=1)->void:
-	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
+
+func reduce_additional_moves_for_char_info(char_info:CharInfo,amount:int=1)->void:
 	char_info.get_node().additional_moves-=amount
 	add_to_advanced_logs("ADVANCED_LOG_REDUCE_ADDITIONAL_MOVES",
 		{
@@ -4251,6 +4186,11 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		folderr=Globals.user_folder
 	
 	print("change_char_info_sprite_from_path")
+	var sprite_base_name="sprite_stage_"+field.get_current_self_char_info().get_node().ascension_stage
+
+	if field.get_current_self_char_info().get_node().costume_stage:
+		sprite_base_name+="_costume_"+field.get_current_self_char_info().get_node().costume_stage
+
 	rpc("change_char_info_sprite_from_path",field.get_current_self_char_info().to_dictionary(),
 	str(folderr)+field.get_current_self_char_info().get_node().servant_path+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
@@ -4305,7 +4245,7 @@ func _on_items_pressed()->void:
 		
 	pass # Replace with function body.
 
-
+@rpc("call_local","reliable","authority")
 func set_random_command_spell_set()->void:
 	var add=""
 	

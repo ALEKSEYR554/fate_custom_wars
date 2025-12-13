@@ -1,6 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://dx87jt83y8o7n"]
+[gd_scene load_steps=3 format=3 uid="uid://dx87jt83y8o7n"]
 
-[ext_resource type="Script" uid="uid://gjimlnfv84sr" path="res://scripts/cell_script.gd" id="1_gv37r"]
+[ext_resource type="Script" uid="uid://gjimlnfv84sr" path="res://scripts/cells_scripts/cell_script.gd" id="1_gv37r"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_upbjj"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:scale")
+properties/1/spawn = true
+properties/1/replication_mode = 2
 
 [node name="cell" type="Node2D"]
 script = ExtResource("1_gv37r")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_upbjj")

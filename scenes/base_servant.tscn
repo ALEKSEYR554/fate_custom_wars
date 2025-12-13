@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://35xccla353gw"]
 
 [ext_resource type="Texture2D" uid="uid://ccjvowe6hibnn" path="res://servants/gray/sprite_stage_1.png" id="1_6uqxg"]
-[ext_resource type="Script" uid="uid://dx7v3ib6clxv5" path="res://scripts/base_servant.gd" id="1_supcg"]
+[ext_resource type="Script" uid="uid://dx7v3ib6clxv5" path="res://scripts/servants/base_servant.gd" id="1_supcg"]
 [ext_resource type="Texture2D" uid="uid://dr1uv4aclstox" path="res://images/white.png" id="2_supcg"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_supcg"]

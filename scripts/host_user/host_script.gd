@@ -62,7 +62,10 @@ func user_requested_registration(pu_id:String,nickname:String)->void:
 	pu_id_info_to_send["is_connected"]=true
 	pu_id_info_to_send["units"]={}
 	pu_id_info_to_send["nickname"]=nickname
+
 	
+
+
 	connect_scene.rpc("registration_complete",pu_id,pu_id_info_to_send.duplicate())
 	update_player_list_ui()
 
@@ -92,7 +95,7 @@ func collect_all_nesessary_veriables()->Dictionary:
 
 	output["game_field"]={
 		"kletka_preference":field_node.kletka_preference.duplicate(true),
-		"kletka_owned_by_unit_uniq_id":field_node.kletka_owned_by_unit_uniq_id.duplicate(true),
+		"unit_uniq_id_to_kletki_ids_owned":field_node.unit_uniq_id_to_kletki_ids_owned.duplicate(true),
 		"pole_generated_seed":field_node.pole_generated_seed,
 		"cell_positions":field_node.cell_positions.duplicate(true),
 		"connected":field_node.connected.duplicate(true),
@@ -223,10 +226,50 @@ func _on_amount_of_teams_spin_box_value_changed(value: float) -> void:
 	pass # Replace with function body.
 
 
-func _on_game_start_button_pressed() -> void:
-	
+
+func _on_game_start_button_pressed():
+	print("_on_game_start_button_button_up")
+	# Убедимся, что все необходимые игроки готовы/подключены
+	# Например, если spin_box_max_players используется для установки точного числа игроков
 	Globals.start_teams_amount=amount_of_teams_spin_box.value
-	pass # Replace with function body.
+	var required_players = players_count_spin_box.value 
+	var current_connected_players = 1
+	for puid in Globals.pu_id_player_info:
+		if Globals.pu_id_player_info[puid].is_connected:
+			current_connected_players += 1
+	
+	if current_connected_players < required_players:
+		OS.alert("Not enough players connected to start the game. Required: %s, Connected: %s" % [required_players, current_connected_players], "Game Start")
+		return
+
+	rpc("hide_main_menu_on_clients") # Отправляем всем клиентам
+	hide_main_menu_locally()        # Выполняем локально для хоста
+	
+	rpc("initiate_game_on_clients") # Отправляем всем клиентам
+	initiate_game_locally()         # Выполняем локально для хоста
+
+@rpc("any_peer", "call_remote", "reliable") # Должно быть доступно для вызова клиентами, если это не так, то `authority`
+func hide_main_menu_on_clients(): # Эта функция будет на клиентах
+	hide_main_menu_locally()
+
+func hide_main_menu_locally():
+	main_menu.visible = false # Проще скрыть родительский узел
+	# self.visible = false # Если этот узел (Host.gd) тоже часть UI лобби
+
+@rpc("any_peer", "call_remote", "reliable")
+func initiate_game_on_clients(): # Эта функция будет на клиентах
+	initiate_game_locally()
+
+func initiate_game_locally():
+	# game_field = load("res://game_field.tscn") # Лучше загружать один раз в _ready или экспортировать
+	print("Game initiation called by host or RPC.")
+	if main_menu and main_menu.has_method("game_initiate"):
+		main_menu.game_initiate()
+		Globals.menu_left=true
+	else:
+		push_error("main_menu node or game_initiate method not found!")
+	# var game_field_instanse = game_field.instantiate()
+	# get_tree().root.add_child(game_field_instanse)
 
 
 func _on_host_button_pressed() -> void:
@@ -237,6 +280,8 @@ func _on_host_button_pressed() -> void:
 	Globals.self_nickname = nickname_line_edit.text
 	
 	var amount_of_players=players_count_spin_box.value
+
+	user_requested_registration(Globals.self_pu_id,Globals.self_nickname)
 	
 	var port = Globals.DEFAULT_PORT
 	

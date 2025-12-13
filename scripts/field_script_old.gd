@@ -5,8 +5,6 @@ extends Node2D
 #region onready
 @onready var players_handler = %players_handler
 
-@onready var fsm = %StateMachine
-
 @onready var character_selection_container = %character_selection_container
 
 @onready var char_select:Control = %Char_select
@@ -78,8 +76,6 @@ extends Node2D
 
 @onready var actions_buttons = %actions_buttons
 
-@onready var custom_choices_main_Vboxcontainer = %custom_choices_main_Vboxcontainer
-
 @onready var current_action_points_label = %current_action_points_label
 
 
@@ -149,60 +145,50 @@ extends Node2D
 #endregion
 
 
-const LINE_BETWEEN_CELLS = preload("res://scenes/line_between_cells.tscn")
-const CAPTUR_KLET = preload("res://scenes/captur_klet.tscn")
-const GLOW_NODE = preload("res://scenes/glow_node.tscn")
-var glow_array={}
+
+
+var glow_array=[]
 var time
+var glowing_kletka_number_selected
 var is_game_started=false
 var is_pole_generated=false
 
 
-#var glow_cletki_node
-#var captured_kletki_node=null
+var glow_cletki_node
+var captured_kletki_node=null
 var captured_kletki_nodes_dict={}
-#var kletki_holder
-
-@onready var lines_holder = %lines_holder
-@onready var kletki_holder = %kletki_holder
-@onready var glow_cletki_node = %Glow_cletki_node
-@onready var captured_kletki_node = %Captured_kletki_node
+var kletki_holder
+var lines_holder
 
 
 signal choose_two(choose:String)
 #signal info_ok_button_clicked
 
 # kletka: who is there node2d
-#{ 6: [CharInfo], 25: [CharInfo,CharInfo(mount)]}
-var kletka_id_to_char_info:Dictionary={}:
-	set(value):
-		kletka_id_to_char_info=value
-	get:
-		return kletka_id_to_char_info
-
-func send_kletka_id_to_char_info_to_all_peers():
-	var output:Dictionary={}
-	for kletka_id in kletka_id_to_char_info.keys():
-		output[kletka_id]=[]
-		for char_info in kletka_id_to_char_info[kletka_id]:
-			output[kletka_id].append(kletka_id_to_char_info[kletka_id].to_dictionary())
-	rpc("sync_kletka_id_to_char_info",output)
-
-@rpc("authority","call_local","reliable")
-func sync_kletka_id_to_char_info(kletka_id_to_char_info_sync:Dictionary):
-	var output:Dictionary={}
-	for kletka_id in kletka_id_to_char_info_sync.keys():
-		output[kletka_id]=[]
-		for char_info in kletka_id_to_char_info_sync[kletka_id]:
-			output[kletka_id].append(CharInfo.from_dictionary(kletka_id_to_char_info[kletka_id].to_dictionary()))
-	kletka_id_to_char_info=output
-
+#{ 6: [el_melloy:<Node2D#62159586689>], 25: [bunyan:<Node2D#61807265149>]}
+var occupied_kletki:Dictionary={}
 #kletka_preference[cletka_id]=config
 var kletka_preference:Dictionary={}
 #peer_id:[cletka_id,kletka_id]
-var unit_uniq_id_to_kletki_ids_owned:Dictionary={}
+var kletka_owned_by_unit_uniq_id:Dictionary={}
 var enemy_to_pull:CharInfo
+var temp_kletka_capture_config
 
+
+
+
+
+
+
+
+
+
+var current_action
+var current_action_points
+var paralyzed=false
+#var current_kletka_id
+
+var current_unit_id:int=0
 var current_player_name:String
 
 var my_turn=false
@@ -212,24 +198,24 @@ signal movement_finished
 var current_open_window=""
 
 
-#var damage_type="physical"#"magic"
+var damage_type="physical"#"magic"
 var recieved_damage_type="physical"
-
 var recieved_phantasm_config={}
 
-var paralyzed=false
+
 
 
 
 var dice_roll_result_list:Dictionary={"main_dice":0,"crit_dice":0,"defence_dice":0,"additional_d6":0,"additional_d6_2":0,"additional_d100":0}
-var char_uniq_id_to_dice_roll_result:Dictionary={}
 var recieved_dice_roll_result
+var attacking_player_on_kletka_id
 
 
 var attacking_char_info:CharInfo
 
 
-const CapturedKletkaScript = preload("res://scripts/cells_scripts/captured_kletka_script.gd")
+#const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
+const CapturedKletkaScript = preload("res://scripts/captured_kletka_script.gd")
 signal glow_kletka_pressed_signal(kletka_id:int)
 var blocked_previous_iteration=[]
 
@@ -243,12 +229,13 @@ const cell_scene = preload("res://scenes/cell.tscn")
 
 var pole_generated_seed
 
+signal are_you_sure_signal(result:String)
+
 signal rolled_a_dice(result:Dictionary)
 
-#var attack_responce_string=""
+var parry_count_max=0
 
-var attack_response_from_charinfo_uniq_to_charinfo_iniq:Dictionary
-
+var attack_responce_string=""
 var attacked_by_char_info:CharInfo
 
 signal attack_response(status:String)
@@ -280,7 +267,7 @@ const SUN = preload("res://images/sun.png")
 const MOON = preload("res://images/moon.png")
 
 
-var field_status={"Default":["City"],"Field Buffs":[]}
+var field_status={"Default":"City","Field Buffs":[]}
 var awaiting_responce_from_pu_id:String
 var char_info_attacked:CharInfo
 
@@ -294,19 +281,8 @@ signal dismounted
 
 signal attacker_finished_attack(char_info_dic)
 
-
-var gui_windows_dictionary:Dictionary={}
-
 func _ready():
-	gui_windows_dictionary={"servant_info_main_container":[players_handler.servant_info_main_container],
-	"skill_info_tab_container":[%skill_info_main_VBoxContainer,skill_info_tab_container,use_skill_but_label_container],
-	"actions_buttons":[actions_buttons],
-	"use_custom":[custom_choices_main_Vboxcontainer,players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
-	"command_spells":[command_spell_choices_container],
-	"menu":[menu_vbox_container],
-	"teams":[players_handler.teams_margin],
-	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button,char_choose_main_VBoxContainer]
-	}
+	
 	
 	Globals.someone_status_changed.connect(disconnect_alert_show)
 	
@@ -345,6 +321,7 @@ func _ready():
 	
 	#print(get_all_children(self))
 
+@rpc("call_local","reliable","authority")
 func generate_pole(preset_time):
 	print("iiiiiiiiiii="+str(preset_time))
 	cell_positions = {}
@@ -362,10 +339,10 @@ func generate_pole(preset_time):
 	print(cell_positions)
 	const_connected=connected
 
-func get_kletki_ids_with_players_you_can_reach_in_steps(steps,current_kletka_local):
+func get_kletki_ids_with_players_you_can_reach_in_steps(steps,current_kletka_local=get_current_kletka_id()):
 	#get_current_kletka_id()
 	var output=[]
-	for end in kletka_id_to_char_info.keys():
+	for end in occupied_kletki.keys():
 		if current_kletka_local == end:
 			continue
 		var queue = []
@@ -391,7 +368,7 @@ func get_kletki_ids_with_players_you_can_reach_in_steps(steps,current_kletka_loc
 	output.erase(current_kletka_local)
 	return output
 
-
+# Функция для определения пути между клетками через N шагов (BFS способ)
 func get_path_in_n_steps(start, end, steps)->Array:
 	if start == end:
 		return [start]
@@ -423,15 +400,13 @@ func get_path_in_n_steps(start, end, steps)->Array:
 
 
 
-func char_info_pulling_enemy_char_info(char_info_master:CharInfo,char_info_slave:CharInfo):
-	#TODO
-	var path=get_path_in_n_steps(
-		get_current_kletka_id_for_char_info(char_info_master),
-		get_current_kletka_id_for_char_info(char_info_slave),999)
-	path.erase(get_current_kletka_id_for_char_info(char_info_master))
+func pull_enemy(char_info:CharInfo):
+	
+	var path=get_path_in_n_steps(get_current_kletka_id(),char_info_to_kletka_number(char_info),999)
+	path.erase(get_current_kletka_id())
 	if path.size()!=1:
 		current_action="emeny pulling"
-		enemy_to_pull=char_info_slave
+		enemy_to_pull=char_info
 		
 		
 		choose_glowing_cletka_by_ids_array(path)
@@ -450,10 +425,9 @@ func generate_cells(preset_time):
 			cell_positions[i] = new_position
 			kletka_preference[i]={}
 			var cell_instance = cell_scene.instantiate()
-			cell_instance.position = new_position
-			cell_instance.name="cell "+str(i)
 			kletki_holder.add_child(cell_instance,true)
-			
+			cell_instance.position = new_position
+			cell_instance.name="клетка "+str(i)
 			connected[i] = {}
 			i+=1
 	print("iiiii="+str(i))
@@ -556,14 +530,13 @@ func ccw(a, b, c):
 	return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
 
 func draw_lineff(start, end):
-	var line = LINE_BETWEEN_CELLS.instantiate()
-	
+	var line = Line2D.new()
+	lines_holder.add_child(line,true)
 	line.width = 3
 	line.z_index=-1
 	line.default_color = Color.WHITE
 	line.add_point(start)
 	line.add_point(end)
-	lines_holder.add_child(line,true)
 
 func get_all_children(in_node,arr:=[]):
 	arr.push_back(in_node)
@@ -587,13 +560,11 @@ func reset_pole(cur_time,generated_pole=true):
 		return
 	
 	for i in get_all_children(kletki_holder):
-		if i.name.contains("cell") or i.name.contains("Line2D"):
+		if i.name.contains("клетка") or i.name.contains("Line2D"):
 			kletki_holder.remove_child(i)
-			i.queue_free()
 	for i in get_all_children(lines_holder):
-		if i.name.contains("cell") or i.name.contains("Line2D"):
+		if i.name.contains("клетка") or i.name.contains("Line2D"):
 			lines_holder.remove_child(i)
-			i.queue_free()
 	#await get_tree().process_frame
 	#call_deferred()
 	pole_generated_seed=cur_time
@@ -602,96 +573,59 @@ func reset_pole(cur_time,generated_pole=true):
 
 func _on_reset_pressed():
 	time=Time.get_unix_time_from_system()
-	reset_pole(time)
-
-func add_glow_kletka_to_kletka_id(kletka_numebr:int):
-	var pos = cell_positions[int(kletka_numebr)]
-	var glow_node=GLOW_NODE.instantiate()
-	var glow = glow_node.get_child(0)
-	glow_node.visible=false
-	
-	glow_node.position = pos
-	glow_node.name="glow "+str(kletka_numebr)
-	#glow.button_down.connect(glow_cletka_pressed)
-	#print(glow.name)
-	glow.button_down.connect(glow_cletka_pressed.bind(glow_node))
-	
-	#glow.size=Vector2(100,100)
-	
-	
-	
-	#glow_node.set_script(load("res://scripts/glow_cell_script.gd"))
-	#glow_node.add_child(glow)
-	glow.set_anchors_preset(8)#PRESET_CENTER
-	glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
-	
-	glow_cletki_node.add_child(glow_node,true)
-	glow_array[kletka_numebr]=(glow_node)
-	print("added glow to kletka id="+str(kletka_numebr))
-
-
+	rpc("reset_pole",time)
 
 func glow_cletki_intiate():
-	glow_array={}
-	#glow_cletki_node=Node2D.new()
-	#glow_cletki_node.z_index=100
-	#glow_cletki_node.name="Glow_cletki_node"
-	#add_child(glow_cletki_node,true)
+	glow_array=[]
+	glow_cletki_node=Node2D.new()
+	glow_cletki_node.z_index=100
+	glow_cletki_node.name="Glow_cletki_node"
+	add_child(glow_cletki_node,true)
 	for i in get_all_children(self):
-		if str(i.name).contains("cell"):
-			var kletka_numebr=int(i.name.trim_prefix("cell "))
-			add_glow_kletka_to_kletka_id(kletka_numebr)
+		if str(i.name).contains("клетка"):
+			var kletka_numebr=int(i.name.trim_prefix("клетка "))
+			var pos = cell_positions[int(kletka_numebr)]
+			var glow_node=Node2D.new()
+			var glow = Button.new()
+			glow_node.visible=false
 			
+			glow_node.position = pos
+			glow_node.name="glow "+str(kletka_numebr)
+			#glow.button_down.connect(glow_cletka_pressed)
+			#print(glow.name)
+			glow.button_down.connect(glow_cletka_pressed.bind(glow_node))
+			
+			glow.size=Vector2(100,100)
+			glow.modulate=Color(1,1,1,0)
+			
+			
+			glow_node.set_script(load("res://scripts/glow_cell_script.gd"))
+			glow_node.add_child(glow)
+			glow.set_anchors_preset(8)#PRESET_CENTER
+			glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
+			
+			glow_cletki_node.add_child(glow_node,true)
+			glow_array.append(glow_node)
+
+func add_all_additional_nodes():
+	print("add_all_additional_nodes")
+	captured_kletki_node=Node2D.new()
+	captured_kletki_node.z_index=30
+	captured_kletki_node.name="Captured_kletki_node"
+	add_child(captured_kletki_node,true)
+	print("-add_all_additional_nodes----")
+	
+
 
 func get_unoccupied_kletki():
 	var output=[]
 	for i in range(glow_array.size()):
-		if kletka_id_to_char_info.has(i):
+		if occupied_kletki.has(i):
 			continue
 		if kletka_preference[i].has("Blocked"):
 			continue
 		output.append(i)
 	return output
-
-
-@rpc("authority","reliable","call_local")
-func show_gui_depends_on_situation(situation:String):
-	
-	match situation:
-		"initianl_spawn":
-			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
-			make_action_button.visible=true
-			right_ange_buttons_container.visible=true
-			%Chat_send_button.disabled=false
-			disable_every_button(false)
-			make_action_button.disabled=true
-			end_turn_button.disabled=true
-			my_turn=false
-		"action_points_runs_out":
-			make_action_button.disabled=true
-		"attacker_cant_attack_due_to_debuff":
-			info_table_show(tr("PLAYER_CANT_ATTACK_CERTAN_DUE_TO_DEBUFF"))
-		"hide_you_were_attacked":
-			dices_main_VBoxContainer.visible=false
-			you_were_attacked_container.visible=false
-			are_you_sure_main_container.visible=false
-		"awaiting_enemie_attack_responce":
-			disable_every_button()	
-			alert_label_text(true,"WAITING_ENEMIE_ATTACK_RESPONCE")
-		_:
-			push_error("no such situation in show_gui_depends_on_situation: "+situation)
-
-	pass
-
-@rpc("authority","call_local","reliable")
-func set_node_property(node_path: NodePath, property_name: String, value):
-	var node = get_node_or_null(node_path)
-	
-	if node:
-		node.set(property_name, value)
-	else:
-		print("Error no node found on path: ", node_path)
-
 
 func choose_glowing_cletka_by_ids_array(glow_kletki_to_blink):
 	#param: "unoccupied"
@@ -721,385 +655,178 @@ func choose_glowing_cletka_by_ids_array(glow_kletki_to_blink):
 			glow_array[i].visible=false
 	glow_cletki_node.visible=false
 
-func get_base_fsm_data_for_pu_id(pu_id:String):
-	var char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
-	var action_points:int=players_handler.get_current_action_points_for_char_info(char_info)
-	return {
-		"char_info":char_info.to_dictionary(),
-		"action_points":action_points,
-	}
-
-
 func glow_cletka_pressed(glow_kletka_selected):
-	
-	#var glow_kletka_selected=glow_array[glowing_kletka_number_selected]
+	print("glow_cletka_pressed, current_action="+str(current_action))
+	glowing_kletka_number_selected=int(glow_kletka_selected.name.trim_prefix("glow "))
 	blinking_glow_button=false
 	blink_timer_node.timeout.emit()
-	var glowing_kletka_number_selected_local=int(glow_kletka_selected.name.trim_prefix("glow "))
-	rpc_id(1,"client_pressed_glow_kletka",glowing_kletka_number_selected_local,Globals.self_pu_id)
-	pass
-
-@rpc("any_peer","call_local","reliable")
-func client_pressed_glow_kletka(glowing_kletka_number_selected_temp,pu_id):
-	if not multiplayer.is_server():
-		return
-	
-	print("glow_cletka_pressed, current_action="+str(Globals.pu_id_to_action_points[pu_id]))
-	var glowing_kletka_number_selected=glowing_kletka_number_selected_temp
-	
-	
-	var glow_kletka_selected:Node2D=glow_array[glowing_kletka_number_selected]
-	var char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
-
-	var current_action=Globals.pu_id_to_current_action[char_info.pu_id]
-	
 	print(glow_kletka_selected)
 	print(current_action)
 	match current_action:
 		"initial_spawn":
+			current_action="wait"
+			players_handler.set_random_command_spell_set()
+			make_action_button.visible=true
+			#if Globals.host_or_user!="host":
+				#Globals.self_servant_node=instance_from_id(Globals.self_servant_node.object_id)
+			var self_player_node = players_handler.get_self_servant_node()
+			self_player_node.visible=true
+			self_player_node.position=glow_kletka_selected.position
+			print(self_player_node)
+			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,-1,glowing_kletka_number_selected)
+			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),-1,glowing_kletka_number_selected)
+			#await movement_finished
+			#get_current_kletka_id()=glowing_kletka_number_selected
+			print("current kletka="+str(get_current_kletka_id()))
+			#print(connected[get_current_kletka_id()])
+			#make_action_button.disabled=false
+			right_ange_buttons_container.visible=true
+			%Chat_send_button.disabled=false
 			
-			fsm.change_state_for_pu_ud(pu_id,"Idle")
-			
-			players_handler.rpc_id(
-				Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"],
-				"set_random_command_spell_set"
-				)
-
-		
-			move_player_from_kletka_id1_to_id2(char_info,-1,glowing_kletka_number_selected)
-			
+			players_handler.current_hp_value_label.text=str(players_handler.get_self_servant_node().hp)
+			disable_every_button(false)
+			end_turn_button.disabled=true
 			await sleep(0.1)
-			rpc_id(
-				Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"],
-				"show_gui_depends_on_situation",
-				"initianl_spawn")
-			players_handler.rpc("pass_next_turn",char_info.pu_id)
+			players_handler.rpc("pass_next_turn",Globals.self_pu_id)
 			
-			#is_game_started=true
+			is_game_started=true
 			Globals.is_game_started=true
 		"field capture":
-			#rpc("sync_owned_kletki",unit_uniq_id_to_kletki_ids_owned)
-			Globals.pu_id_player_info[pu_id]["temp_kletka_capture_config"]["Color"]=Globals.self_field_color
-			capture_single_kletka_sync_for_char_info(
-				char_info,
-				glowing_kletka_number_selected,
-				Globals.pu_id_player_info[pu_id]["temp_kletka_capture_config"]
-				)
-			print("temp_kletka_capture_config  222="+str(Globals.pu_id_player_info[pu_id]["temp_kletka_capture_config"]))
+			rpc("sync_owned_kletki",kletka_owned_by_unit_uniq_id)
+			temp_kletka_capture_config["Color"]=Globals.self_field_color
+			rpc("capture_single_kletka_sync", glowing_kletka_number_selected,temp_kletka_capture_config)
+			print("temp_kletka_capture_config  222="+str(temp_kletka_capture_config))
 			klekta_captured.emit()
-			Globals.pu_id_to_current_action[char_info.pu_id]="wait"
 		"move":
-			fsm.change_state_for_pu_ud(pu_id,"Idle")
-			
-			#if get_current_kletka_id_for_char_info(char_info)!=-1:
-				#print("cr-klet="+str(get_current_kletka_id_for_char_info(char_info)))
-				#
-				#var cn=connected[get_current_kletka_id_for_char_info(char_info)]
-				#print("cn= "+str(cn))
-				#for i in cn:
-					#if kletka_id_to_char_info.has(i):
-						#continue
-					#glow_array[i].visible=true
-				#pass
+			current_action="wait"
+			if get_current_kletka_id()!=-1:
+				print("cr-klet="+str(get_current_kletka_id()))
+				
+				var cn=connected[get_current_kletka_id()]
+				print("cn= "+str(cn))
+				for i in cn:
+					if occupied_kletki.has(i):
+						continue
+					glow_array[i].visible=true
+				pass
 			
 			var mounted=false
 			if check_if_kletka_has_mount(glowing_kletka_number_selected):
 				print("kletka has mount")
-				if check_if_char_info_can_ride_mount_on_kletka_id(char_info,glowing_kletka_number_selected):
-					var answer=await await_choose_between_two_from_pu_id(
-						char_info.pu_id,
-						"ENTER_MOUNT_QUESTION",
-						"ENTER_MOUNT_QUESTION_AGREEMENT",
-						"ENTER_MOUNT_QUESTION_DISAGREEMENT"
-						)
-					if answer=="ENTER_MOUNT_QUESTION_AGREEMENT":
+				if check_if_char_info_can_ride_mount_on_kletka_id(get_current_self_char_info().to_dictionary(),glowing_kletka_number_selected):
+					var answer=await choose_between_two(
+						tr("ENTER_MOUNT_QUESTION"),
+						tr("ENTER_MOUNT_QUESTION_AGREEMENT"),
+						tr("ENTER_MOUNT_QUESTION_DISAGREEMENT"))
+					if answer==tr("ENTER_MOUNT_QUESTION_AGREEMENT"):
 						mounted=true
 				else:
 					print("player cant ride this mount")
 						
 						
 			#if not mounted:
-			if char_info.get_node().additional_moves>=1 or get_current_kletka_id_for_char_info(char_info)==-1:
-				players_handler.reduce_additional_moves_for_char_info(char_info)
+			if players_handler.get_self_servant_node().additional_moves>=1 or get_current_kletka_id()==-1:
+				players_handler.rpc("reduce_additional_moves_for_char_info",get_current_self_char_info().to_dictionary())
 			else:
-				reduce_one_action_point_for_pu_id(char_info.pu_id,-1,"movement")
+				reduce_one_action_point(-1,"movement")
 			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,get_current_kletka_id(),glowing_kletka_number_selected)
-			move_player_from_kletka_id1_to_id2(
-				char_info,
-				get_current_kletka_id_for_char_info(char_info),
-				glowing_kletka_number_selected
-			)
+			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),get_current_kletka_id(),glowing_kletka_number_selected)
 			await player_moved
 			if mounted:
-				sit_char_info_on_mount_on_kletka_id(
-					char_info.to_dictionary(),
-					glowing_kletka_number_selected
-				)
+				rpc("sit_char_info_on_mount_on_kletka_id",get_current_self_char_info().to_dictionary(),glowing_kletka_number_selected)
 			#get_current_kletka_id()=glowing_kletka_number_selected
 		"attack":
-			var attack_data=get_base_fsm_data_for_pu_id(pu_id)
-			attack_data.merge(
-				{
-					"kletka_id_selected":glowing_kletka_number_selected,
-					"damage_type":Globals.unit_uniq_id_to_damage_type[char_info.get_uniq_id()]
-				}
-			)
-			fsm.change_state_for_pu_ud(pu_id,"Attacking",attack_data)
-			
-			players_handler.unit_uniq_id_player_game_stat_info[char_info.get_uniq_id()]["attacked_this_turn"]+=1
+			attacking_player_on_kletka_id=glowing_kletka_number_selected
+			#SHIT START
+			#attacking_char_info=
+			#attacking_char_info=players_handler.servant_name_to_pu_id[attacking_char_info]
+
+			#attacking_char_info=get_char_info_from_node_name(occupied_kletki[glowing_kletka_number_selected].name)
+			#SHIT END
+			await attack_player_on_kletka_id(attacking_player_on_kletka_id,damage_type)
+			players_handler.unit_uniq_id_player_game_stat_info[get_current_self_char_info().get_uniq_id()]["attacked_this_turn"]+=1
 		"choose_allie":
-			var char_infffo=await await_choose_char_info_on_kletka_id_from_client(char_info.pu_id,glowing_kletka_number_selected)
-			
-			players_handler.chosen_allie.emit(char_infffo)
+			var char_infffo=await get_char_info_on_kletka_id(glowing_kletka_number_selected)
+			players_handler.choosen_allie_return_value= char_infffo.get_node()
+			players_handler.chosen_allie.emit()
 		"emeny pulling":
 			var atk_char_info=attacking_char_info
-			move_player_from_kletka_id1_to_id2(
-				atk_char_info,
-				char_info_to_kletka_number(atk_char_info),
-				glowing_kletka_number_selected)
+			rpc("move_player_from_kletka_id1_to_id2",atk_char_info.to_dictionary(),char_info_to_kletka_number(atk_char_info),glowing_kletka_number_selected)
 			
 			
 	glow_kletka_pressed_signal.emit(glowing_kletka_number_selected)
 
-func check_if_char_info_can_ride_mount_on_kletka_id(char_info:CharInfo,kletka_id:int)->bool:
+@rpc("any_peer","call_local","reliable")
+func check_if_char_info_can_ride_mount_on_kletka_id(char_info_dic:Dictionary,kletka_id:int)->bool:
+	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
 	var can_ride:bool=false
 	
 
-	if kletka_id_to_char_info[kletka_id].size()==0:
+	if occupied_kletki[kletka_id].size()==0:
 		return false
 	
-	if kletka_id_to_char_info[kletka_id].size()>=2:
+	if occupied_kletki[kletka_id].size()>=2:
 		#TODO mounts that can hold multiple servants
 		return false
-	var mount_node = kletka_id_to_char_info[kletka_id][0]
+	var mount_node = occupied_kletki[kletka_id][0]
 
-	if not mount_node.mount:
+	if not mount_node.get_meta("Mount",false):
 		return false
 
 
 
-	if not mount_node.require_riding_skill:
+	if not mount_node.get_meta("Require_Riding_Skill",false):
 		can_ride=true
 	else:
 		#finding riding skill
-		if char_info.get_node().passive_skills:
+		if "passive_skills" in char_info.get_node():
 			for skill in char_info.get_node().passive_skills:
 				if skill["Name"]=="Riding":
 					can_ride=true
 
 	return can_ride
 
+@rpc("any_peer","call_local","reliable")
 func sit_char_info_on_mount_on_kletka_id(char_info_dic:Dictionary,kletka_id:int):
 	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
 
 	#alredy checked that on kletka_id just mount
-	var mount_node=kletka_id_to_char_info[kletka_id][0]
+	var mount_node=occupied_kletki[kletka_id][0]
 
-	var char_kletka=get_current_kletka_id_for_char_info(char_info)
+	var char_kletka=get_current_kletka_id(char_info)
 
 	if char_kletka!=kletka_id:
 		push_error("Mount and charinfo are on different kletki")
 		return
 	
-	mount_node.mounted_by_uniq_ids_array=[char_info.get_uniq_id()]
-	char_info.get_node().mounts_uniq_id_array=[mount_node.unit_unique_id]
+	mount_node.set_meta("Mounted_by_uniq_ids_array",[char_info.get_uniq_id()])
+	char_info.get_node().set_meta("Mounts_uniq_id_array",[mount_node.get_meta('unit_unique_id')])
 
 
 	return
 
 
-func sleep(seconds:float):
-	await get_tree().create_timer(seconds).timeout
 
-
-func _on_char_choose_button_pressed():
-	var char_info:CharInfo = char_info_choose_scroll_container.get_char_info_selected()
-	char_on_kletka_selected.emit(char_info)
-	pass
-
-
-
-func dismount_char_info(char_info_to_dismount:CharInfo):
-	#var char_info_to_dismount = CharInfo.from_dictionary(char_info_dic)
-
-	var pu_id=char_info_to_dismount.pu_id
-	#var mount_uniq_id = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array")
-	
-
-	var mount_char_info = await await_choose_char_info_on_kletka_id_from_client(
-		pu_id,
-		get_current_kletka_id_for_char_info(char_info_to_dismount),
-		true)
-
-	var currently_on_mount:Array = mount_char_info.get_node().mounted_by_uniq_ids_array
-	currently_on_mount.erase(char_info_to_dismount.get_uniq_id())
-	mount_char_info.get_node().mounted_by_uniq_ids_array=currently_on_mount
-
-	var current_mounts:Array = char_info_to_dismount.get_node().mounts_uniq_id_array
-	current_mounts.erase(mount_char_info.get_uniq_id())
-	char_info_to_dismount.get_node().mounts_uniq_id_array=current_mounts
-	await sleep(0.1)
-	print("emiting dismounted")
-	dismounted.emit()
-
-	pass
-
-func get_kletki_ids_available_to_move_to_for_char_info(char_info)->Array:
-	var move_ck=[]
-	var skip=false
-	for i in connected[get_current_kletka_id_for_char_info(char_info)]:
-		skip=false
-		if kletka_id_to_char_info.has(i):
-			skip=true
-		if skip:
-			continue
-		if kletka_preference[i].has("Blocked"):
-			continue
-		move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))
-	
-	return move_ck
-
-signal kletki_ids_available_to_move_to(array)
-
-@rpc("any_peer","call_local","reliable")
-func request_kletki_to_move_to(char_info_dic:Dictionary):
-	if multiplayer.is_server():
-		var sender_peer_id = multiplayer.get_remote_sender_id()
-		var out = get_kletki_ids_available_to_move_to_for_char_info(char_info_dic)
-		rpc_id(sender_peer_id,"send_kletki_awailable_to_move_to",out)
-
-@rpc("authority","call_local","reliable")
-func send_kletki_awailable_to_move_to(out):
-	await sleep(0.1)
-	kletki_ids_available_to_move_to.emit(out)
-
-
-func get_kletki_available_to_move_to_for_char_info_from_server(char_info:CharInfo)->Array:
-
-	rpc_id(1,"request_kletki_to_move_to",char_info.to_dictionary())
-	var kletki_ids= await kletki_ids_available_to_move_to
-	return kletki_ids
-
-
-@rpc("any_peer","call_local","reliable")
-func unmount_pressed_by_pu_id(pu_id):
-	print("dismounting")
-	var char_info=get_current_char_info_for_pu_id(pu_id)
-	
-	#checking if available kletki exists
-	
-	var move_ck=get_kletki_ids_available_to_move_to_for_char_info(char_info)
-
-	if move_ck.size()<=0:
-		#info_table_show(tr("UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND"))
-		#await info_ok_button.pressed
-
-		await await_info_ok_button_pressed_from_char_info(char_info,"UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND")
-		return
-
-	dismount_char_info(char_info)
-	
-	await dismounted
-
-	print("dismounted, waiting for glowing kletka pressed")
-
-	Globals.pu_id_to_current_action[char_info.pu_id]="move"
-	_on_move_pressed()
-	#current_action="move"
-	await glowing_kletka_number_selected
-	
-
-
-
-func _on_unmount_pressed():
-	var answer=await choose_between_two(
-		"UNMOUNT_QUESTION",
-		"UNMOUNT_QUESTION_AGREEMENT",
-		"UNMOUNT_QUESTION_DISAGREEMENT"
-		)
-
-	
-
-	if answer=="UNMOUNT_QUESTION_AGREEMENT":
-		%action_button_cancel.disabled=true
-		rpc_id(1,"unmount_pressed_by_pu_id",Globals.self_pu_id)
-		%action_button_cancel.disabled=false
-	pass
-
-signal char_on_kletka_selected_for_pu_id(char_info:CharInfo)
-
-func await_get_char_info_on_kletka_id_for_pu_id(pu_id:String,kletka_id:int,mounts_only=false,playable_only=false)->CharInfo:
-	var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-	rpc_id(pu_peer_id,"request_get_char_info_on_kletka_id_from_client",pu_id,kletka_id,mounts_only,playable_only)
-	var char_info_out = await char_on_kletka_selected_for_pu_id
-	return char_info_out
-
-@rpc("authority","reliable","call_local")
-func request_get_char_info_on_kletka_id_from_client(pu_id:String,kletka_id:int,mounts_only=false,playable_only=false):
-	if multiplayer.is_server():
-		var sender_peer_id = multiplayer.get_remote_sender_id()
-		var char_info_out = await get_char_info_on_kletka_id(pu_id,kletka_id,mounts_only,playable_only)
-		rpc_id(sender_peer_id,"send_get_char_info_on_kletka_id_to_server",char_info_out.to_dictionary())
-
-@rpc("any_peer","call_local","reliable")
-func send_get_char_info_on_kletka_id_to_server(char_info_dic:Dictionary):
-	await sleep(0.1)
-	var char_info_out=CharInfo.from_dictionary(char_info_dic)
-	char_on_kletka_selected_for_pu_id.emit(char_info_out)
-
-func get_char_info_on_kletka_id(_pu_id:String,kletka_id:int,mounts_only=false,playable_only=false):
-
-	if kletka_id_to_char_info[kletka_id].is_empty():
-		push_error("No enemies on kletka id = ",kletka_id, " kletka_id_to_char_info=",kletka_id_to_char_info)
-
-	if kletka_id_to_char_info[kletka_id].size()==1:
-		print("kletka has just one unit")
-		var serv_node = kletka_id_to_char_info[kletka_id][0]
-		var kletka_unit_id=serv_node.unit_id
-		var kletka_pu_id=serv_node.pu_id
-		return CharInfo.new(kletka_pu_id,kletka_unit_id)
-	else:
-		return await choose_char_info_on_kletka_id(kletka_id,mounts_only,playable_only)
-
-
-
-signal choose_char_info_on_kletka_id_from_client(char_info_dic)
-
-func await_choose_char_info_on_kletka_id_from_client(pu_id,kletka_id:int,mounts_only=false,playable_only=false)->CharInfo:
-	var peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-
-	rpc_id(peer_id,"choose_char_info_on_kletka_id",kletka_id,mounts_only,playable_only)
-	var char_info_dic_choosen = await choose_char_info_on_kletka_id_from_client
-	var char_info_choosen=CharInfo.from_dictionary(char_info_dic_choosen)
-	return char_info_choosen
-
-
-@rpc("any_peer","reliable","call_local")
-func send_choose_char_info_on_kletka_id_to_server(char_info_dic):
-	if multiplayer.is_server():
-		await sleep(0.1)
-		choose_char_info_on_kletka_id_from_client.emit(char_info_dic)
-
-@rpc("authority","reliable","call_local")
 func choose_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only=false)->CharInfo:
 
 	var char_infos:Array=[]
 
-	for char_info in kletka_id_to_char_info[kletka_id]:
-		var node=char_info.get_node()
+	for node in occupied_kletki[kletka_id]:
+		var unit_id=node.get_meta("unit_id")
+		var pu_id=node.get_meta("pu_id")
 		if mounts_only:
-			if node.mount:
+			if node.get_meta("Mount",false):
 				if playable_only:
-					if node.can_be_played:
-						char_infos.append(char_info)
-				else:
-					char_infos.append(char_info)
+					if node.get_meta("Can_Be_Played",true):
+						char_infos.append(CharInfo.new(pu_id,unit_id))
+					else:
+						char_infos.append(CharInfo.new(pu_id,unit_id))
 		else:
 			if playable_only:
-				if node.can_be_played:
-					char_infos.append(char_info)
+				if node.get_meta("Can_Be_Played",true):
+					char_infos.append(CharInfo.new(pu_id,unit_id))
 			else:
-				char_infos.append(char_info)
+				char_infos.append(CharInfo.new(pu_id,unit_id))
 	
 
 	if char_infos.size()==1:
@@ -1113,45 +840,143 @@ func choose_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only
 
 	hide_all_gui_windows("char_choose_on_kletka")
 
-	rpc_id(1,"send_choose_char_info_on_kletka_id_to_server",char_info_out.to_dictionary())
 	return char_info_out
+
+func sleep(seconds:float):
+	await get_tree().create_timer(seconds).timeout
+
+
+func _on_char_choose_button_pressed():
+	var char_info:CharInfo = char_info_choose_scroll_container.get_char_info_selected()
+	char_on_kletka_selected.emit(char_info)
+	pass
+
+
+
+@rpc("any_peer","call_local","reliable")
+func dismount_char_info(char_info_dic:Dictionary):
+	var char_info_to_dismount = CharInfo.from_dictionary(char_info_dic)
+
+	#var mount_uniq_id = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array")
+	
+
+	var mount_char_info = await get_char_info_on_kletka_id(get_current_kletka_id(),true)
+
+	var currently_on_mount:Array = mount_char_info.get_node().get_meta("Mounted_by_uniq_ids_array",[])
+	currently_on_mount.erase(char_info_to_dismount.get_uniq_id())
+	mount_char_info.get_node().set_meta("Mounted_by_uniq_ids_array",currently_on_mount)
+
+	var current_mounts:Array = char_info_to_dismount.get_node().get_meta("Mounts_uniq_id_array",[])
+	current_mounts.erase(mount_char_info.get_uniq_id())
+	char_info_to_dismount.get_node().set_meta("Mounts_uniq_id_array",current_mounts)
+	await sleep(0.1)
+	print("emiting dismounted")
+	dismounted.emit()
+
+	pass
+
+
+func _on_unmount_pressed():
+	var answer=await choose_between_two(
+		tr("UNMOUNT_QUESTION"),
+		tr("UNMOUNT_QUESTION_AGREEMENT"),
+		tr("UNMOUNT_QUESTION_DISAGREEMENT")
+		)
+
+	
+
+	if answer==tr("UNMOUNT_QUESTION_AGREEMENT"):
+		print("dismounting")
+		#checking if available kletki exists
+		%action_button_cancel.disabled=true
+		var move_ck=[]
+		var skip=false
+		for i in connected[get_current_kletka_id()]:
+			skip=false
+			if occupied_kletki.has(i):
+				for node in occupied_kletki[i]:
+						skip=true
+			if skip:
+				continue
+			if kletka_preference[i].has("Blocked"):
+				continue
+			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
+
+		if move_ck.size()<=0:
+			info_table_show(tr("UNMOUNT_ABORTED_NO_VALID_CELLS_FOUND"))
+			await info_ok_button.pressed
+			return
+
+		rpc("dismount_char_info",get_current_self_char_info().to_dictionary())
+		
+		await dismounted
+
+		print("dismounted, waiting for glowing kletka pressed")
+
+
+		_on_move_pressed()
+		current_action="move"
+		await glowing_kletka_number_selected
+		%action_button_cancel.disabled=false
+	pass
+
+
+func get_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only=false):
+
+	if occupied_kletki[kletka_id].is_empty():
+		push_error("No enemies on kletka id = ",kletka_id, " occupied_kletki=",occupied_kletki)
+
+	if occupied_kletki[kletka_id].size()==1:
+		print("kletka has just one unit")
+		var node = occupied_kletki[kletka_id][0]
+		var unit_id=node.get_meta("unit_id")
+		var pu_id=node.get_meta("pu_id")
+		return CharInfo.new(pu_id,unit_id)
+	else:
+		return await choose_char_info_on_kletka_id(kletka_id,mounts_only,playable_only)
 
 
 func check_if_kletka_has_mount(kletka_id:int)->bool:
 	print("\ncheck_if_kletka_has_mount")
-	if not kletka_id_to_char_info.has(kletka_id):
+	if not occupied_kletki.has(kletka_id):
 		return false
 
-	if kletka_id_to_char_info[kletka_id].size()==0:
+	if occupied_kletki[kletka_id].size()==0:
 		return false
 	
-	if kletka_id_to_char_info[kletka_id].size()>=2:
+	if occupied_kletki[kletka_id].size()>=2:
 		#TODO mounts that can hold multiple servants
 		return false
-	var kletka_node = kletka_id_to_char_info[kletka_id][0]
+	var kletka_node = occupied_kletki[kletka_id][0]
 
-	if kletka_node.mount:
+	if kletka_node.get_meta("Mount",false):
 		return true
 
 	return false
 
 
-func capture_single_kletka_sync_for_char_info(char_info:CharInfo,glowing_kletka_number_selected_temp,temp_kletka_capture_config):
+@rpc("any_peer","call_local","reliable")
+func capture_single_kletka_sync(glowing_kletka_number_selected_temp,temp_kletka_capture_config):
 	var kletka_owner=temp_kletka_capture_config["Owner"]
 	#var own_pu=kletka_owner["pu_id"]
 	#var own_uni_id=kletka_owner["unit_id"]
 
 	var kletka_color=temp_kletka_capture_config["Color"]
+	if typeof(captured_kletki_node)==TYPE_NIL:
+		captured_kletki_node=Node2D.new()
+		captured_kletki_node.z_index=30
+		captured_kletki_node.name="Captured_kletki_node"
+		add_child(captured_kletki_node,true)
 
-	if !unit_uniq_id_to_kletki_ids_owned.has(kletka_owner):
-		unit_uniq_id_to_kletki_ids_owned[kletka_owner]=[]
+	if !kletka_owned_by_unit_uniq_id.has(kletka_owner):
+		kletka_owned_by_unit_uniq_id[kletka_owner]=[]
 
 	print(str(glowing_kletka_number_selected_temp," is captured"))
 	kletka_preference[glowing_kletka_number_selected_temp]=temp_kletka_capture_config
 	
-	unit_uniq_id_to_kletki_ids_owned[kletka_owner].append(glowing_kletka_number_selected_temp)
+	kletka_owned_by_unit_uniq_id[kletka_owner].append(glowing_kletka_number_selected_temp)
 	
-	var captur_klet=CAPTUR_KLET.instantiate()
+	var captur_klet=Node2D.new()
 	var pos = cell_positions[int(glowing_kletka_number_selected_temp)]
 	captur_klet.position = pos
 	captur_klet.name="field "+str(glowing_kletka_number_selected_temp)
@@ -1164,27 +989,23 @@ func capture_single_kletka_sync_for_char_info(char_info:CharInfo,glowing_kletka_
 	captur_klet.queue_redraw()
 	captured_kletki_nodes_dict[glowing_kletka_number_selected_temp]=captur_klet
 
-func reduce_one_action_point_for_pu_id(pu_id,amount_to_reduce=-1,why=""):
-	print("reduce_one_action_point for pu_id=",pu_id," why=",why)
-	
-	Globals.pu_id_to_action_points[pu_id]+=amount_to_reduce
-	current_action_points_label.text=str(Globals.pu_id_to_action_points[pu_id])
-	if Globals.pu_id_to_action_points[pu_id]==0 and pu_id==Globals.self_pu_id:
-		rpc_id(
-			Globals.pu_id_to_action_points[pu_id]["current_peer_id"],
-			"show_gui_depends_on_situation",
-			"action_points_runs_out")
-	print("reduce_one_action_point done, current_action_points="+str(Globals.pu_id_to_action_points[pu_id])+"\n\n")
+func reduce_one_action_point(amount_to_reduce=-1,why=""):
+	print("reduce_one_action_point for self="+str(get_current_self_char_info().get_node().name)," why=",why)
+	current_action_points+=amount_to_reduce
+	current_action_points_label.text=str(current_action_points)
+	if current_action_points==0:
+		make_action_button.disabled=true
+	print("reduce_one_action_point done, current_action_points="+str(current_action_points)+"\n\n")
 
 
-func get_current_kletka_id_for_char_info(char_info:CharInfo)->int:
+func get_current_kletka_id(char_info:CharInfo=get_current_self_char_info())->int:
 	#current_player_name=""
-	print("occupied_kletki=",kletka_id_to_char_info)
-	for kletka_id in kletka_id_to_char_info:
+	print("occupied_kletki=",occupied_kletki)
+	for kletka_id in occupied_kletki:
 		print_debug("kletka_id=",kletka_id)
-		for char_info_in_kletka in kletka_id_to_char_info[kletka_id]:
-			print_debug("char_info_in_kletka=",char_info_in_kletka)
-			if char_info_in_kletka.get_uniq_id()==char_info.get_uniq_id():
+		for node in occupied_kletki[kletka_id]:
+			print_debug("Node=",node)
+			if node.get_meta("unit_unique_id")==char_info.get_uniq_id():
 				return kletka_id
 	return -1
 
@@ -1203,9 +1024,9 @@ func get_char_info_from_uniq_id(uniq_id:String)->CharInfo:
 
 
 @rpc("any_peer","call_local","reliable")
-func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:int,_glowing_kletka_number_selected:int,is_partial:bool=false,visually_only:bool=false):
+func move_player_from_kletka_id1_to_id2(char_info_dic:Dictionary,current_kletka_local:int,_glowing_kletka_number_selected:int,is_partial:bool=false,visually_only:bool=false):
 	print("_________________movement______________-")
-	#var char_info=CharInfo.from_dictionary(char_info_dic)
+	var char_info=CharInfo.from_dictionary(char_info_dic)
 
 
 	var pu_id=char_info.pu_id
@@ -1242,15 +1063,15 @@ func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:
 
 	#collecting all nodes to move (mounts)
 	var array_of_nodes_to_move:Array=[player_node_to_move]
-	if char_info.get_node().mounts_uniq_id_array:
-		var mounts_ids=char_info.get_node().mounts_uniq_id_array
+	if char_info.get_node().get_meta("Mounts_uniq_id_array",false):
+		var mounts_ids=char_info.get_node().get_meta("Mounts_uniq_id_array")
 		print("mounts_ids=",mounts_ids)
 		for mount_uniq_id in mounts_ids:
 			var mount_node = get_char_info_from_uniq_id(mount_uniq_id).get_node()
 			if not mount_node in array_of_nodes_to_move:
 				array_of_nodes_to_move.append(mount_node)
 			#getting_all_units that rides this mount
-			for unit_uniq_id in mount_node.mounted_by_uniq_ids_array:
+			for unit_uniq_id in mount_node.get_meta("Mounted_by_uniq_ids_array"):
 				var player_nodee = get_char_info_from_uniq_id(mount_uniq_id).get_node()
 				if not player_nodee in array_of_nodes_to_move:
 					array_of_nodes_to_move.append(player_nodee)
@@ -1274,26 +1095,29 @@ func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:
 	if not is_partial or current_kletka_local==-1:
 		if not visually_only:
 			for node_to_move in array_of_nodes_to_move:
-				var pu_id_local=node_to_move.pu_id
-				var unit_id_local=node_to_move.unit_id
+				var pu_id_local=node_to_move.get_meta("pu_id")
+				var unit_id_local=node_to_move.get_meta("unit_id")
 				var char_info_local=CharInfo.new(pu_id_local,unit_id_local)
 				
 				if current_kletka_local!=-1:
 					remove_char_info_from_kletka_id(char_info_local,current_kletka_local)
 
-				if not kletka_id_to_char_info.has(_glowing_kletka_number_selected):
-					kletka_id_to_char_info[_glowing_kletka_number_selected]=[]
+				if not occupied_kletki.has(_glowing_kletka_number_selected):
+					occupied_kletki[_glowing_kletka_number_selected]=[]
 
-				if kletka_id_to_char_info[_glowing_kletka_number_selected].is_empty():
-					kletka_id_to_char_info[_glowing_kletka_number_selected]=[node_to_move.char_info]
+				if occupied_kletki[_glowing_kletka_number_selected].is_empty():
+					occupied_kletki[_glowing_kletka_number_selected]=[node_to_move]
 				else:
-					kletka_id_to_char_info[_glowing_kletka_number_selected].append(node_to_move.char_info)
+					occupied_kletki[_glowing_kletka_number_selected].append(node_to_move)
 
-				players_handler.change_game_stat_for_char_info(char_info_local.to_dictionary(),"total_kletki_moved",1)
-				players_handler.change_game_stat_for_char_info(char_info_local.to_dictionary(),"kletki_moved_this_turn",1)
+				players_handler.rpc("change_game_stat_for_char_info",char_info_local.to_dictionary(),"total_kletki_moved",1)
+				players_handler.rpc("change_game_stat_for_char_info",char_info_local.to_dictionary(),"kletki_moved_this_turn",1)
 	#if pu_id==Globals.self_pu_id and not visually_only and not is_partial:
 		#get_current_kletka_id()=glowing_kletka_number_selected
 	
+	for kletka_id in occupied_kletki.keys():
+		if occupied_kletki.is_empty():
+			occupied_kletki.erase(kletka_id)
 	
 	await sleep(0.1)
 	player_moved.emit()
@@ -1303,9 +1127,9 @@ func move_player_from_kletka_id1_to_id2(char_info:CharInfo,current_kletka_local:
 func remove_char_info_from_kletka_id(char_info:CharInfo,kletka_id:int):
 
 
-	kletka_id_to_char_info[kletka_id].erase(char_info.get_node())
-	if kletka_id_to_char_info[kletka_id].is_empty():
-		kletka_id_to_char_info.erase(kletka_id)
+	occupied_kletki[kletka_id].erase(char_info.get_node())
+	if occupied_kletki[kletka_id].is_empty():
+		occupied_kletki.erase(kletka_id)
 
 
 
@@ -1314,34 +1138,8 @@ func _on_start_pressed():
 		#print(i)
 	if !is_pole_generated:
 		_on_reset_pressed()
-	await sleep(0.2)
 	rpc("main_game")
 
-#region dice rolls
-signal got_dice_from_client(dice_result:Dictionary)
-
-func await_dice_roll_including_rerolls_from_char_info(char_info:CharInfo,type:String)->Dictionary:
-	rpc_id(
-		Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"],
-		"request_dice_roll_including_rerolls_from_client",
-		type,
-		get_char_info_rerolls_amount_for_type(char_info,type),
-		can_char_info_reroll_dice_for_type(char_info,type)
-		)
-	char_uniq_id_to_dice_roll_result[char_info.get_uniq_id()]=await got_dice_from_client
-	return char_uniq_id_to_dice_roll_result[char_info.get_uniq_id()]
-
-
-@rpc("authority","reliable","call_local")
-func request_dice_roll_including_rerolls_from_client(type:String,reroll_amount:int,can_reroll:bool):
-	var output = await await_dice_including_rerolls(type,can_reroll,reroll_amount)
-	rpc_id(1,"send_dice_roll_to_server",output)
-
-@rpc("any_peer","call_local","reliable")
-func send_dice_roll_to_server(output:Dictionary):
-	if multiplayer.is_server():
-		await sleep(0.1)
-		got_dice_from_client.emit(output)
 
 func await_dice_roll()->Dictionary:
 	dices_main_VBoxContainer.visible=true
@@ -1358,28 +1156,30 @@ func hide_dice_rolls_with_timeout(timeout_in_seconds):
 
 
 
-func await_dice_including_rerolls(type:String,can_reroll:bool,rerolls:int)->Dictionary:
+func await_dice_including_rerolls(type:String,rerolls:int=-20)->Dictionary:
 	var result=await await_dice_roll()
 
+	if rerolls==-20:
+		rerolls=get_rerolls_amount_for_type(type)
 	if rerolls<=0:
 		return result
-	if can_reroll:
+	if can_reroll_dice_for_type(type):
 		var answ=await choose_between_two(
-			"DO_YOU_WANT_TO_REROLL_QUESTION",
-			"DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT",
-			"DO_YOU_WANT_TO_REROLL_QUESTION_DISAGREEMENT"
-			)
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION"),
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT"),
+			tr("DO_YOU_WANT_TO_REROLL_QUESTION_DISAGREEMENT"))
 		print("rerolls=",rerolls)
-		if answ == "DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT":
-			result=await await_dice_including_rerolls(type,can_reroll,rerolls-1)
+		if answ == tr("DO_YOU_WANT_TO_REROLL_QUESTION_AGREEMENT"):
+			result=await await_dice_including_rerolls(type,rerolls-1)
 			return result
-		#else:
-		#	rpc_id(1,"send_dice_roll_to_server",result)
-		#	return result
-	rpc_id(1,"send_dice_roll_to_server",result)
+		else:
+			return result
+
 	return result
 
-func can_char_info_reroll_dice_for_type(char_info:CharInfo,type:String)->bool:
+func can_reroll_dice_for_type(type:String)->bool:
+	var char_info:CharInfo=get_current_self_char_info()
+
 	var reroll_buffs=players_handler.get_all_buffs_with_name_for_char_info(char_info,"Dice Reroll")
 
 	for buff in reroll_buffs:
@@ -1388,7 +1188,8 @@ func can_char_info_reroll_dice_for_type(char_info:CharInfo,type:String)->bool:
 
 	return false
 
-func get_char_info_rerolls_amount_for_type(char_info:CharInfo,type:String)->int:
+func get_rerolls_amount_for_type(type:String)->int:
+	var char_info:CharInfo=get_current_self_char_info()
 	var reroll_buffs=players_handler.get_all_buffs_with_name_for_char_info(char_info,"Dice Reroll")
 	var amount:int=0
 	for buff in reroll_buffs:
@@ -1396,9 +1197,6 @@ func get_char_info_rerolls_amount_for_type(char_info:CharInfo,type:String)->int:
 			amount+=buff["Power"]
 
 	return amount
-
-#endregion
-
 
 func disable_every_button(block=true):
 	hide_all_gui_windows("all")
@@ -1417,24 +1215,6 @@ func disable_every_button(block=true):
 	%Chat_send_button.disabled=false
 	
 	blocked_previous_iteration=blocked_this_iteration
-	pass
-
-signal ok_button_pressed_from_client
-
-func await_info_ok_button_pressed_from_char_info(char_info,text):
-	print_debug("await_info_ok_button_pressed_from_char_info=",char_info.to_dictionary()," text=",text)
-	var peer_id = Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"]
-	rpc_id(peer_id,"send_info_table_show_to_client",text)
-	await ok_button_pressed_from_client
-
-@rpc("authority","call_local","reliable")
-func send_info_table_show_to_client(text):
-	info_table_show(text)
-
-@rpc("any_peer","call_local","reliable")
-func send_ok_button_pressed_to_server():
-	await sleep(0.01)
-	ok_button_pressed_from_client.emit()
 	pass
 
 func info_table_show(text="someone forgot to set this, contact anyone, SCREAM"):
@@ -1469,224 +1249,124 @@ func alert_label_text(show=false,text=""):
 		alert_label.visible=false
 		
 
-func increase_dice_result_to_action_name_with_buffs_for_char_info(char_info:CharInfo,type:String):
-	var dice_plus_buff=players_handler.char_info_has_active_buff(char_info,"Dice +")
+func increase_dice_result_to_action_name_with_buffs(type:String):
+	var dice_plus_buff=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Dice +")
 	if dice_plus_buff:
 		if dice_plus_buff.has("Action"):
 			if dice_plus_buff["Action"]==type:
-				var new_value=char_uniq_id_to_dice_roll_result[char_info.get_uniq_id()].duplicate(true)
-				new_value+=dice_plus_buff.get("Power",1)
-				char_uniq_id_to_dice_roll_result[char_info.get_uniq_id()]=min(new_value,6)
+				dice_roll_result_list["main_dice"]+=dice_plus_buff.get("Power",1)
+				dice_roll_result_list["main_dice"]=min(dice_roll_result_list["main_dice"],6)
 				players_handler.rpc("add_to_advanced_logs",
 					"ADVANCED_LOG_USER_HAS_REROLL_DICE_BUFF",
 					{
 						"type":type,
-						"dice_roll_result_list":new_value
+						"dice_roll_result_list":dice_roll_result_list
 					}
 				)
 					
 	pass
 
-@rpc("any_peer","reliable","call_local")
-func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:String="Physical",consume_action_point:bool=true,phantasm_config={}):
-	if not multiplayer.is_server(): return
-	
-	var attacker_char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
-	
-	var defender_char_info:CharInfo =await await_choose_char_info_on_kletka_id_from_client(attacker_char_info.pu_id,kletka_id)
-	var attacker_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-	
+
+
+
+func attack_player_on_kletka_id(kletka_id,attack_type="Physical",consume_action_point:bool=true,phantasm_config={}):
+	end_turn_button.disabled=true
+	var self_char_info:CharInfo=get_current_self_char_info()
+	var enemy_char_info:CharInfo =await get_char_info_on_kletka_id(kletka_id)
+
 	players_handler.rpc("add_to_advanced_logs",
 		"ADVANCED_LOG_ATTACK_ATTEMPT",
 		{
-			"Attacker_name":attacker_char_info.get_node().name,
-			"Taker_name":defender_char_info.get_node().name
+			"Attacker_name":self_char_info.get_node().name,
+			"Taker_name":enemy_char_info.get_node().name
 		}
-	)
-	
-	if not players_handler.can_char_info_attack_char_info(attacker_char_info,defender_char_info):
-		rpc_id(attacker_peer_id,"show_gui_depends_on_situation","attacker_cant_attack_due_to_debuff")
-		
+		)
+
+	if not players_handler.can_char_info_attack_char_info(self_char_info,enemy_char_info):
+		info_table_show(tr("PLAYER_CANT_ATTACK_CERTAN_DUE_TO_DEBUFF"))
+
 		players_handler.rpc("add_to_advanced_logs",
 			"ADVANCED_LOG_PLAYER_CANT_ATTACK_CERTAIN_DUE_TO_DEBUFF",
 			{
-				"Attacker_name":attacker_char_info.get_node().name,
-				"Taker_name":defender_char_info.get_node().name
+				"Attacker_name":self_char_info.get_node().name,
+				"Taker_name":enemy_char_info.get_node().name
 			}
 		)
+
+		await info_ok_button.pressed
 		return "ERROR"
 	
-	
-	var attack_responce=attack_response_from_charinfo_uniq_to_charinfo_iniq[defender_char_info.get_uniq_id()][attacker_peer_id.get_uniq_id()]
-	
-	var parry_count_max=0
-	#if regular attack
-	if attack_type==players_handler.DAMAGE_TYPE.PHYSICAL or attack_type==players_handler.DAMAGE_TYPE.MAGICAL:
-		if attack_responce!="parried":
-			rpc_id(
-				attacker_peer_id,
-				"set_node_property",
-				type_of_damage_choose_buttons_box.get_path(),
-				"visible",
-				false
-			)
-			
-			var confirm_action_data=get_base_fsm_data_for_pu_id(pu_id)
-			
-			confirm_action_data.merge(
-				{
-					"why":"attack_start_no_parry",
-					"text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"
-				}
-			)
-			
-			fsm.change_state_for_pu_ud(pu_id,"ConfirmAction",confirm_action_data)
-			
-			var are_you_sure_result=await are_you_sure_signal_from_client
-			
-			if are_you_sure_result=="ARE_YOU_SURE_DISAGREEMENT":
+
+	if attack_type=="Physical" or attack_type=="Magical":
+		if attack_responce_string!="parried":
+			type_of_damage_choose_buttons_box.visible=false
+			#are_you_sure_main_container.visible=true
+			fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"))
+			var are_you_sure_result=await are_you_sure_signal
+			if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
 				players_handler.rpc("add_to_advanced_logs",
 				"ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE")
-				
-				fsm.change_state_for_pu_ud(pu_id,"Idle",get_base_fsm_data_for_pu_id(pu_id))
-				
+				type_of_damage_choose_buttons_box.visible=true
 				return
-			parry_count_max=players_handler.get_char_info_agility_rank(attacker_char_info)
+			parry_count_max=players_handler.get_char_info_agility_rank(self_char_info)
 			parry_count_max=players_handler.get_agility_in_numbers(parry_count_max)
-		#else:
-			#rpc_id(
-				#attacker_peer_id,
-				#"set_node_property",
-				#roll_dice_optional_label.get_path(),
-				#"text",
-				#"ENEMY_PARRIED_ATTACK_REROLLING"
-			#)
-			##roll_dice_optional_label.text=tr("ENEMY_PARRIED_ATTACK_REROLLING")
-			##roll_dice_optional_label.visible=true
-			#rpc_id(
-				#attacker_peer_id,
-				#"set_node_property",
-				#roll_dice_optional_label.get_path(),
-				#"visible",
-				#true
-			#)
-		
-		
-		
-		var dice_roll_data=get_base_fsm_data_for_pu_id(pu_id)
-			
-		dice_roll_data.merge(
-			{
-				"action_name":"Attack",
-				"can_reroll":can_char_info_reroll_dice_for_type(attacker_char_info,"Attack"),
-				"reroll_amount":get_char_info_rerolls_amount_for_type(attacker_char_info,"Attack"),
-			}
-		)
-		
-		fsm.change_state_for_pu_ud(pu_id,"DiceRoll",dice_roll_data)
-		
-		await await_dice_roll_including_rerolls_from_char_info(attacker_char_info,"Attack")
-		
-		char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()] = await got_dice_from_client
-		
+		else: 
+			roll_dice_optional_label.text=tr("ENEMY_PARRIED_ATTACK_REROLLING")
+			roll_dice_optional_label.visible=true
+		await await_dice_including_rerolls("Attack")
 		players_handler.rpc("add_to_advanced_logs",
 			"ADVANCED_LOG_SHOWING_ATTACKER_ROLL",
-			{
-				"attacker_roll":char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()]
-			}
+			{"attacker_roll":dice_roll_result_list}
 		)
+			
+		dices_main_VBoxContainer.visible=false
+		you_were_attacked_container.visible=false
+		are_you_sure_main_container.visible=false
 		
-		#rpc_id(attacker_peer_id,"show_gui_depends_on_situation","hide_you_were_attacked")
-		
+
+	increase_dice_result_to_action_name_with_buffs("Attack")
+
+	#var pu_id_to_attack = players_handler.servant_name_to_pu_id[occupied_kletki[kletka_id].name]
+
 	
-	increase_dice_result_to_action_name_with_buffs_for_char_info(attacker_char_info,"Attack")
+
+
 	
+
+
+	var pu_id_to_attack = enemy_char_info.pu_id
+	var enem_unit_id = enemy_char_info.unit_id
+
+
+	attacking_char_info= enemy_char_info
+
 	
-	var defender_pu_id = defender_char_info.pu_id
-	var defender_unit_id = defender_char_info.unit_id
-	
-	var peer_id_to_attack=Globals.pu_id_player_info[defender_pu_id].current_peer_id
-	
-	if not Globals.pu_id_player_info[defender_pu_id]["is_connected"]:
-		await_info_ok_button_pressed_from_char_info(attacker_char_info,"Enemy disconnected, aborting")
+
+	var peer_id_to_attack=Globals.pu_id_player_info[pu_id_to_attack].current_peer_id
+
+
+	if not Globals.pu_id_player_info[pu_id_to_attack]["is_connected"]:
 		return
-	
-	
-	var attacker_dices = char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()]
-	
-	var defending_date=get_base_fsm_data_for_pu_id(defender_pu_id)
-	
-	
-	
-	
-	var defender_node=defender_char_info.get_node()
-	
-	#should be automatically sync by multiplayersync thing
-	#var can_evade=defender_node.can_evade
-	#var can_defence=defender_node.can_defence
-	
-	
-	
-	#checking parry
-	var can_parry=defender_node.can_parry
-	if can_parry:
-		var atk_rng=players_handler.get_char_info_attack_range(defender_char_info)
-		var attacker_kletka_id=char_info_to_kletka_number(attacker_char_info)
-		var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(
-			atk_rng,
-			get_current_kletka_id_for_char_info(defender_char_info)
-			)
-		can_parry = attacker_kletka_id in kletki_with_players
-		
-	defending_date.merge(
-		{
-			"attacker_char_info_dic":attacker_char_info.to_dictionary(),
-			"defender_char_info_dic":defender_char_info.to_dictionary(),
-			"attacker_dices":attacker_dices,
-			"defender_can_parry":can_parry
-		}
-	)
-	
-	fsm.change_state_for_pu_ud(defender_pu_id,"Defending",defending_date)
-	
 
 
-func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physical",consume_action_point:bool=true,phantasm_config={}):
-	#var self_char_info:CharInfo=attacker_char_info
-	
-	
-	#rpc_id(peer_id_to_attack,"receice_dice_roll_results",dice_roll_result_list)
-	
-	#ttack_responce_string!="parried":
-	#rpc_id(peer_id_to_attack,"set_action_status",attacker_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
+	awaiting_responce_from_pu_id=pu_id_to_attack
 
-
-	#
-
-	#else:#ignore this
-	#rpc_id(peer_id_to_attack,"set_action_status",attacker_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
 	
-	set_action_status(
-			attacker_char_info,#who
-			"getting_attacked",#what doint
-			enemy_char_info,#to who
-			dice_roll_result_list,
-			attack_type#,
-			#phantasm_config
-			)
+	rpc_id(peer_id_to_attack,"receice_dice_roll_results",dice_roll_result_list)
+	
+	if attack_responce_string!="parried":
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
+	else:#ignore this
+		rpc_id(peer_id_to_attack,"set_action_status",self_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
+	
+	
 	
 	if attack_type=="Physical" and players_handler.get_self_servant_node().attack_range<=2 and attack_responce_string!="parried":
-		move_player_from_kletka_id1_to_id2(
-			attacker_char_info,
-			get_current_kletka_id_for_char_info(attacker_char_info),
-			kletka_id,
-			true
-		)
+		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),get_current_kletka_id(),kletka_id,true)
 	
-	if attacker_char_info.pu_id != enemy_char_info.pu_id:
-		rpc_id(attacker_peer_id,"show_gui_depends_on_situation","waiting_enemie_attack_responce")
-		#disable_every_button()	
-		#alert_label_text(true,tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
+	if pu_id_to_attack != Globals.self_pu_id:
+		disable_every_button()	
+		alert_label_text(true,tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
 	
 	var hitted=false
 	
@@ -1708,9 +1388,9 @@ func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physic
 			parry_count_max-=1
 			if parry_count_max!=0:
 				current_action="wait"
-				rpc("systemlog_message",str(attacker_char_info.get_node().name," stamina left:",parry_count_max))
+				rpc("systemlog_message",str(self_char_info.get_node().name," stamina left:",parry_count_max))
 				await attack_player_on_kletka_id(kletka_id,damage_type)
-				await players_handler.trigger_buffs_on(attacker_char_info,"enemy parried",enemy_char_info)
+				await players_handler.trigger_buffs_on(self_char_info,"enemy parried",enemy_char_info)
 				return
 			else:
 				players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY")
@@ -1719,43 +1399,43 @@ func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physic
 			players_handler.rpc("add_to_advanced_logs",			"ADVANCED_LOG_TAKER_HALFED_DAMAGE")
 			hitted=true
 			current_action="wait"
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
 			
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy halfed damage",enemy_char_info)
+			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
+			await players_handler.trigger_buffs_on(self_char_info,"enemy halfed damage",enemy_char_info)
 		"damaged":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_DIRECT_HIT")
 			hitted=true
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
 			current_action="wait"
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
+			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
 		"defending":
 			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_DEFENDED")
 			hitted=true
 			current_action="wait"
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy defended",enemy_char_info)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.rpc("change_game_stat_for_char_info",self_char_info.to_dictionary(),"attacked_this_turn",1)
+			await players_handler.trigger_buffs_on(self_char_info,"Success Attack",enemy_char_info)
+			await players_handler.trigger_buffs_on(self_char_info,"enemy defended",enemy_char_info)
 		"evaded":
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_EVADED")
 			current_action="wait"
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy evaded",enemy_char_info)
+			await players_handler.trigger_buffs_on(self_char_info,"enemy evaded",enemy_char_info)
 		
 
 	if hitted and attack_type!="Phantasm":
-		players_handler.rpc("charge_np_to_char_info_by_number",attacker_char_info.to_dictionary(),1)
+		players_handler.rpc("charge_np_to_char_info_by_number",self_char_info.to_dictionary(),1)
 		players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM")
 	roll_dice_optional_label.visible=false
-	if attack_type=="Physical" and players_handler.get_char_info_attack_range(attacker_char_info)<=2: 
-		rpc("move_player_from_kletka_id1_to_id2",attacker_char_info,kletka_id,get_current_kletka_id(),true)
+	if attack_type=="Physical" and players_handler.get_char_info_attack_range(self_char_info)<=2: 
+		rpc("move_player_from_kletka_id1_to_id2",self_char_info.to_dictionary(),kletka_id,get_current_kletka_id(),true)
 	if attack_type!="Phantasm" or consume_action_point:
 		if players_handler.get_self_servant_node().additional_attack>=1:
-			players_handler.rpc("reduce_additional_attacks_for_char_info",attacker_char_info.to_dictionary())
+			players_handler.rpc("reduce_additional_attacks_for_char_info",self_char_info.to_dictionary())
 		else:
 			print("reducing action point after attack attack_type=",attack_type," consume_action_point=",consume_action_point)
 			reduce_one_action_point(-1,"attack")
@@ -1785,20 +1465,20 @@ func get_char_info_from_node_name(unit_name:String)->CharInfo:
 
 
 	
-	var pu_id=serv_nod.owner_pu_id
-	var unit_id=serv_nod.unit_id
+	var pu_id=serv_nod.get_meta("owner_pu_id","")
+	var unit_id=serv_nod.get_meta("unit_id")
 
 	var return_info:CharInfo=CharInfo.new(pu_id,unit_id)
 	return return_info
 
-func get_current_char_info_for_pu_id(pu_id)->CharInfo:
+func get_current_self_char_info()->CharInfo:
 
 	#if char_info_attacked!=null:
 	#	return char_info_attacked
-	var pu_idd=Globadls.self_pu_iddd
+	var pu_idd=Globals.self_pu_id
 	#var nnode=Globals.pu_id_player_info[pu_idd]["units"][current_unit_id]
 
-	var current_unit_id = Globals.pu_id_player_info[pu_id]["current_unit_id"]
+
 	var rett_value=CharInfo.new(pu_idd,current_unit_id)
 
 	return rett_value
@@ -1846,18 +1526,26 @@ func _roll_dices_button_pressed():
 
 
 @rpc("any_peer","call_local","reliable")
-func set_action_status(char_info_setting_status:CharInfo,status:String,char_info_getting_status:CharInfo,attack_type="Physical",phantasm_config={}):
-	print("set_action_status status=",status," by_whom_char_info_dic=",char_info_setting_status)
-
-	var setting_dice_roll=char_uniq_id_to_dice_roll_result[char_info_setting_status.get_uniq_id()]
-		
+func set_action_status(by_whom_char_info_dic:Dictionary,status,char_info_attacked_dic:Dictionary,recieved_dice_roll_result_temp:Dictionary,attack_type="Physical",phantasm_config={}):
+	print("set_action_status status=",status," by_whom_char_info_dic=",by_whom_char_info_dic)
+	recieved_dice_roll_result=recieved_dice_roll_result_temp
+	
+	char_info_attacked=CharInfo.from_dictionary(char_info_attacked_dic)
+	
 	await get_tree().create_timer(0.2).timeout
 	
+	var by_whom_char_info:CharInfo=CharInfo.from_dictionary(by_whom_char_info_dic)
+	self_action_status=status
+	attacked_by_char_info=by_whom_char_info
+
+	var self_char_info=get_current_self_char_info()
+
 	var self_unit_hit=false
 	
-	if char_info_setting_status.pu_id == char_info_getting_status.pu_id:
+
+	if by_whom_char_info.pu_id == self_char_info.pu_id:
 		self_unit_hit = true
-	var attacked_by_peer_id=Globals.pu_id_player_info[char_info_setting_status.pu_id].current_peer_id
+	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
 	
 	recieved_damage_type=attack_type
 	recieved_phantasm_config=phantasm_config
@@ -1865,7 +1553,45 @@ func set_action_status(char_info_setting_status:CharInfo,status:String,char_info
 	print(str("status=",status," attacked_by_char_info=",attacked_by_char_info))
 	match status:
 		"getting_attacked":
+
+			if by_whom_char_info in players_handler.get_allies() and not self_unit_hit:
+				disable_every_button()
+				var type=await choose_between_two(
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION").format(
+						{"Ally_nick":Globals.pu_id_player_info[by_whom_char_info.pu_id]["nickname"]}),
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT"),
+					tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_DISAGREEMENT")
+				)
+				disable_every_button(false)
+				if type==tr("TEAMS_ALLY_ATTACKED_YOU_BETRAYLE_QUESTION_AGREEMENT"):
+					players_handler.additional_enemies+=by_whom_char_info.pu_id
 			
+
+			var node_attacked=char_info_attacked.get_node()
+
+			var can_evade=node_attacked.get_meta("Can_Evade",true)
+			var can_defence=node_attacked.get_meta("Can_Defence",true)
+			var can_parry=node_attacked.get_meta("Can_Parry",true)
+
+
+			#checking parry
+			var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
+			var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
+			var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(atk_rng)
+
+			can_parry = attacker_kletka_id in kletki_with_players
+			#ending checking parry
+			
+
+
+			you_were_attacked_label.text=tr("YOU_WERE_ATTACKER_WHAT_TO_DO_QUESTION").format(
+				{
+					"Attacker_name":by_whom_char_info.get_node().name,
+					"Attacker_main_dice":recieved_dice_roll_result["main_dice"],
+					"Attacker_crit_dice":recieved_dice_roll_result["crit_dice"]
+				}
+			)
+
 			var atk_range=players_handler.get_char_info_attack_range(by_whom_char_info)
 
 			
@@ -1992,7 +1718,7 @@ func _on_evade_button_pressed():
 	
 	
 	
-	increase_dice_result_to_action_name_with_buffs_for_char_info("Evade")
+	increase_dice_result_to_action_name_with_buffs("Evade")
 
 	#
 	var enemy_agility=players_handler.get_char_info_agility_rank(attacked_by_char_info)
@@ -2113,7 +1839,7 @@ func _on_evade_button_pressed():
 		char_info_dic = await attacker_finished_attack
 		print("attacker_finished_attack char_info_dic=",char_info_dic)
 	
-	if counter_attack and get_current_self_char_info().get_node().can_attack:
+	if counter_attack:
 		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
 		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
 		
@@ -2184,7 +1910,7 @@ func _on_defence_button_pressed():
 	
 	await await_dice_including_rerolls("Defence")
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	increase_dice_result_to_action_name_with_buffs_for_char_info("Defence")
+	increase_dice_result_to_action_name_with_buffs("Defence")
 
 
 	rpc_id(attacked_by_peer_id,"answer_attack","defending")
@@ -2225,7 +1951,7 @@ func _on_parry_button_pressed():
 		
 	await await_dice_including_rerolls("Parry")
 	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	increase_dice_result_to_action_name_with_buffs_for_char_info("Parry")
+	increase_dice_result_to_action_name_with_buffs("Parry")
 
 	you_were_attacked_container.visible=false
 	are_you_sure_main_container.visible=false
@@ -2271,7 +1997,6 @@ func _on_phantasm_evation_button_pressed():
 @rpc('any_peer',"call_local","reliable")
 func answer_attack(status):
 	attack_responce_string=status
-	#var attack_responce=attack_response_from_charinfo_uniq_to_charinfo_iniq[defender_char_info.get_uniq_id()][attacker_peer_id.get_uniq
 	attack_response.emit("OK")
 
 @rpc("any_peer","call_local","reliable")
@@ -2290,133 +2015,95 @@ func main_game():
 	#print("connected="+str(connected))
 	#spawn random dommies
 	#generate_characters_on_random_kletkax()
-	
+	glow_cletki_intiate()
 	#choose kletka so spawn
-	print("occupied_kletki="+str(kletka_id_to_char_info))
+	print("occupied_kletki="+str(occupied_kletki))
 	reset_button.queue_free()
 	#random_kletka()
 	if multiplayer.get_unique_id()==1:
-		glow_cletki_intiate()
 		players_handler.start()
 	start_button.queue_free()
 	#attack_button.visible=true
 	#move_button.visible=true
 	#cancel_button.visible=true
-	#current_action_points=3
-	#current_action_points_label.text=str(current_action_points)
+	current_action_points=3
+	current_action_points_label.text=str(current_action_points)
 	
+	
+	
+	#players_handler.peer_id_to_np_points["peer_id"]=0
+	
+	#players_handler.
+	#for pu_id in Globals.pu_id_player_info.keys():
+		#kletka_owned_by_unit_uniq_id[pu_id]={}
+
+		#print(str(pu_id," kletka_owned_by_unit_uniq_id ={}"))
+		#print(str("kletka_owned_by_unit_uniq_id =",kletka_owned_by_unit_uniq_id))
+	#rpc("sync_owned_kletki",kletka_owned_by_unit_uniq_id)
 	pass
 	
 	
 @rpc("any_peer","call_local","reliable")
-func sync_owned_kletki(unit_uniq_id_to_kletki_ids_owned_local):
-	unit_uniq_id_to_kletki_ids_owned=unit_uniq_id_to_kletki_ids_owned_local
+func sync_owned_kletki(kletka_owned_by_unit_uniq_id_local):
+	kletka_owned_by_unit_uniq_id=kletka_owned_by_unit_uniq_id_local
 	
 @rpc("authority","call_local","reliable")
 func initial_spawn():
 	pass
 	
-func inital_spawn_of_player(pu_id):
-	#still operates on host
+@rpc("authority","call_local","reliable")
+func inital_spawn_of_player():
 	print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-	
-	Globals.pu_id_to_action_points[pu_id]=3
-
+	current_action="initial_spawn"
 	var kletka_to_initial_spawn=get_unoccupied_kletki()
+	choose_glowing_cletka_by_ids_array(kletka_to_initial_spawn)
 	
-	var move_data={
-			"char_info":get_current_char_info_for_pu_id(pu_id),
-			"Current Kletka":-1,
-			"Available Kletki":kletka_to_initial_spawn,
-			"Initial Spawn":true
-		}
-	fsm.change_state_for_pu_ud(pu_id,"MoveSelection",move_data)
-
-
-@rpc("any_peer","reliable","call_local")
-func pu_id_pressed_attack_button(pu_id:String,counter_attack:bool):
-	if not multiplayer.is_server(): return
-	
-	var char_info=get_current_char_info_for_pu_id(pu_id)
-	
-	var player_has_magic_attack=players_handler.get_char_info_magical_attack(char_info)
-	
-	var addit_attacks=char_info.get_node().additional_attack>=1
-	
-	if Globals.pu_id_to_action_points[pu_id]>=1 or counter_attack or addit_attacks:
-		rpc_id(
-			Globals.pu_id_player_info[pu_id]["current_peer_id"],
-			"show_attack_choises_for_client",
-			player_has_magic_attack
-			)
-		pass
-	
-
-@rpc("authority","reliable","call_local")
-func show_attack_choises_for_client(player_has_magic_attack:bool):
-	if player_has_magic_attack:
-		magical_damage_button.disabled=false
-	type_of_damage_choose_buttons_box.visible=true
-	actions_buttons.visible=false
-
-
 func _on_attack_pressed(counter_attack:bool=false):
 	print("_________________attack______________")
-	#print("occupied_kletki="+str(occupied_kletki))
-	#print("get_current_kletka_id()="+str(get_current_kletka_id()))
+	print("occupied_kletki="+str(occupied_kletki))
+	print("get_current_kletka_id()="+str(get_current_kletka_id()))
 	magical_damage_button.disabled=true
 	#var magic_power=players_handler.get_peer_id_magical_attack(Globals.self_peer_id)
 	
-	rpc_id(1,"pu_id_pressed_attack_button",Globals.self_pu_id)
+	#var player_has_magic_attack=Globals.pu_id_player_info[Globals.self_pu_id]["servant_node"].default_stats["magic"]["Power"]
 
+	var player_has_magic_attack=players_handler.get_char_info_magical_attack(get_current_self_char_info())
 
-
-func pu_id_pressed_damage_type_button(pu_id:String,type:String):
-	if not multiplayer.is_server(): return
-	#const DAMAGE_TYPE= {PHYSICAL="Physical", MAGICAL="Magical", PHANTASM="Phantasm"}
-	var char_info=get_current_char_info_for_pu_id(pu_id)
-	var attack_range
-	Globals.unit_uniq_id_to_damage_type[char_info.get_uniq_id()]=type
-	match type:
-		players_handler.DAMAGE_TYPE.PHYSICAL:
-			attack_range=players_handler.get_char_info_attack_range(char_info)
-		players_handler.DAMAGE_TYPE.MAGICAL:
-			attack_range=3
+	var addit_attacks=players_handler.get_self_servant_node().additional_attack>=1
 	
-	var kk=get_kletki_ids_with_players_you_can_reach_in_steps(
-		attack_range,
-		get_current_kletka_id_for_char_info(char_info)
-		)
 	
-	if kk.size()==0:
-		rpc_id(
-			Globals.pu_id_player_info[pu_id]["current_peer_id"],
-			"send_info_table_show_to_client",
-			"No enemies available to attack"
-		)
-		fsm.change_state_for_pu_ud(pu_id,"Idle")
-		return
-	
-	var state_data:Dictionary=get_base_fsm_data_for_pu_id(pu_id)
-	
-	state_data.merge(
-		{
-			"cells_to_choose":kk
-		}
-	)
-	
-	fsm.change_state_for_pu_ud(pu_id,"ChoosingTarget",state_data)
-	
-	pass
+	if player_has_magic_attack:
+		magical_damage_button.disabled=false
+	if current_action_points>=1 or counter_attack or addit_attacks:
+		type_of_damage_choose_buttons_box.visible=true
+		actions_buttons.visible=false
+		current_action="attack"
+		pass
 
 
 
 func _on_regular_damage_button_pressed():
-	rpc_id(1,"pu_id_pressed_damage_type_button",players_handler.DAMAGE_TYPE.PHYSICAL)
+	var attack_range=players_handler.get_char_info_attack_range(get_current_self_char_info())
+	
+	var kk=get_kletki_ids_with_players_you_can_reach_in_steps(attack_range)
+	if kk.size()==0:
+		type_of_damage_choose_buttons_box.visible=false
+		return
+	print(kk)
+	damage_type=players_handler.DAMAGE_TYPE.PHYSICAL
+	choose_glowing_cletka_by_ids_array(kk)
+	type_of_damage_choose_buttons_box.visible=false
 
 func _on_magical_damage_button_pressed():
-	rpc_id(1,"pu_id_pressed_damage_type_button",players_handler.DAMAGE_TYPE.MAGICAL)
+	var kk=get_kletki_ids_with_players_you_can_reach_in_steps(3)
+	print(kk)
+	if kk.size()==0:
+		type_of_damage_choose_buttons_box.visible=false
+		return
+	damage_type=players_handler.DAMAGE_TYPE.MAGICAL
+	choose_glowing_cletka_by_ids_array(kk)
+
+	type_of_damage_choose_buttons_box.visible=false
 
 func deal_damage():
 	pass
@@ -2431,27 +2118,27 @@ func update_field_icon()->void:
 			push_error("UNKNOWN TIME REQUEST URGENT HELP, YOU BROKE TIMELINE")
 	return
 
-#var unit_ids_already_played_this_turn:Array=[]
+var unit_ids_already_played_this_turn:Array=[]
 var maximum_playable_units:int
 
-func choose_unit_to_play_for_pu_id(pu_id)->bool:
+func choose_unit_to_play()->bool:
 	var kletki_with_non_played_units:Array=[]
-	for unit_id in Globals.pu_id_player_info[pu_id]['units'].keys():
-		if not unit_id in Globals.pu_id_player_info[pu_id]["unit_ids_already_played_this_turn"]:
-			var char_info_temp=CharInfo.new(pu_id,unit_id)
-			print(char_info_temp.get_node().name+" Can_Be_Played=",char_info_temp.get_node().can_be_played)
-			if char_info_temp.get_node().can_be_played and\
-			not char_info_temp.get_node().total_dead:
-				kletki_with_non_played_units.append(
-					players_handler.get_char_info_kletka_number(
-						char_info_temp
+	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
+			if not unit_id in unit_ids_already_played_this_turn:
+				var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
+				print(char_info_temp.get_node().name+" Can_Be_Played=",char_info_temp.get_node().get_meta("Can_Be_Played",true))
+				if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
+				not char_info_temp.get_node().get_meta("total_dead",false):
+					kletki_with_non_played_units.append(
+						players_handler.get_char_info_kletka_number(
+							char_info_temp
+						)
 					)
-				)
-	var pu_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
+
 	if kletki_with_non_played_units.size()<=0:
-		rpc_id(pu_peer_id,"info_table_show","NO_UNITS_AVAILABLE_TO_PLAY")
-		Globals.pu_id_player_info[pu_id]["unit_ids_already_played_this_turn"]=[]
-		Globals.pu_id_player_info[pu_id]["maximum_playable_units"]=0
+		info_table_show(tr("NO_UNITS_AVAILABLE_TO_PLAY"))
+		maximum_playable_units=0
+		unit_ids_already_played_this_turn=[]
 		await info_ok_button.pressed
 		return false
 	current_action="wait"
@@ -2459,8 +2146,7 @@ func choose_unit_to_play_for_pu_id(pu_id)->bool:
 	var choosen_kletka_id
 
 	if kletki_with_non_played_units.size()>1:
-		#info_table_show(tr("CHOOSE_UNIT_TO_PLAY"))
-		rpc_id(pu_peer_id,"info_table_show","CHOOSE_UNIT_TO_PLAY")
+		info_table_show(tr("CHOOSE_UNIT_TO_PLAY"))
 		await info_ok_button.pressed
 		choose_glowing_cletka_by_ids_array(kletki_with_non_played_units)
 		choosen_kletka_id=await glow_kletka_pressed_signal
@@ -2474,10 +2160,9 @@ func choose_unit_to_play_for_pu_id(pu_id)->bool:
 	var node_choosen=tmp.get_node()
 
 
-	var unit_id_choosen=node_choosen.unit_id
+	var unit_id_choosen=node_choosen.get_meta("unit_id")
 
-	Globals.pu_id_player_info[pu_id]["current_unit_id"]=unit_id_choosen
-	#current_unit_id=unit_id_choosen
+	current_unit_id=unit_id_choosen
 
 	print("unit_id_choosen=",unit_id_choosen)
 	if unit_id_choosen==0:
@@ -2486,7 +2171,7 @@ func choose_unit_to_play_for_pu_id(pu_id)->bool:
 		current_action_points=3
 	else:
 		print("starting as sub servant/summon")
-		if node_choosen.servant:
+		if node_choosen.get_meta("Servant",false):
 			current_action_points_label.text=str(3)
 			current_action_points=3
 		else:
@@ -2496,12 +2181,12 @@ func choose_unit_to_play_for_pu_id(pu_id)->bool:
 		players_handler.rpc(
 			"reduce_additional_moves_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.move_points
+			-node_choosen.get_meta("Move_Points", 0)
 			)
 		players_handler.rpc(
 			"reduce_additional_attacks_for_char_info",
 			get_current_self_char_info().to_dictionary(),
-			-node_choosen.can_attack
+			-node_choosen.get_meta("Attack_Points", 0)
 			)
 	%np_points_number_label.text=str(node_choosen.phantasm_charge)
 	%current_hp_value_label.text=str(node_choosen.hp)
@@ -2517,30 +2202,30 @@ func get_additional_actions_for_char_info_from_mount(char_info_dic:Dictionary):
 
 	var char_info_node=char_info.get_node()
 
-	for mount_uniq_id in char_info_node.mounts_uniq_id_array:
+	for mount_uniq_id in char_info_node.get_meta("Mounts_uniq_id_array",[]):
 		var mount_char_info=get_char_info_from_uniq_id(mount_uniq_id)
 		var mount_node=mount_char_info.get_node()
 
-		if mount_char_info.move_points:
+		if mount_char_info.get_meta("Move_Points",0):
 			players_handler.reduce_additional_moves_for_char_info(
 				char_info_dic,
-				-mount_node.move_points
+				-mount_node.get_meta("Move_Points", 1)
 			)
-		if mount_char_info.attack_points:
+		if mount_char_info.get_meta("Attack_Points",0):
 			players_handler.reduce_additional_attacks_for_char_info(
 				char_info_dic,
-				-mount_node.attack_points
+				-mount_node.get_meta("Attack_Points", 1)
 			)
 
 	pass
 
 	
-func calculate_maximum_playable_units_for_pu_id(pu_id:String):
+func calculate_maximum_playable_units():
 	var kletki_with_non_played_units:Array=[]
-	for unit_id in Globals.pu_id_player_info[pu_id]['units'].keys():
-		var char_info_temp=CharInfo.new(pu_id,unit_id)
-		if char_info_temp.get_node().can_be_played and\
-			not char_info_temp.get_node().total_dead:
+	for unit_id in Globals.pu_id_player_info[Globals.self_pu_id]['units'].keys():
+		var char_info_temp=CharInfo.new(Globals.self_pu_id,unit_id)
+		if char_info_temp.get_node().get_meta("Can_Be_Played",true) and\
+			not char_info_temp.get_node().get_meta("total_dead",false):
 			kletki_with_non_played_units.append(
 				players_handler.get_char_info_kletka_number(
 					char_info_temp
@@ -2550,17 +2235,16 @@ func calculate_maximum_playable_units_for_pu_id(pu_id:String):
 	pass
 
 
+
 @rpc("authority","call_local","reliable")
-func start_turn(pu_id:String):
-	
+func start_turn():
 	#choosing char_info to play
-	Globals.pu_id_player_info[pu_id]["unit_ids_already_played_this_turn"]=[]
-	#unit_ids_already_played_this_turn=[]
-	calculate_maximum_playable_units_for_pu_id(pu_id)
+	unit_ids_already_played_this_turn=[]
+	calculate_maximum_playable_units()
 	
 
 
-	await choose_unit_to_play_for_pu_id(pu_id)
+	await choose_unit_to_play()
 
 	#if Globals.pu_id_player_info[Globals.self_pu_id]['units'].size()>=2:
 	#	
@@ -2590,8 +2274,8 @@ func start_turn(pu_id:String):
 	var self_char_info=get_current_self_char_info()
 
 	var skills_enabledd=true
-	if self_char_info.get_node().summon_check:
-		skills_enabledd = self_char_info.get_node().skills_enabled
+	if self_char_info.get_node().get_meta("Summon_Check",false):
+		skills_enabledd = self_char_info.get_node().get_meta("Skills_Enabled",false)
 
 
 	skill_info_show_button.disabled=not skills_enabledd
@@ -2695,33 +2379,32 @@ func _on_cancel_pressed():
 		current_action="wait"
 		blinking_glow_button=false
 
-@rpc("any_peer","reliable","call_local")
-func on_move_pressed_by_pu_id(pu_id):
-	if not multiplayer.is_server(): return
-	
-	var char_info=get_current_char_info_for_pu_id(pu_id)
-	print("char_name=",char_info.get_node().name," current_action_points=",Globals.pu_id_to_action_points[pu_id]," additional_moves=",char_info.get_node().additional_moves)
-	if Globals.pu_id_to_action_points[char_info.pu_id]>=1 or char_info.get_node().additional_moves>=1:
-		
-		var move_ck=get_kletki_ids_available_to_move_to_for_char_info(char_info)
-
-		var move_data={
-			"char_info":char_info.to_dictionary(),
-			"Current Kletka":players_handler.get_char_info_kletka_number(char_info),
-			"Available Kletki":move_ck
-		}
-		
-		fsm.change_state_for_pu_ud(char_info.pu_id, "MoveSelection", move_data)
-	else:
-		#if it is pressed then resync accured need sync
-		#TODO after FSM implemented
-		pass
-		
-		
-
 
 func _on_move_pressed(unmounting=false):
-	rpc_id(1,"on_move_pressed_by_pu_id",Globals.self_pu_id)
+	print("current_action_points=",current_action_points," additional_moves=",players_handler.get_self_servant_node().additional_moves)
+	if current_action_points>=1 or players_handler.get_self_servant_node().additional_moves>=1:
+		current_action="move"
+		if not unmounting:
+			_on_make_action_pressed()
+		var move_ck=[]
+		print("get_current_kletka_id()="+str(get_current_kletka_id())+" connected[get_current_kletka_id()]="+str(connected[get_current_kletka_id()]))
+		var skip=false
+		for i in connected[get_current_kletka_id()]:
+			skip=false
+			if occupied_kletki.has(i):
+				for node in occupied_kletki[i]:
+					if node.get_meta("Mount",false):
+						pass
+					else:
+						skip=true
+			if skip:
+				continue
+			if kletka_preference[i].has("Blocked"):
+				continue
+			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
+		pass
+		choose_glowing_cletka_by_ids_array(move_ck)
+		#var self_char_info=get_current_self_char_info()
 		
 
 
@@ -2767,24 +2450,7 @@ func field_manipulation(buff_config:Dictionary):
 		
 	return true
 
-signal choose_between_two_client_answer(answer)
 
-func await_choose_between_two_from_pu_id(pu_id:String,question:String,first:String,second:String)->String:
-	var peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-	rpc_id(peer_id,"choose_between_two",question,first,second)
-
-	var answer=await choose_between_two_client_answer
-	return answer
-
-
-@rpc("any_peer","call_local","reliable")
-func send_choose_between_two_answer_to_host(answer:String)->void:
-	await sleep(0.1)
-	choose_between_two_client_answer.emit(answer)
-	pass
-
-
-@rpc("authority","call_local","reliable")
 func choose_between_two(question:String,first:String,second:String)->String:
 	var out:String
 	
@@ -2809,9 +2475,6 @@ func choose_between_two(question:String,first:String,second:String)->String:
 	disable_every_button(false)
 	info_but_choose_1.pressed.disconnect(info_but_choose.bind(first))
 	info_but_choose_2.pressed.disconnect(info_but_choose.bind(second))
-
-	rpc_id(1,"send_choose_between_two_answer_to_host",out)
-
 	return out
 
 func info_but_choose(choose_local:String):
@@ -2846,25 +2509,25 @@ func capture_field_kletki(amount,config_of_kletka,owner_char_info:CharInfo):
 	#var owner_char_info=players_handler.get_charInfo_from_pu_id_unit_id(own_pu,own_uni_id)
 
 
-	if !unit_uniq_id_to_kletki_ids_owned.has(owner_uniq_id):
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[]
+	if !kletka_owned_by_unit_uniq_id.has(owner_uniq_id):
+		kletka_owned_by_unit_uniq_id[owner_uniq_id]=[]
 	
 
 
 
 	temp_kletka_capture_config["Color"]=Globals.self_field_color
-	if unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]==[]:
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[char_info_to_kletka_number(owner_char_info)]
-		rpc("sync_owned_kletki",unit_uniq_id_to_kletki_ids_owned)
+	if kletka_owned_by_unit_uniq_id[owner_uniq_id]==[]:
+		kletka_owned_by_unit_uniq_id[owner_uniq_id]=[char_info_to_kletka_number(owner_char_info)]
+		rpc("sync_owned_kletki",kletka_owned_by_unit_uniq_id)
 		rpc("capture_single_kletka_sync", char_info_to_kletka_number(owner_char_info),temp_kletka_capture_config)
 	else:
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]+=[char_info_to_kletka_number(owner_char_info)]
+		kletka_owned_by_unit_uniq_id[owner_uniq_id]+=[char_info_to_kletka_number(owner_char_info)]
 		
 		
-	print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
+	print(str("kletka_owned_by_unit_uniq_id=",kletka_owned_by_unit_uniq_id))
 	var to_glow_depends_on_owned=[]
 	for amount_to_capture in range(amount):
-		for klettka in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
+		for klettka in kletka_owned_by_unit_uniq_id[owner_uniq_id]:
 			to_glow_depends_on_owned+=connected[klettka].keys()
 			
 		print(str("to_glow_depends_on_owned=",to_glow_depends_on_owned))
@@ -2873,180 +2536,19 @@ func capture_field_kletki(amount,config_of_kletka,owner_char_info:CharInfo):
 				continue
 			available_to_capture.append(int(glow_array[klekta_number].name.trim_prefix("glow ")))#.visible=true
 		available_to_capture=array_unique(available_to_capture)
-		for already_captured_kletki in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
+		for already_captured_kletki in kletka_owned_by_unit_uniq_id[owner_uniq_id]:
 			available_to_capture.erase(already_captured_kletki)
 		print("available_to_capture="+str(available_to_capture))
 		choose_glowing_cletka_by_ids_array(array_unique(available_to_capture))
 		await klekta_captured
 		available_to_capture=[]
 		to_glow_depends_on_owned=[]
-		print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
+		print(str("kletka_owned_by_unit_uniq_id=",kletka_owned_by_unit_uniq_id))
 	pass
 	
 	current_action="wait"
 	return true
-
-var kletka_to_add:Node2D
-signal new_cell_created
-
-var temp_lines_to_draw:Array=[]
-
-func create_new_cell(single_skill_info:Dictionary):
-	#var amount=single_skill_info.get("Amount",1)
-	var cell_config=single_skill_info.get("Config",{})
-
-
 	
-	for i in range(2):
-		var line = LINE_BETWEEN_CELLS.instantiate()
-		lines_holder.add_child(line,true)
-		line.width = 3
-		line.z_index=-1
-		line.default_color = Color.WHITE
-		temp_lines_to_draw.append(line)
-
-	#cell_config["Owner"]=get_current_self_char_info().get_uniq_id()
-	
-	var new_id=connected.size()
-	kletka_to_add=cell_scene.instantiate()
-	kletki_holder.add_child(kletka_to_add,true)
-
-	kletka_to_add.name="cell "+str(new_id)
-
-	current_action="create_new_cell"
-	
-	var lines_points_array:Array=[]
-
-	
-	
-	await new_cell_created
-
-	for line in temp_lines_to_draw:
-		lines_points_array.append([line.get_point_position(0),line.get_point_position(1)])
-
-	rpc("create_new_cell_sync",kletka_to_add.position,cell_config,new_id,lines_points_array)
-	kletka_preference[new_id]=cell_config
-	
-
-	
-	
-	#connecting kletki
-	var kletki_ids_to_connect_to=get_neareset_cells_to_cell_position(kletka_to_add.position,2)
-	print("new_id="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
-	connected[new_id]={}
-	cell_positions[new_id]=kletka_to_add.position
-	
-	for kletka_id in kletki_ids_to_connect_to:
-		connected[new_id][kletka_id]=true
-		connected[kletka_id][new_id]=true
-
-	print("new_id after="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
-	
-	#adding glow kletka
-	add_glow_kletka_to_kletka_id(new_id)
-
-	
-	return true
-
-@rpc("any_peer","call_remote","reliable")
-func create_new_cell_sync(new_position:Vector2,cell_config:Dictionary,new_id:int,lines_cords_to_draw:Array):
-	var kletka_to_add=cell_scene.instantiate()
-	kletki_holder.add_child(kletka_to_add,true)
-	kletka_to_add.position=new_position
-
-	for line_cords in lines_cords_to_draw:
-		var new_line=Line2D.new()
-		new_line.add_point(line_cords[0])
-		new_line.add_point(line_cords[1])
-
-
-		new_line.width = 3
-		new_line.z_index=-1
-		new_line.default_color = Color.WHITE
-
-		lines_holder.add_child(new_line,true)
-
-	kletka_preference[new_id]=cell_config
-	connected[new_id]={}
-	
-	var kletki_ids_to_connect_to=get_neareset_cells_to_cell_position(kletka_to_add.position,2)
-	print("new_id="+str(new_id)+" kletki_ids_to_connect_to="+str(kletki_ids_to_connect_to), "connected="+str(connected))
-	cell_positions[new_id]=kletka_to_add.position
-	
-	for kletka_id in kletki_ids_to_connect_to:
-		connected[new_id][kletka_id]=true
-		connected[kletka_id][new_id]=true
-	
-	#adding glow kletka
-	add_glow_kletka_to_kletka_id(new_id)
-
-	
-
-	rpc("systemlog_message",str("New cell created at ",new_position))
-
-
-func get_neareset_cells_to_cell_position(cell_position:Vector2, number_of_cells:int)->Array:
-	var nearest_cells:Array = []
-	var cell_distances:Dictionary = {}
-	
-	# Calculate distances from the given position to all cells
-	for kletka_id in cell_positions.keys():
-		var dist = cell_positions[kletka_id].distance_to(cell_position)
-		cell_distances[kletka_id] = dist
-	
-	# Sort the cell IDs by their distances
-	var sorted_keys = cell_distances.keys()
-	sorted_keys.sort_custom(func(a, b):
-		return cell_distances[a] < cell_distances[b]
-	)
-
-	for i in range(min(number_of_cells, sorted_keys.size())):
-		nearest_cells.append(sorted_keys[i])
-	
-	return nearest_cells
-
-
-func _process(_delta):
-	if current_action=="create_new_cell":
-		var mouse_pos = get_global_mouse_position()
-		kletka_to_add.position=mouse_pos
-		var kletki_ids_to_draw_temp_lines_to=get_neareset_cells_to_cell_position(mouse_pos,2)
-
-		temp_lines_to_draw[0].clear_points()
-		temp_lines_to_draw[1].clear_points()
-
-
-		temp_lines_to_draw[0].add_point(mouse_pos,0)
-		temp_lines_to_draw[1].add_point(mouse_pos,0)
-		
-		temp_lines_to_draw[0].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[0]],1)
-		temp_lines_to_draw[1].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[1]],1)
-
-	pass
-
-func _input(event):
-	if event is InputEventKey:
-		if event.keycode == KEY_ESCAPE and event.pressed:
-			if OS.has_feature("editor"):
-				disconnect_button.visible=true
-				reconnect_button.visible=true
-			if check_if_hidable_gui_windows_active():
-				hide_all_gui_windows("all")
-			if current_action!="wait" and current_action!="Create New Field Cell":
-				current_action="wait"
-				blinking_glow_button=false
-				glow_cletki_node.visible=false
-		if event.keycode == KEY_TAB and event.pressed:
-			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if current_action=="create_new_cell":
-				current_action="wait"
-				kletka_to_add.position=kletka_to_add.position#.snapped(Vector2(64,64))#+Vector2(32,32)
-				temp_lines_to_draw[0].points=temp_lines_to_draw[0].points
-				temp_lines_to_draw[1].points=temp_lines_to_draw[1].points
-
-				new_cell_created.emit()
 
 func line_attack_phantasm(phantasm_config,dash:bool=false):
 	
@@ -3085,12 +2587,12 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 			pass#no available kletki nearly impossible
 		else:
 			for kletka in kletki_to_dash_array:
-				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),temp_kletka_id,kletka,false,true)
+				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),temp_kletka_id,kletka,false,true)
 				await get_tree().create_timer(0.5).timeout
 				temp_kletka_id=kletka
 			await get_tree().create_timer(2).timeout
 			print("get_current_kletka_id()=",get_current_kletka_id()," kletka_to_dash=",kletka_to_dash)
-			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),get_current_kletka_id(),kletka_to_dash)
+			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info().to_dictionary(),get_current_kletka_id(),kletka_to_dash)
 
 
 	await await_dice_including_rerolls("Attack")
@@ -3101,7 +2603,7 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 			# = players_handler.servant_name_to_pu_id[occupied_kletki[kletka].name]
 			var uniq_ids_on_kletka=[]
 			for node in occupied_kletki[kletka]:
-				uniq_ids_on_kletka.append(node.uniq_id)
+				uniq_ids_on_kletka.append(node.get_meta("uniq_id"))
 
 			# if self char uniq id is on this kletka
 			if players_handler.intersect(uniq_ids_on_kletka,[get_current_self_char_info().get_uniq_id()]):
@@ -3176,12 +2678,12 @@ func _on_make_action_pressed():
 	var phantasm_enabledd=true
 
 	var mounting_something=false
-	if cur_node.summon_check:
-		skills_enabledd = cur_node.skills_enabled
-		attack_enabledd = cur_node.can_attack
-		phantasm_enabledd = cur_node.can_use_phantasm
+	if cur_node.get_meta("Summon_Check",false):
+		skills_enabledd = cur_node.get_meta("Skills_Enabled",false)
+		attack_enabledd = cur_node.get_meta("Can_Attack", true)
+		phantasm_enabledd = cur_node.get_meta("Can_Use_Phantasm", false)
 
-	mounting_something=cur_node.mounts_uniq_id_array!=[]
+	mounting_something=cur_node.get_meta("Mounts_uniq_id_array",[])!=[]
 	
 	print(str("players_handler.unit_unique_id_to_items_owned=",players_handler.unit_unique_id_to_items_owned))
 
@@ -3244,31 +2746,6 @@ func _on_make_action_pressed():
 	#actions_buttons.visible=!actions_buttons.visible
 	pass # Replace with function body.
 
-@rpc("any_peer","call_local","reliable")
-func on_end_turn_pressed_by_char_info(char_info_dic:Dictionary):
-	var char_info=CharInfo.from_dictionary(char_info_dic)
-	print(players_handler.trigger_buffs_on)
-	await players_handler.trigger_buffs_on(char_info,"End Turn")
-	await players_handler.reduce_all_cooldowns(char_info, "End Turn")
-	
-	unit_ids_already_played_this_turn.append(Globals.pu_id_player_info[char_info.pu_id]["current_unit_id"])
-	
-	calculate_maximum_playable_units_for_pu_id()
-	print("maximum_playable_units=",maximum_playable_units, "unit_ids_already_played_this_turn=",unit_ids_already_played_this_turn.size())
-	
-
-	if maximum_playable_units!=unit_ids_already_played_this_turn.size():
-		var answer=await choose_between_two("You have unplayed units. Do you want to skip their turn?","Choose unit","Pass turn")
-		if answer=="Choose unit":
-			await choose_unit_to_play_for_pu_id()
-			return
-
-
-
-	make_action_button.disabled=true
-	end_turn_button.disabled=true
-	players_handler.rpc("pass_next_turn",Globals.self_pu_id)
-
 
 func _on_end_turn_pressed():
 	print_debug("_on_end_turn_pressed, pu_id=",get_current_self_char_info())
@@ -3278,7 +2755,26 @@ func _on_end_turn_pressed():
 	#current_action_points_label.text=str(current_action_points)
 	disable_every_button(false)#if paralysis
 	
+	print(players_handler.trigger_buffs_on)
+	await players_handler.trigger_buffs_on(get_current_self_char_info(),"End Turn")
+	await players_handler.reduce_all_cooldowns(get_current_self_char_info(), "End Turn")
+	unit_ids_already_played_this_turn.append(current_unit_id)
 	
+	calculate_maximum_playable_units()
+	print("maximum_playable_units=",maximum_playable_units, "unit_ids_already_played_this_turn=",unit_ids_already_played_this_turn.size())
+	
+
+	if maximum_playable_units!=unit_ids_already_played_this_turn.size():
+		var answer=await choose_between_two("You have unplayed units. Do you want to skip their turn?","Choose unit","Pass turn")
+		if answer=="Choose unit":
+			await choose_unit_to_play()
+			return
+
+
+
+	make_action_button.disabled=true
+	end_turn_button.disabled=true
+	players_handler.rpc("pass_next_turn",Globals.self_pu_id)
 	
 	pass # Replace with function body.
 
@@ -3314,32 +2810,15 @@ func _on_chat_hide_show_button_pressed():
 		chat_log_container.visible=true
 	pass # Replace with function body.
 
-signal are_you_sure_signal_from_client(answer)
-
-func await_fill_are_you_sure_from_client(pu_id,text:String="")->String:
-	var peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
-	rpc_id(peer_id,"fill_are_you_sure_screen",text)
-	var choose=await are_you_sure_signal_from_client
-	return choose
-
-@rpc("any_peer","call_local","reliable")
-func send_are_you_sure_answer_to_host(answer:String)->void:
-	await sleep(0.1)
-	are_you_sure_signal_from_client.emit(answer)
-	pass
-
-@rpc("authority","call_local","reliable")
 func fill_are_you_sure_screen(text:String=""):
 	are_you_sure_label.text=tr("ARE_YOU_SURE_YOU_WANT_TO_QUESTION").format({"action":text})
 	are_you_sure_main_container.visible=true
 
 func _on_im_sure_button_pressed():
 	are_you_sure_main_container.visible=false
-	%ConfirmAction.answer_button_pressed_agreed.emit(true)
 	#are_you_sure_result="yes"
 	#are_you_sure_signal.emit()
-	rpc_id(1,"send_are_you_sure_answer_to_host","ARE_YOU_SURE_AGREEMENT")
-	#emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_AGREEMENT"))
+	emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_AGREEMENT"))
 	
 	pass # Replace with function body.
 
@@ -3347,9 +2826,7 @@ func _on_im_sure_button_pressed():
 func _on_im_not_sure_button_pressed():
 	are_you_sure_main_container.visible=false
 	#are_you_sure_result="no"
-	%ConfirmAction.answer_button_pressed_agreed.emit(false)
-	rpc_id(1,"send_are_you_sure_answer_to_host","ARE_YOU_SURE_DISAGREEMENT")
-	#emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_DISAGREEMENT"))
+	emit_signal("are_you_sure_signal", tr("ARE_YOU_SURE_DISAGREEMENT"))
 	#are_you_sure_signal.emit()
 	
 	pass # Replace with function body.
@@ -3376,28 +2853,20 @@ func _on_skill_info_show_button_pressed():
 	hide_all_gui_windows("skill_info_tab_container")
 	pass # Replace with function body.
 
-func check_if_hidable_gui_windows_active()->bool:
-	var dictio=gui_windows_dictionary
-	for key in dictio:
-		for item in dictio[key]:
-			if item.visible:
-				return true
-	return false
-
-@rpc("authority","call_local","reliable")
-func set_pu_id_gui_node_uniq_name_visibility(pu_id,node_uniq_name,visible):
-
-	gui.get_node(node_uniq_name).visiblily=visible
-
-	pass
-
-
 func hide_all_gui_windows(except_name="all"):
 	if except_name!="servant_info_main_container":
 		players_handler.player_info_button_current_pu_id=""
 	print("hide_all_gui_windows= "+str(except_name))
-	var dictio=gui_windows_dictionary
 	
+	var dictio={"servant_info_main_container":[players_handler.servant_info_main_container],
+	"skill_info_tab_container":[%skill_info_main_VBoxContainer,skill_info_tab_container,use_skill_but_label_container],
+	"actions_buttons":[actions_buttons],
+	"use_custom":[%custom_choices_main_Vboxcontainer,players_handler.use_custom_but_label_container,players_handler.custom_choices_tab_container],
+	"command_spells":[command_spell_choices_container],
+	"menu":[menu_vbox_container],
+	"teams":[players_handler.teams_margin],
+	"char_choose_on_kletka":[char_info_choose_scroll_container,char_choose_button,char_choose_main_VBoxContainer]
+	}
 	var did_changed=false
 	for key in dictio:
 		if key==except_name:
@@ -3518,11 +2987,7 @@ func _on_refresh_buffs_button_pressed():
 	var buff_duration
 	for buff in buffs:
 		buff_duration=buff.get("Duration","-")
-		if buff.has("Display Name"):
-			display_buffs+=str(buff["Display Name"],"(",buff_duration,")\n")
-		else:
-			display_buffs+=str(buff["Name"],"(",buff_duration,")\n")
-		
+		display_buffs+=str(buff["Name"],"(",buff_duration,")\n")
 	$GUI/buffs_temp_container/buffs_label.text="Buffs:"+display_buffs
 	pass # Replace with function body.
 
@@ -3663,6 +3128,18 @@ func char_info_to_kletka_number(char_info:CharInfo)->int:
 	return -2
 
 
+
+
+func _input(event):
+	if event is InputEventKey:
+		if event.keycode == KEY_ESCAPE and event.pressed:
+			if OS.has_feature("editor"):
+				disconnect_button.visible=true
+				reconnect_button.visible=true
+			hide_all_gui_windows("menu")
+		if event.keycode == KEY_TAB and event.pressed:
+			%advanced_logs_textedit.visible=!%advanced_logs_textedit.visible
+
 func _on_disconnect_button_pressed():
 	Globals.disconnection_request.emit()
 	pass # Replace with function body.
@@ -3680,23 +3157,4 @@ func _on_reconnect_button_pressed():
 
 func _on_cheats_show_button_pressed():
 	%debug_character_control.visible=!%debug_character_control.visible
-	pass # Replace with function body.
-
-
-func _on_kletki_multiplayer_spawner_spawned(node: Node) -> void:
-	var cell_number=int(node.name.trim_prefix("cell "))
-	cell_positions[cell_number]=node.position
-	pass # Replace with function body.
-
-
-func _on_glow_kletki_multiplayer_spawner_spawned(node: Node) -> void:
-	node.get_child(0).button_down.connect(glow_cletka_pressed.bind(node))
-	var glow_nubmer=int(node.name.trim_prefix("glow "))
-	glow_array[glow_nubmer]=node
-	pass # Replace with function body.
-
-
-func _on_captured_kletki_multiplayer_spawner_spawned(node: Node) -> void:
-	var captured_kletka_number_selected=int(node.name.trim_prefix("field "))
-	captured_kletki_nodes_dict[captured_kletka_number_selected]=node
 	pass # Replace with function body.

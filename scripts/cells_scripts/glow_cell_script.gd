@@ -1,8 +1,14 @@
 extends Node2D
 
+@onready var glow: Button = $Button
+
 var color=Color.GOLD
 #var color=Color.FUCHSIA
 func _ready():
+	glow.size=Vector2(100,100)
+	glow.modulate=Color(1,1,1,0)
+	glow.set_anchors_preset(8)#PRESET_CENTER
+	glow.position=Vector2(-glow.size.x/2,-glow.size.y/2)
 	#self.size=Vector2(60,60)
 	#self.position=Vector2(0,0)
 	#self.pivot_offset=Vector2(60,60)

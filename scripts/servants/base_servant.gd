@@ -28,6 +28,7 @@ var phantasm_charge=0
 var attribute
 var gender
 var ascension_stage
+var costume_stage
 
 var skills
 var phantasms
@@ -65,6 +66,8 @@ var owner_pu_id = "pu_id"
 var pu_id = "pu_id"
 
 var CharInfoDic = {}
+
+var char_info:CharInfo #does not sync
 
 var unit_unique_id = "get_id_from_hostt"
 
