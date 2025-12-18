@@ -213,7 +213,7 @@ var current_open_window=""
 
 
 #var damage_type="physical"#"magic"
-var recieved_damage_type="physical"
+#var recieved_damage_type="physical"
 
 var recieved_phantasm_config={}
 
@@ -221,9 +221,9 @@ var paralyzed=false
 
 
 
-var dice_roll_result_list:Dictionary={"main_dice":0,"crit_dice":0,"defence_dice":0,"additional_d6":0,"additional_d6_2":0,"additional_d100":0}
+#var dice_roll_result_list:Dictionary={"main_dice":0,"crit_dice":0,"defence_dice":0,"additional_d6":0,"additional_d6_2":0,"additional_d100":0}
 var char_uniq_id_to_dice_roll_result:Dictionary={}
-var recieved_dice_roll_result
+#var recieved_dice_roll_result
 
 
 var attacking_char_info:CharInfo
@@ -249,7 +249,7 @@ signal rolled_a_dice(result:Dictionary)
 
 var attack_response_from_charinfo_uniq_to_charinfo_iniq:Dictionary
 
-var attacked_by_char_info:CharInfo
+#var attacked_by_char_info:CharInfo
 
 signal attack_response(status:String)
 
@@ -282,13 +282,13 @@ const MOON = preload("res://images/moon.png")
 
 var field_status={"Default":["City"],"Field Buffs":[]}
 var awaiting_responce_from_pu_id:String
-var char_info_attacked:CharInfo
+#var char_info_attacked:CharInfo
 
 signal char_on_kletka_selected(char_info:CharInfo)
 
 signal player_moved
 
-signal attack_answered
+#signal attack_answered
 
 signal dismounted
 
@@ -362,7 +362,7 @@ func generate_pole(preset_time):
 	print(cell_positions)
 	const_connected=connected
 
-func get_kletki_ids_with_players_you_can_reach_in_steps(steps,current_kletka_local):
+func get_kletki_ids_with_players_you_can_reach_in_steps(steps:int,current_kletka_local:int):
 	#get_current_kletka_id()
 	var output=[]
 	for end in kletka_id_to_char_info.keys():
@@ -725,7 +725,7 @@ func get_base_fsm_data_for_pu_id(pu_id:String):
 	var char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
 	var action_points:int=players_handler.get_current_action_points_for_char_info(char_info)
 	return {
-		"char_info":char_info.to_dictionary(),
+		"char_info_dic":char_info.to_dictionary(),
 		"action_points":action_points,
 	}
 
@@ -758,25 +758,7 @@ func client_pressed_glow_kletka(glowing_kletka_number_selected_temp,pu_id):
 	match current_action:
 		"initial_spawn":
 			
-			fsm.change_state_for_pu_ud(pu_id,"Idle")
-			
-			players_handler.rpc_id(
-				Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"],
-				"set_random_command_spell_set"
-				)
-
-		
-			move_player_from_kletka_id1_to_id2(char_info,-1,glowing_kletka_number_selected)
-			
-			await sleep(0.1)
-			rpc_id(
-				Globals.pu_id_player_info[char_info.pu_id]["current_peer_id"],
-				"show_gui_depends_on_situation",
-				"initianl_spawn")
-			players_handler.rpc("pass_next_turn",char_info.pu_id)
-			
-			#is_game_started=true
-			Globals.is_game_started=true
+			pass
 		"field capture":
 			#rpc("sync_owned_kletki",unit_uniq_id_to_kletki_ids_owned)
 			Globals.pu_id_player_info[pu_id]["temp_kletka_capture_config"]["Color"]=Globals.self_field_color
@@ -789,64 +771,20 @@ func client_pressed_glow_kletka(glowing_kletka_number_selected_temp,pu_id):
 			klekta_captured.emit()
 			Globals.pu_id_to_current_action[char_info.pu_id]="wait"
 		"move":
-			fsm.change_state_for_pu_ud(pu_id,"Idle")
+			pass
+		"choosing_target":
 			
-			#if get_current_kletka_id_for_char_info(char_info)!=-1:
-				#print("cr-klet="+str(get_current_kletka_id_for_char_info(char_info)))
-				#
-				#var cn=connected[get_current_kletka_id_for_char_info(char_info)]
-				#print("cn= "+str(cn))
-				#for i in cn:
-					#if kletka_id_to_char_info.has(i):
-						#continue
-					#glow_array[i].visible=true
-				#pass
+			var choose_unit_on_sell_data = get_base_fsm_data_for_pu_id(pu_id)
 			
-			var mounted=false
-			if check_if_kletka_has_mount(glowing_kletka_number_selected):
-				print("kletka has mount")
-				if check_if_char_info_can_ride_mount_on_kletka_id(char_info,glowing_kletka_number_selected):
-					var answer=await await_choose_between_two_from_pu_id(
-						char_info.pu_id,
-						"ENTER_MOUNT_QUESTION",
-						"ENTER_MOUNT_QUESTION_AGREEMENT",
-						"ENTER_MOUNT_QUESTION_DISAGREEMENT"
-						)
-					if answer=="ENTER_MOUNT_QUESTION_AGREEMENT":
-						mounted=true
-				else:
-					print("player cant ride this mount")
-						
-						
-			#if not mounted:
-			if char_info.get_node().additional_moves>=1 or get_current_kletka_id_for_char_info(char_info)==-1:
-				players_handler.reduce_additional_moves_for_char_info(char_info)
-			else:
-				reduce_one_action_point_for_pu_id(char_info.pu_id,-1,"movement")
-			#move_player_from_kletka_id1_to_id2(Globals.self_peer_id,get_current_kletka_id(),glowing_kletka_number_selected)
-			move_player_from_kletka_id1_to_id2(
-				char_info,
-				get_current_kletka_id_for_char_info(char_info),
-				glowing_kletka_number_selected
-			)
-			await player_moved
-			if mounted:
-				sit_char_info_on_mount_on_kletka_id(
-					char_info.to_dictionary(),
-					glowing_kletka_number_selected
-				)
-			#get_current_kletka_id()=glowing_kletka_number_selected
-		"attack":
-			var attack_data=get_base_fsm_data_for_pu_id(pu_id)
-			attack_data.merge(
+			choose_unit_on_sell_data.merge(
 				{
-					"kletka_id_selected":glowing_kletka_number_selected,
+					"kletka_id_to_choose_unit_on":glowing_kletka_number_selected,
 					"damage_type":Globals.unit_uniq_id_to_damage_type[char_info.get_uniq_id()]
 				}
 			)
-			fsm.change_state_for_pu_ud(pu_id,"Attacking",attack_data)
 			
-			players_handler.unit_uniq_id_player_game_stat_info[char_info.get_uniq_id()]["attacked_this_turn"]+=1
+			fsm.change_state_for_pu_ud(pu_id,"ChoosingUnitOnCell",choose_unit_on_sell_data)
+			
 		"choose_allie":
 			var char_infffo=await await_choose_char_info_on_kletka_id_from_client(char_info.pu_id,glowing_kletka_number_selected)
 			
@@ -1113,7 +1051,7 @@ func choose_char_info_on_kletka_id(kletka_id:int,mounts_only=false,playable_only
 
 	hide_all_gui_windows("char_choose_on_kletka")
 
-	rpc_id(1,"send_choose_char_info_on_kletka_id_to_server",char_info_out.to_dictionary())
+	#rpc_id(1,"send_choose_char_info_on_kletka_id_to_server",char_info_out.to_dictionary())
 	return char_info_out
 
 
@@ -1376,7 +1314,7 @@ func await_dice_including_rerolls(type:String,can_reroll:bool,rerolls:int)->Dict
 		#else:
 		#	rpc_id(1,"send_dice_roll_to_server",result)
 		#	return result
-	rpc_id(1,"send_dice_roll_to_server",result)
+	#rpc_id(1,"send_dice_roll_to_server",result)
 	return result
 
 func can_char_info_reroll_dice_for_type(char_info:CharInfo,type:String)->bool:
@@ -1487,9 +1425,59 @@ func increase_dice_result_to_action_name_with_buffs_for_char_info(char_info:Char
 					
 	pass
 
-@rpc("any_peer","reliable","call_local")
-func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:String="Physical",consume_action_point:bool=true,phantasm_config={}):
+func can_char_info_evade_defence_parry_against_char_info(defender_char_info:CharInfo,attacker_char_info:CharInfo,attack_type:String)->Dictionary:
+	
+	var defender_node=defender_char_info.get_node()
+	
+	var can_evade=defender_node.can_evade
+	var can_defence=defender_node.can_defence
+	
+	#checking parry
+	var can_parry=defender_node.can_parry
+	
+	if can_parry:
+		var defender_atk_range=players_handler.get_char_info_attack_range(defender_char_info)
+		var distance_between_enemie=get_path_in_n_steps(
+			get_current_kletka_id_for_char_info(defender_char_info),
+			get_current_kletka_id_for_char_info(attacker_char_info),
+			defender_atk_range
+		).size()
+		
+		var magic_distance_between_enemie=-1
+		if players_handler.get_char_info_magical_attack(defender_char_info):
+			magic_distance_between_enemie=get_path_in_n_steps(
+				get_current_kletka_id_for_char_info(defender_char_info),
+				get_current_kletka_id_for_char_info(attacker_char_info),
+				3
+			).size()
+		
+		var parry_option=""
+		
+		if distance_between_enemie!=0:
+			if distance_between_enemie > magic_distance_between_enemie:
+				parry_option = players_handler.DAMAGE_TYPE.PHYSICAL
+			
+			if magic_distance_between_enemie > distance_between_enemie:
+				parry_option = players_handler.DAMAGE_TYPE.MAGICAL
+			
+			if distance_between_enemie == magic_distance_between_enemie:
+				parry_option = "all"
+			
+		if attack_type != "Phantasm" or parry_option=="" or not can_parry:
+			can_parry=false
+	
+	
+	return {"can_parry":can_parry,"can_defence":can_defence,"can_evade":can_evade}
+
+
+func pu_id_attack_player_on_kletka_id(pu_id:String, kletka_id:int, data={}):
 	if not multiplayer.is_server(): return
+	
+	var damage_type:String = data.get("damage_type","Physical")
+	var consume_action_point:bool = data.get("consume_action_point",true)
+	var phantasm_config = data.get("phantasm_config",{})
+	
+	
 	
 	var attacker_char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
 	
@@ -1517,11 +1505,20 @@ func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:Str
 		return "ERROR"
 	
 	
-	var attack_responce=attack_response_from_charinfo_uniq_to_charinfo_iniq[defender_char_info.get_uniq_id()][attacker_peer_id.get_uniq_id()]
+	if damage_type=="Physical" and attacker_char_info.get_node().attack_range<=2:# and attack_responce_string!="parried":
+		move_player_from_kletka_id1_to_id2(
+			attacker_char_info,
+			get_current_kletka_id_for_char_info(attacker_char_info),
+			kletka_id,
+			true
+		)
 	
-	var parry_count_max=0
+	#var attack_responce=attack_response_from_charinfo_uniq_to_charinfo_iniq[defender_char_info.get_uniq_id()][attacker_peer_id.get_uniq_id()]
+	var attack_responce=data.get("attack_responce")
+	
+	
 	#if regular attack
-	if attack_type==players_handler.DAMAGE_TYPE.PHYSICAL or attack_type==players_handler.DAMAGE_TYPE.MAGICAL:
+	if damage_type==players_handler.DAMAGE_TYPE.PHYSICAL or damage_type==players_handler.DAMAGE_TYPE.MAGICAL:
 		if attack_responce!="parried":
 			rpc_id(
 				attacker_peer_id,
@@ -1535,8 +1532,8 @@ func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:Str
 			
 			confirm_action_data.merge(
 				{
-					"why":"attack_start_no_parry",
-					"text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"
+					"action":"attack_start_no_parry",
+					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"
 				}
 			)
 			
@@ -1551,8 +1548,7 @@ func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:Str
 				fsm.change_state_for_pu_ud(pu_id,"Idle",get_base_fsm_data_for_pu_id(pu_id))
 				
 				return
-			parry_count_max=players_handler.get_char_info_agility_rank(attacker_char_info)
-			parry_count_max=players_handler.get_agility_in_numbers(parry_count_max)
+			
 		#else:
 			#rpc_id(
 				#attacker_peer_id,
@@ -1574,31 +1570,48 @@ func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:Str
 		
 		
 		var dice_roll_data=get_base_fsm_data_for_pu_id(pu_id)
-			
+		dice_roll_data.merge(data)
+		
 		dice_roll_data.merge(
 			{
 				"action_name":"Attack",
 				"can_reroll":can_char_info_reroll_dice_for_type(attacker_char_info,"Attack"),
 				"reroll_amount":get_char_info_rerolls_amount_for_type(attacker_char_info,"Attack"),
+				
+				"action_after_dice_roll":"attack_after_attacker_dice_roll",
+				
+				"attacker_char_info_dic":attacker_char_info.to_dictionary(),
+				"defender_char_info_dic":defender_char_info.to_dictionary(),
+				"damage_type":damage_type
 			}
 		)
+		
+		
 		
 		fsm.change_state_for_pu_ud(pu_id,"DiceRoll",dice_roll_data)
 		
-		await await_dice_roll_including_rerolls_from_char_info(attacker_char_info,"Attack")
-		
-		char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()] = await got_dice_from_client
-		
-		players_handler.rpc("add_to_advanced_logs",
-			"ADVANCED_LOG_SHOWING_ATTACKER_ROLL",
-			{
-				"attacker_roll":char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()]
-			}
-		)
-		
-		#rpc_id(attacker_peer_id,"show_gui_depends_on_situation","hide_you_were_attacked")
+func attack_after_attacker_dice_roll(data={}):
+	
+	var attacker_char_info:CharInfo = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
+	var defender_char_info:CharInfo = CharInfo.from_dictionary(data.get("defender_char_info_dic"))
+	var attacker_dice_roll = data.get("dice_roll_result")
+	var damage_type = data.get("damage_type")
+	
+	char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()] = attacker_dice_roll
+	
+	players_handler.rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_SHOWING_ATTACKER_ROLL",
+		{
+			"attacker_roll":char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()]
+		}
+	)
+	
+	#rpc_id(attacker_peer_id,"show_gui_depends_on_situation","hide_you_were_attacked")
 		
 	
+	var parry_count_max=0
+	parry_count_max=players_handler.get_char_info_agility_rank(attacker_char_info)
+	parry_count_max=players_handler.get_agility_in_numbers(parry_count_max)
 	increase_dice_result_to_action_name_with_buffs_for_char_info(attacker_char_info,"Attack")
 	
 	
@@ -1614,77 +1627,429 @@ func pu_id_attack_player_on_kletka_id(pu_id:String,kletka_id:int,attack_type:Str
 	
 	var attacker_dices = char_uniq_id_to_dice_roll_result[attacker_char_info.get_uniq_id()]
 	
+	
+	
+	
+	var can_char_info=can_char_info_evade_defence_parry_against_char_info(defender_char_info,attacker_char_info,damage_type)
+	
+	var can_parry = can_char_info["can_parry"]
+	var can_defence = can_char_info["can_defence"]
+	var can_evade = can_char_info["can_evade"]
+	
+	
+	var all_actions_blocked=not can_parry and not can_evade and not can_defence
+	if all_actions_blocked:
+		calculating_damage_after_attack_ended(
+			{
+				"defender_char_info":defender_char_info,
+				"attacker_char_info":attacker_char_info,
+				"damage_type":damage_type
+			}
+		)
+		return
+	
 	var defending_date=get_base_fsm_data_for_pu_id(defender_pu_id)
-	
-	
-	
-	
-	var defender_node=defender_char_info.get_node()
-	
-	#should be automatically sync by multiplayersync thing
-	#var can_evade=defender_node.can_evade
-	#var can_defence=defender_node.can_defence
-	
-	
-	
-	#checking parry
-	var can_parry=defender_node.can_parry
-	if can_parry:
-		var atk_rng=players_handler.get_char_info_attack_range(defender_char_info)
-		var attacker_kletka_id=char_info_to_kletka_number(attacker_char_info)
-		var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(
-			atk_rng,
-			get_current_kletka_id_for_char_info(defender_char_info)
-			)
-		can_parry = attacker_kletka_id in kletki_with_players
-		
 	defending_date.merge(
 		{
 			"attacker_char_info_dic":attacker_char_info.to_dictionary(),
 			"defender_char_info_dic":defender_char_info.to_dictionary(),
 			"attacker_dices":attacker_dices,
-			"defender_can_parry":can_parry
+			"defender_can_parry":can_parry,
+			"defender_can_defence":can_defence,
+			"defender_can_evade":can_evade,
+			"parry_count_max":parry_count_max
 		}
 	)
 	
 	fsm.change_state_for_pu_ud(defender_pu_id,"Defending",defending_date)
 	
 
+func parry_rolled(data={}):
+	
+	var attacker_char_info:CharInfo = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
+	var defender_char_info:CharInfo = CharInfo.from_dictionary(data.get("defender_char_info_dic"))
+	var defender_dices = data.get("dice_roll_result")
+	var attacker_dices = data.get("attacker_dices")
+	var damage_type = data.get("damage_type")
+	
+	#var attacked_by_peer_id=Globals.pu_id_player_info[attacker_char_info.pu_id].current_peer_id
+	increase_dice_result_to_action_name_with_buffs_for_char_info(defender_char_info,"Parry")
+
+
+	#if rolled+-1==recieved
+	if defender_dices["main_dice"]==attacker_dices["main_dice"]+1 or \
+	defender_dices["main_dice"]==attacker_dices["main_dice"]-1 or \
+	defender_dices["main_dice"]==attacker_dices["main_dice"]:
+		print("parried")
+		var responce_data = get_base_fsm_data_for_pu_id(attacker_char_info.pu_id)
+		responce_data["defender_char_info_dic"]=defender_char_info.to_dictionary()
+		responce_data["attack_responce"]="evaded"
+			
+		fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
+		#rpc_id(attacked_by_peer_id,"answer_attack","parried")
+		#attack_answered.emit()
+		rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," parried"))
+		return
+	print("dont parried")
+	
+	
+	
+	rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," got hit"))
+	
+	calculating_damage_after_attack_ended(
+		{
+			"defender_char_info":defender_char_info,
+			"attacker_char_info":attacker_char_info,
+			"damage_type":damage_type
+		}
+	)
+	
+	#var damage_to_take=players_handler.calculate_damage_to_take(attacker_char_info,attacker_dices,damage_type)
+	
+			
+		
+		
+
+	#dices_main_VBoxContainer.visible=false
+
+
+func evade_pressed(data={}):
+	
+	var dice_roll_result = data.get("dice_roll_result")
+	var attacker_dices = data.get("attacker_dices")
+	var defender_char_info = CharInfo.from_dictionary(data.get("defender_char_info_dic"))
+	var attacker_char_info = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
+	var damage_type = data.get("damage_type")
+	
+	players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_ATTEMPT_EVADING")
+	#print("\n\n_on_evade_button_pressed   dice_roll_result_list= ",dice_roll_result," recieved_dice_roll_result=",attacker_dices)
+	
+	#print("\n\n_on_evade_button_pressed  2 dice_roll_result_list= ",dice_roll_result_list," recieved_dice_roll_result=",recieved_dice_roll_result)
+	
+	increase_dice_result_to_action_name_with_buffs_for_char_info(defender_char_info,"Evade")
+	
+	var enemy_agility=players_handler.get_char_info_agility_rank(attacker_dices)
+	var self_agility=players_handler.get_char_info_agility_rank(defender_char_info)
+	var agility_bonus=calculate_agility_bonus(self_agility,enemy_agility)
+	var counter_attack=false
+	counter_attack = dice_roll_result["main_dice"]==dice_roll_result["crit_dice"]
+	print("counter attack=",counter_attack," (",dice_roll_result["main_dice"],"==",dice_roll_result["crit_dice"],") ?")
+
+	players_handler.rpc("add_to_advanced_logs",
+	"ADVANCED_LOG_COUNTER_ATTACK_CHECHKING",
+		{
+			"counter_attack_flag":counter_attack,
+			"main_dice_roll":dice_roll_result["main_dice"],
+			"crit_dice_roll":dice_roll_result["crit_dice"]
+		}
+	)
+
+	#dice_roll_result_list
+	#recieved_dice_roll_result
+	#var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
+	var enemy_has_ignore_evade=players_handler.char_info_has_active_buff(attacker_char_info,"Ignore Evade")
+
+	if enemy_has_ignore_evade:
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK",
+			{"ignore_evade_buff":enemy_has_ignore_evade}
+		)
+
+	var dice_with_agility_bonus=min(6,dice_roll_result["main_dice"]+agility_bonus)
+
+
+	players_handler.rpc("add_to_advanced_logs",
+		"ADVANCED_LOG_AGILITY_DIFFERENCE_SHOW",
+		{
+			"self_agility":self_agility,
+			"enemy_agility":enemy_agility,
+			"agility_bonus":agility_bonus
+
+		}
+	)
+	
+	var responce_data = get_base_fsm_data_for_pu_id(attacker_char_info.pu_id)
+	responce_data["defender_char_info_dic"]=defender_char_info.to_dictionary()
+	responce_data.merge(data)
+	
+	
+	
+	if dice_with_agility_bonus>attacker_dices["main_dice"] and not enemy_has_ignore_evade:
+		responce_data["attack_responce"]="evaded"
+		#rpc_id(attacked_by_peer_id,"answer_attack","evaded")
+
+		rpc("systemlog_message",str("{self_name} evaded by throwing {dice_result} agility_bonus={agility_bonus}").format({
+				"self_name":get_char_info_nick(defender_char_info),
+				"dice_result":dice_roll_result["main_dice"],
+				"agility_bonus":agility_bonus
+			})
+			)
+		players_handler.rpc("add_to_advanced_logs",
+			"ADVANCED_LOG_USER_EVADED_ATTACK",
+			{
+				"self_name":get_char_info_nick(defender_char_info),
+				"dice_result":dice_roll_result["main_dice"],
+				"agility_bonus":agility_bonus
+			}
+		)
+	elif dice_with_agility_bonus==attacker_dices["main_dice"] and not enemy_has_ignore_evade:
+		var damage_to_take=players_handler.calculate_damage_to_take(attacker_char_info,attacker_dices,damage_type,"Halfed Damage")
+		if typeof(damage_to_take)==TYPE_STRING:
+			if damage_to_take=="evaded":
+				#rpc_id(attacked_by_peer_id,"answer_attack","evaded")
+				responce_data["attack_responce"]="evaded"
+				rpc("systemlog_message",str(defender_char_info," evaded by buff"))
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
+					{
+						"self_name":get_char_info_nick(defender_char_info)
+					}
+				)
+		else:
+			responce_data["attack_responce"]="Halfed Damage"
+			#rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
+			#attack_answered.emit()
+			if damage_to_take==0:
+				rpc("remove_invinsibility_after_hit_for_pu_id",defender_char_info)
+			rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," halfed damage by throwing ",dice_roll_result["main_dice"]))
+			#print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info=",attacked_by_char_info.to_dictionary())
+			players_handler.take_damage_to_char_info(defender_char_info.to_dictionary(),damage_to_take,true,attacker_char_info.to_dictionary())
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+	else:
+		var damage_to_take=players_handler.calculate_damage_to_take(attacker_char_info,attacker_dices,damage_type)
+		
+		if typeof(damage_to_take)==TYPE_STRING:
+			if damage_to_take=="evaded":
+				responce_data["attack_responce"]="evaded"
+				rpc("systemlog_message",str(defender_char_info," evaded by buff"))
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
+					{
+						"self_name":get_char_info_nick(defender_char_info)
+					}
+				)
+		else:
+			responce_data["attack_responce"]="damaged"
+			#rpc_id(attacked_by_peer_id,"answer_attack","damaged")
+			#attack_answered.emit()
+			if damage_to_take==0:
+				rpc("remove_invinsibility_after_hit_for_char_info",defender_char_info.to_dictionary())
+			#print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info=",attacked_by_char_info.to_dictionary())
+			players_handler.take_damage_to_char_info(defender_char_info.to_dictionary(),damage_to_take,true,attacker_char_info.to_dictionary())
+			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+			rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," got damaged thowing ",dice_roll_result["main_dice"]))
+	
+	
+	
+	
+	if counter_attack and defender_char_info.get_node().can_attack:
+		var atk_rng=players_handler.get_char_info_attack_range(defender_char_info)
+		var attacker_kletka_id=char_info_to_kletka_number(attacker_char_info)
+		
+		#var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_rng).size()
+
+		var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(atk_rng,get_current_kletka_id_for_char_info(defender_char_info))
+
+		print("attempting counter attack kletki_with_players=",kletki_with_players," ? attacker_kletka_id=",attacker_kletka_id)
+
+		if attacker_kletka_id in kletki_with_players:
+			
+			responce_data.merge(
+				{
+					"counter_attack_after_action":true,
+					"counter_attack_attacker_char_info_dic":defender_char_info.to_dictionary(),
+					"counter_attack_defender_char_info_dic":attacker_char_info.to_dictionary(),
+				}
+			)
+			
+			info_table_show(tr("YOU_CAN_COUNTER_ATTACK"))
+			await info_ok_button.pressed
+			fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK"))
+			
+			are_you_sure_result=await are_you_sure_signal
+			if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
+				return
+			
+			rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," counter attacking"))
+			var player_has_magic_attack=players_handler.get_char_info_magical_attack(defender_char_info)
+			var damage_type_new=players_handler.DAMAGE_TYPE.PHYSICAL
+			if player_has_magic_attack:
+				damage_type_new=await choose_between_two("Choose damage type",players_handler.DAMAGE_TYPE.PHYSICAL,players_handler.DAMAGE_TYPE.MAGICAL)
+			await attack_player_on_kletka_id(attacker_kletka_id,damage_type_new,false)
+	
+	fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
+	
+	#attack_answered.emit()
+
+
+func calculating_damage_after_attack_ended(data={}):
+	
+	
+	var defender_char_info:CharInfo = data.get("defender_char_info")
+	var attacker_char_info:CharInfo = data.get("attacker_char_info")
+	var damage_type:String = data.get("damage_type")
+	
+	var damage_to_take=players_handler.calculate_damage_to_take(
+		attacker_char_info,
+		recieved_dice_roll_result,
+		damage_type
+	)
+	
+	var responce_data = get_base_fsm_data_for_pu_id(attacker_char_info.pu_id)
+	responce_data["defender_char_info_dic"]=defender_char_info.to_dictionary()
+	responce_data.merge(data)
+	if typeof(damage_to_take)==TYPE_STRING:
+		if damage_to_take=="evaded":
+			remove_evade_buff_after_hit_for_char_info(defender_char_info.to_dictionary())
+			responce_data["attack_responce"]="evaded"
+			
+			fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
+			
+			rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," evaded by buff"))
+	else:
+		responce_data["attack_responce"]="damaged"
+		
+		if damage_to_take==0:
+			rpc("remove_invinsibility_after_hit_for_char_info",defender_char_info.to_dictionary())
+		#print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info.=",attacked_by_char_info.to_dictionary())
+		players_handler.take_damage_to_char_info(defender_char_info.to_dictionary(),damage_to_take,true,attacker_char_info.to_dictionary())
+		players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
+		
+		fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
+	
+
+	rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," got damaged thowing ",
+			char_uniq_id_to_dice_roll_result[defender_char_info.get_uniq_id()]["main_dice"]
+		)
+	)
+	pass
+
+
+func attack_responce_handle_for_char_info_from_char_info(data={}):
+	
+	var attack_responce_string:String = data.get("attack_responce")
+	var defender_char_info:CharInfo = data.get("defender_char_info")
+	var attacker_char_info:CharInfo =  data.get("attacker_char_info")
+	var damage_type:String = data.get("damage_type")
+	var parry_count_max = data.get("parry_count_max")
+	var kletka_id_selected = data.get("kletka_id_selected")
+	var consume_action_point = data.get("consume_action_point")
+	
+	var counter_attack_after_action = data.get("counter_attack_after_action",false)
+	var counter_attack_attacker_char_info:CharInfo = null
+	var counter_attack_defender_char_info:CharInfo = null
+	
+	if counter_attack_after_action:
+		print("counter_attack_after_action = data=",data)
+		counter_attack_attacker_char_info = CharInfo.from_dictionary(data.get("counter_attack_attacker_char_info_dic"))
+		counter_attack_defender_char_info = CharInfo.from_dictionary(data.get("counter_attack_defender_char_info_dic"))
+		
+	
+	var hitted=false
+	match attack_responce_string:
+		"parried":
+			players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_TAKER_PARRIED",
+				{"parry_count_max":parry_count_max}
+			)
+			parry_count_max-=1
+			if parry_count_max!=0:
+				rpc("systemlog_message",str(attacker_char_info.get_node().name," stamina left:",parry_count_max))
+				
+				var parry_data = data.duplicate()
+				parry_data["current_parry_count"] = parry_data["current_parry_count"]+1
+				
+				#await attack_player_on_kletka_id(kletka_id,damage_type)
+				await players_handler.trigger_buffs_on(attacker_char_info,"enemy parried",defender_char_info)
+				return
+			else:
+				players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY")
+		"Halfed Damage":
+			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_HALFED_DAMAGE")
+			hitted=true
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			
+			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",defender_char_info)
+			await players_handler.trigger_buffs_on(attacker_char_info,"enemy halfed damage",defender_char_info)
+		"damaged":
+			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_DIRECT_HIT")
+			hitted=true
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			#current_action="wait"
+			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",defender_char_info)
+		"defending":
+			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_DEFENDED")
+			hitted=true
+			#current_action="wait"
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"total_success_hit",1)
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",defender_char_info)
+			await players_handler.trigger_buffs_on(attacker_char_info,"enemy defended",defender_char_info)
+		"evaded":
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_EVADED")
+			#current_action="wait"
+			players_handler.change_game_stat_for_char_info(attacker_char_info.to_dictionary(),"attacked_this_turn",1)
+			await players_handler.trigger_buffs_on(attacker_char_info,"enemy evaded",defender_char_info)
+		
+
+	if hitted and damage_type!="Phantasm":
+		players_handler.charge_np_to_char_info_by_number(attacker_char_info.to_dictionary(),1)
+		players_handler.add_to_advanced_logs("ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM")
+	roll_dice_optional_label.visible=false
+	
+	if damage_type=="Physical" and players_handler.get_char_info_attack_range(attacker_char_info)<=2: 
+		move_player_from_kletka_id1_to_id2(attacker_char_info,kletka_id_selected,get_current_kletka_id_for_char_info(attacker_char_info),true)
+	
+	if damage_type!="Phantasm" or consume_action_point:
+		if players_handler.get_self_servant_node().additional_attack>=1:
+			players_handler.reduce_additional_attacks_for_char_info(attacker_char_info.to_dictionary())
+		else:
+			#print("reducing action point after attack attack_type=",attack_type," consume_action_point=",consume_action_point)
+			reduce_one_action_point_for_pu_id(attacker_char_info.pu_id,-1,"attack")
+			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
+	
+	
+	if counter_attack_after_action:
+		var counter_attack_data = {
+			"defender_char_info_dic":data.get("counter_attack_defender_char_info_dic"),
+			"kletka_id_selected":get_current_kletka_id_for_char_info(defender_char_info),
+			
+			"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK",
+			"action_after_confirming_action":"choose_damage_type_before_counter_attack",
+		
+			
+			"choose_between_two_question":"Choose damage type",
+			
+			"first_option":players_handler.DAMAGE_TYPE.PHYSICAL,
+			"second_option":players_handler.DAMAGE_TYPE.MAGICAL,
+			"first_option_action":"choosed_physical_damage_type_for_counter_attack",
+			"second_option_action":"choosed_magical_damage_type_for_counter_attack",
+		}
+		fsm.change_state_for_pu_ud(counter_attack_attacker_char_info.pu_id,"ConfirmAction",counter_attack_data)
+	
+
+
 
 func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physical",consume_action_point:bool=true,phantasm_config={}):
-	#var self_char_info:CharInfo=attacker_char_info
-	
-	
-	#rpc_id(peer_id_to_attack,"receice_dice_roll_results",dice_roll_result_list)
-	
-	#ttack_responce_string!="parried":
-	#rpc_id(peer_id_to_attack,"set_action_status",attacker_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
 
-
-	#
-
-	#else:#ignore this
-	#rpc_id(peer_id_to_attack,"set_action_status",attacker_char_info.to_dictionary(),"getting_attacked",enemy_char_info.to_dictionary(),dice_roll_result_list,attack_type,phantasm_config)
+	#set_action_status(
+			#attacker_char_info,#who
+			#"getting_attacked",#what doint
+			#enemy_char_info,#to who
+			#dice_roll_result_list,
+			#attack_type#,
+			##phantasm_config
+			#)
 	
-	set_action_status(
-			attacker_char_info,#who
-			"getting_attacked",#what doint
-			enemy_char_info,#to who
-			dice_roll_result_list,
-			attack_type#,
-			#phantasm_config
-			)
 	
-	if attack_type=="Physical" and players_handler.get_self_servant_node().attack_range<=2 and attack_responce_string!="parried":
-		move_player_from_kletka_id1_to_id2(
-			attacker_char_info,
-			get_current_kletka_id_for_char_info(attacker_char_info),
-			kletka_id,
-			true
-		)
 	
-	if attacker_char_info.pu_id != enemy_char_info.pu_id:
-		rpc_id(attacker_peer_id,"show_gui_depends_on_situation","waiting_enemie_attack_responce")
+	#if attacker_char_info.pu_id != enemy_char_info.pu_id:
+		#rpc_id(attacker_peer_id,"show_gui_depends_on_situation","waiting_enemie_attack_responce")
 		#disable_every_button()	
 		#alert_label_text(true,tr("WAITING_ENEMIE_ATTACK_RESPONCE"))
 	
@@ -1699,67 +2064,7 @@ func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physic
 		"Disconnect":
 			return "ERROR"
 
-	match attack_responce_string:
-		"parried":
-			players_handler.rpc("add_to_advanced_logs",
-				"ADVANCED_LOG_TAKER_PARRIED",
-				{"parry_count_max":parry_count_max}
-			)
-			parry_count_max-=1
-			if parry_count_max!=0:
-				current_action="wait"
-				rpc("systemlog_message",str(attacker_char_info.get_node().name," stamina left:",parry_count_max))
-				await attack_player_on_kletka_id(kletka_id,damage_type)
-				await players_handler.trigger_buffs_on(attacker_char_info,"enemy parried",enemy_char_info)
-				return
-			else:
-				players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_RUN_OUT_OF_STAMINA_FULL_PARRY")
-		"Halfed Damage":
-			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs",			"ADVANCED_LOG_TAKER_HALFED_DAMAGE")
-			hitted=true
-			current_action="wait"
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
-			
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy halfed damage",enemy_char_info)
-		"damaged":
-			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_DIRECT_HIT")
-			hitted=true
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
-			current_action="wait"
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
-		"defending":
-			#players_handler.charge_np_to_peer_id_by_number(Globals.self_peer_id,1)
-			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_DEFENDED")
-			hitted=true
-			current_action="wait"
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"total_success_hit",1)
-			players_handler.rpc("change_game_stat_for_char_info",attacker_char_info.to_dictionary(),"attacked_this_turn",1)
-			await players_handler.trigger_buffs_on(attacker_char_info,"Success Attack",enemy_char_info)
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy defended",enemy_char_info)
-		"evaded":
-			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_EVADED")
-			current_action="wait"
-			await players_handler.trigger_buffs_on(attacker_char_info,"enemy evaded",enemy_char_info)
-		
-
-	if hitted and attack_type!="Phantasm":
-		players_handler.rpc("charge_np_to_char_info_by_number",attacker_char_info.to_dictionary(),1)
-		players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_CHARGING_PHANTASM")
-	roll_dice_optional_label.visible=false
-	if attack_type=="Physical" and players_handler.get_char_info_attack_range(attacker_char_info)<=2: 
-		rpc("move_player_from_kletka_id1_to_id2",attacker_char_info,kletka_id,get_current_kletka_id(),true)
-	if attack_type!="Phantasm" or consume_action_point:
-		if players_handler.get_self_servant_node().additional_attack>=1:
-			players_handler.rpc("reduce_additional_attacks_for_char_info",attacker_char_info.to_dictionary())
-		else:
-			print("reducing action point after attack attack_type=",attack_type," consume_action_point=",consume_action_point)
-			reduce_one_action_point(-1,"attack")
-			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
+	
 
 	dices_main_VBoxContainer.visible=false
 	if players_handler.current_player_pu_id_turn==Globals.self_pu_id:
@@ -1767,20 +2072,22 @@ func attack_player_on_kletka_id(attacker_char_info,kletka_id,attack_type="Physic
 		end_turn_button.disabled=false
 	alert_label_text(false)
 	
-	if attack_type != "Phantasm":
-		players_handler.rpc("finish_attack",get_current_self_char_info().to_dictionary())
 	
-	return enemy_char_info
+	#this was for counter attack
+	#if attack_type != "Phantasm":
+	#	players_handler.rpc("finish_attack",get_current_self_char_info().to_dictionary())
+	
+	#return enemy_char_info
 	
 	
 
 func get_char_info_from_node_name(unit_name:String)->CharInfo:
 	
 	var serv_nod#=players_handler.get_self_servant_node(unit_name)
-	for kletka_id in occupied_kletki:
-		for node in occupied_kletki[kletka_id]:
-			if node.name==unit_name:
-				serv_nod=node
+	for kletka_id in kletka_id_to_char_info:
+		for char_info in kletka_id_to_char_info[kletka_id]:
+			serv_nod = char_info.get_node()
+			if serv_nod.name==unit_name:
 				break
 
 
@@ -1795,11 +2102,11 @@ func get_current_char_info_for_pu_id(pu_id)->CharInfo:
 
 	#if char_info_attacked!=null:
 	#	return char_info_attacked
-	var pu_idd=Globadls.self_pu_iddd
+	#var pu_id=Globadls.self_pu_iddd
 	#var nnode=Globals.pu_id_player_info[pu_idd]["units"][current_unit_id]
 
 	var current_unit_id = Globals.pu_id_player_info[pu_id]["current_unit_id"]
-	var rett_value=CharInfo.new(pu_idd,current_unit_id)
+	var rett_value=CharInfo.new(pu_id,current_unit_id)
 
 	return rett_value
 
@@ -1807,8 +2114,10 @@ func get_current_char_info_for_pu_id(pu_id)->CharInfo:
 func roll_a_dice():
 	
 	randomize()
-
-	var set_dices=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Faceless Moon")
+	var dice_roll_result_list:Dictionary={"main_dice":0,"crit_dice":0,"defence_dice":0,"additional_d6":0,"additional_d6_2":0,"additional_d100":0}
+	
+	#var set_dices=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Faceless Moon")
+	var set_dices=false
 	if set_dices:
 		dice_roll_result_list=set_dices.get("Dices",{})
 	
@@ -1859,48 +2168,17 @@ func set_action_status(char_info_setting_status:CharInfo,status:String,char_info
 		self_unit_hit = true
 	var attacked_by_peer_id=Globals.pu_id_player_info[char_info_setting_status.pu_id].current_peer_id
 	
-	recieved_damage_type=attack_type
-	recieved_phantasm_config=phantasm_config
+	#recieved_damage_type=attack_type
+	#recieved_phantasm_config=phantasm_config
 	
-	print(str("status=",status," attacked_by_char_info=",attacked_by_char_info))
+	#print(str("status=",status," attacked_by_char_info=",attacked_by_char_info))
 	match status:
 		"getting_attacked":
-			
-			var atk_range=players_handler.get_char_info_attack_range(by_whom_char_info)
-
-			
-			print_debug("parry distance_between_enemie get_current_kletka_id()=",get_current_kletka_id()," attacker_kletka_id=",attacker_kletka_id)
-
-			var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_range).size()
-			print_debug("parry atk_range=",atk_range," distance_between_enemie=",distance_between_enemie)
-			if attack_type=="Phantasm" or distance_between_enemie==0: #distance_between_enemie>atk_range:
-				you_were_attacked_parry_option_button.disabled=true
-			else: 
-				you_were_attacked_parry_option_button.disabled=false
-			
-			you_were_attacked_parry_option_button.disabled   = not can_parry
-			you_were_attacked_evade_option_button.disabled   = not can_evade
-			you_were_attacked_def_option_button.disabled = not can_defence
-
-			var all_actions_blocked=you_were_attacked_parry_option_button.disabled and \
-			you_were_attacked_evade_option_button.disabled and \
-			you_were_attacked_def_option_button.disabled
-
-			if all_actions_blocked:
-				var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
-				rpc_id(attacked_by_peer_id,"answer_attack","damaged")
-				if damage_to_take==0:
-					rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
-				print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take," by_whom_char_info_dic=",by_whom_char_info_dic)
-				players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take,true,by_whom_char_info_dic)
-				players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
-				rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
-				return
-
-			you_were_attacked_container.visible=true
+			pass
 			#await attack_answered
 		"parrying":
-			await _on_parry_button_pressed()
+			#await _on_parry_button_pressed()
+			pass
 			#await attack_answered
 		"roll_dice_for_result":
 			roll_dice_optional_label.text=tr("ROLL_DICE_FOR_RESULT_STATEMENT").format(
@@ -1927,8 +2205,6 @@ func set_action_status(char_info_setting_status:CharInfo,status:String,char_info
 
 
 func get_char_info_nick(char_info:CharInfo)->String:
-
-
 	return char_info.get_node().name
 
 
@@ -1976,168 +2252,7 @@ func calculate_agility_bonus(self_agility_rank: String, attacker_agility_rank: S
 
 
 func _on_evade_button_pressed():
-	you_were_attacked_container.visible=false
-	fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE"))
-	var are_you_sure_result=await are_you_sure_signal
-	if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
-		you_were_attacked_container.visible=true
-		return
-	
-	players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_TAKER_ATTEMPT_EVADING")
-
-	print("\n\n_on_evade_button_pressed   dice_roll_result_list= ",dice_roll_result_list," recieved_dice_roll_result=",recieved_dice_roll_result)
-	dice_roll_result_list=await await_dice_including_rerolls("Evade")
-	
-	print("\n\n_on_evade_button_pressed  2 dice_roll_result_list= ",dice_roll_result_list," recieved_dice_roll_result=",recieved_dice_roll_result)
-	
-	
-	
-	increase_dice_result_to_action_name_with_buffs_for_char_info("Evade")
-
-	#
-	var enemy_agility=players_handler.get_char_info_agility_rank(attacked_by_char_info)
-	var self_agility=players_handler.get_char_info_agility_rank(get_current_self_char_info())
-
-	var agility_bonus=calculate_agility_bonus(self_agility,enemy_agility)
-
-	var counter_attack=false
-
-	counter_attack = dice_roll_result_list["main_dice"]==dice_roll_result_list["crit_dice"]
-
-	print("counter attack=",counter_attack," (",dice_roll_result_list["main_dice"],"==",dice_roll_result_list["crit_dice"],") ?")
-
-	players_handler.rpc("add_to_advanced_logs",
-	"ADVANCED_LOG_COUNTER_ATTACK_CHECHKING",
-		{
-			"counter_attack_flag":counter_attack,
-			"main_dice_roll":dice_roll_result_list["main_dice"],
-			"crit_dice_roll":dice_roll_result_list["crit_dice"]
-		}
-	)
-
-	#dice_roll_result_list
-	#recieved_dice_roll_result
-	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	var enemy_has_ignore_evade=players_handler.char_info_has_active_buff(attacked_by_char_info,"Ignore Evade")
-
-	if enemy_has_ignore_evade:
-		players_handler.rpc("add_to_advanced_logs",
-			"ADVANCED_LOG_ENEMY_HAS_IGNORE_EVADE_CHECK",
-			{"ignore_evade_buff":enemy_has_ignore_evade}
-		)
-
-	var dice_with_agility_bonus=min(6,dice_roll_result_list["main_dice"]+agility_bonus)
-
-
-	players_handler.rpc("add_to_advanced_logs",
-		"ADVANCED_LOG_AGILITY_DIFFERENCE_SHOW",
-		{
-			"self_agility":self_agility,
-			"enemy_agility":enemy_agility,
-			"agility_bonus":agility_bonus
-
-		}
-	)
-
-	if dice_with_agility_bonus>recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
-		rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-		attack_answered.emit()
-		rpc("systemlog_message",str("{self_name} evaded by throwing {dice_result} agility_bonus={agility_bonus}").format({
-				"self_name":get_char_info_nick(char_info_attacked),
-				"dice_result":dice_roll_result_list["main_dice"],
-				"agility_bonus":agility_bonus
-			})
-			)
-		players_handler.rpc("add_to_advanced_logs",
-			"ADVANCED_LOG_USER_EVADED_ATTACK",
-			{
-				"self_name":get_char_info_nick(char_info_attacked),
-				"dice_result":dice_roll_result_list["main_dice"],
-				"agility_bonus":agility_bonus
-			}
-		)
-	elif dice_with_agility_bonus==recieved_dice_roll_result["main_dice"] and not enemy_has_ignore_evade:
-		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type,"Halfed Damage")
-		print("test")
-		if typeof(damage_to_take)==TYPE_STRING:
-			if damage_to_take=="evaded":
-				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-				attack_answered.emit()
-				rpc("systemlog_message",str(attacked_by_char_info," evaded by buff"))
-				players_handler.rpc("add_to_advanced_logs",
-				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
-					{
-						"self_name":attacked_by_char_info.get_node().name
-					}
-				)
-		else:
-			rpc_id(attacked_by_peer_id,"answer_attack","Halfed Damage")
-			attack_answered.emit()
-			if damage_to_take==0:
-				rpc("remove_invinsibility_after_hit_for_pu_id",char_info_attacked)
-			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," halfed damage by throwing ",dice_roll_result_list["main_dice"]))
-			print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info=",attacked_by_char_info.to_dictionary())
-			players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take,true,attacked_by_char_info.to_dictionary())
-			players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
-	else: 
-		var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
-		
-		if typeof(damage_to_take)==TYPE_STRING:
-			if damage_to_take=="evaded":
-				rpc("remove_evade_buff_after_hit_for_char_info",char_info_attacked.to_dictionary())
-				rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-				attack_answered.emit()
-				rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
-				players_handler.rpc("add_to_advanced_logs",
-				"ADVANCED_LOG_TAKER_EVADED_BY_BUFF",
-					{
-						"self_name":attacked_by_char_info.get_node().name
-					}
-				)
-		else:
-			rpc_id(attacked_by_peer_id,"answer_attack","damaged")
-			attack_answered.emit()
-			if damage_to_take==0:
-				rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
-			print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info=",attacked_by_char_info.to_dictionary())
-			players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take,true,attacked_by_char_info.to_dictionary())
-			players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
-			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
-	
-
-
-	dices_main_VBoxContainer.visible=false
-
-	var char_info_dic={}
-	while char_info_dic != attacked_by_char_info.to_dictionary():
-		char_info_dic = await attacker_finished_attack
-		print("attacker_finished_attack char_info_dic=",char_info_dic)
-	
-	if counter_attack and get_current_self_char_info().get_node().can_attack:
-		var atk_rng=players_handler.get_char_info_attack_range(char_info_attacked)
-		var attacker_kletka_id=char_info_to_kletka_number(attacked_by_char_info)
-		
-		#var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_rng).size()
-
-		var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(atk_rng)
-
-		print("attempting counter attack kletki_with_players=",kletki_with_players," ? attacker_kletka_id=",attacker_kletka_id)
-
-		if attacker_kletka_id in kletki_with_players:
-			info_table_show(tr("YOU_CAN_COUNTER_ATTACK"))
-			await info_ok_button.pressed
-			fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK"))
-			are_you_sure_result=await are_you_sure_signal
-			if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
-				return
-			systemlog_message(str(get_char_info_nick(char_info_attacked)," counter attacking"))
-			var player_has_magic_attack=players_handler.get_char_info_magical_attack(get_current_self_char_info())
-			var damage_type_new=players_handler.DAMAGE_TYPE.PHYSICAL
-			if player_has_magic_attack:
-				damage_type_new=await choose_between_two("Choose damage type",players_handler.DAMAGE_TYPE.PHYSICAL,players_handler.DAMAGE_TYPE.MAGICAL)
-			await attack_player_on_kletka_id(attacker_kletka_id,damage_type_new,false)
-	
-	attack_answered.emit()
+	pass
 
 
 @rpc("any_peer","call_local","reliable")
@@ -2215,52 +2330,7 @@ func _on_defence_button_pressed():
 
 func _on_parry_button_pressed():
 	
-	if self_action_status!="parrying":
-		you_were_attacked_container.visible=false
-		fill_are_you_sure_screen(tr("ARE_YOU_SURE_YOU_WANT_TO_ACTION_PARRY"))
-		var are_you_sure_result=await are_you_sure_signal
-		if are_you_sure_result==tr("ARE_YOU_SURE_DISAGREEMENT"):
-			you_were_attacked_container.visible=true
-			return
-		
-	await await_dice_including_rerolls("Parry")
-	var attacked_by_peer_id=Globals.pu_id_player_info[attacked_by_char_info.pu_id].current_peer_id
-	increase_dice_result_to_action_name_with_buffs_for_char_info("Parry")
-
-	you_were_attacked_container.visible=false
-	are_you_sure_main_container.visible=false
-	#if rolled+-1==recieved
-	if dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]+1 or dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]-1 or dice_roll_result_list["main_dice"]==recieved_dice_roll_result["main_dice"]:
-		print("parried")
-		rpc_id(attacked_by_peer_id,"answer_attack","parried")
-		attack_answered.emit()
-		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," parried"))
-		return
-	print("dont parried")
-	rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got hit"))
-	
-	var damage_to_take=players_handler.calculate_damage_to_take(attacked_by_char_info,recieved_dice_roll_result,recieved_damage_type)
-	
-	if typeof(damage_to_take)==TYPE_STRING:
-		if damage_to_take=="evaded":
-			rpc("remove_evade_buff_after_hit_for_char_info",char_info_attacked.to_dictionary())
-			rpc_id(attacked_by_peer_id,"answer_attack","evaded")
-			attack_answered.emit()
-			rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," evaded by buff"))
-	else:
-		rpc_id(attacked_by_peer_id,"answer_attack","damaged")
-		attack_answered.emit()
-		if damage_to_take==0:
-			rpc("remove_invinsibility_after_hit_for_char_info",char_info_attacked.to_dictionary())
-		print_debug("take_damage_to_char_info, self_pu_id=",Globals.self_pu_id," damage_to_take=",damage_to_take,"attacked_by_char_info.=",attacked_by_char_info.to_dictionary())
-		players_handler.rpc("take_damage_to_char_info",char_info_attacked.to_dictionary(),damage_to_take,true,attacked_by_char_info.to_dictionary())
-		players_handler.rpc("change_game_stat_for_char_info",attacked_by_char_info.to_dictionary(),"total_damage_dealt",damage_to_take)
-		
-		
-		
-		rpc("systemlog_message",str(get_char_info_nick(char_info_attacked)," got damaged thowing ",dice_roll_result_list["main_dice"]))
-	dices_main_VBoxContainer.visible=false
-	
+	pass
 
 
 func _on_phantasm_evation_button_pressed():
@@ -2326,7 +2396,7 @@ func inital_spawn_of_player(pu_id):
 	var kletka_to_initial_spawn=get_unoccupied_kletki()
 	
 	var move_data={
-			"char_info":get_current_char_info_for_pu_id(pu_id),
+			"char_info_dic":get_current_char_info_for_pu_id(pu_id),
 			"Current Kletka":-1,
 			"Available Kletki":kletka_to_initial_spawn,
 			"Initial Spawn":true
@@ -2402,7 +2472,9 @@ func pu_id_pressed_damage_type_button(pu_id:String,type:String):
 	
 	state_data.merge(
 		{
-			"cells_to_choose":kk
+			"cells_to_choose":kk,
+			"type":"attack",
+			"damage_type":type
 		}
 	)
 	
@@ -2706,7 +2778,7 @@ func on_move_pressed_by_pu_id(pu_id):
 		var move_ck=get_kletki_ids_available_to_move_to_for_char_info(char_info)
 
 		var move_data={
-			"char_info":char_info.to_dictionary(),
+			"char_info_dic":char_info.to_dictionary(),
 			"Current Kletka":players_handler.get_char_info_kletka_number(char_info),
 			"Available Kletki":move_ck
 		}
@@ -2810,7 +2882,7 @@ func choose_between_two(question:String,first:String,second:String)->String:
 	info_but_choose_1.pressed.disconnect(info_but_choose.bind(first))
 	info_but_choose_2.pressed.disconnect(info_but_choose.bind(second))
 
-	rpc_id(1,"send_choose_between_two_answer_to_host",out)
+	#rpc_id(1,"send_choose_between_two_answer_to_host",out)
 
 	return out
 

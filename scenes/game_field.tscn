@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=42 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" uid="uid://gac36rced45l" path="res://scripts/field_script.gd" id="1_oabkp"]
 [ext_resource type="Script" uid="uid://c40rsjvmastjp" path="res://scripts/fsm/StateMachine.gd" id="2_h561p"]
@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://plh5s6b8uffa" path="res://scripts/fsm/states/IdleState.gd" id="3_aca2m"]
 [ext_resource type="Texture2D" uid="uid://clu4wu8t87c6o" path="res://images/empty.png" id="3_jji7v"]
 [ext_resource type="Theme" uid="uid://cxyp1rji2fm4" path="res://themes/commans_spells_choose.tres" id="4_4iwbj"]
-[ext_resource type="Script" uid="uid://c1m26c8jb5j0r" path="res://scripts/fsm/states/MovingState.gd" id="4_kqtco"]
+[ext_resource type="Script" uid="uid://dewj0ok36crl5" path="res://scripts/fsm/states/MovingState.gd" id="4_kqtco"]
 [ext_resource type="Script" uid="uid://8by8gd1yjhb3" path="res://scripts/fsm/states/MoveSelectionState.gd" id="4_rn0lg"]
 [ext_resource type="Script" uid="uid://d3x8k37kydn8m" path="res://scripts/fsm/states/AttackingState.gd" id="5_rn0lg"]
 [ext_resource type="PackedScene" uid="uid://cx3m1fecta1u4" path="res://scenes/debug_character_control.tscn" id="5_wbafj"]
@@ -19,10 +19,12 @@
 [ext_resource type="Script" uid="uid://br5q7od0p5eyj" path="res://scripts/fsm/states/SpectatorState.gd" id="8_aa6mp"]
 [ext_resource type="Theme" uid="uid://u7xcmb80jvax" path="res://themes/use_skill.tres" id="8_mvgku"]
 [ext_resource type="Theme" uid="uid://bs217guh5owfx" path="res://themes/left_down_buttons.tres" id="9_2fy0y"]
+[ext_resource type="Script" uid="uid://kpghnkfwui0m" path="res://scripts/fsm/states/ChoosingUnitOnCellState.gd" id="9_mx07d"]
 [ext_resource type="Script" uid="uid://dov6n622h4t0x" path="res://scripts/fsm/states/ConfirmActionState.gd" id="10_aa6mp"]
 [ext_resource type="Theme" uid="uid://bluusd5oywrwg" path="res://themes/current_rolls.tres" id="10_rqsdo"]
 [ext_resource type="Theme" uid="uid://dtrvd4pujwke0" path="res://themes/right_down.tres" id="11_ae1m1"]
 [ext_resource type="Script" uid="uid://dwd6nslhuy7sd" path="res://scripts/fsm/states/ParryingState.gd" id="11_jd2tu"]
+[ext_resource type="Script" uid="uid://bpwfry8iow0su" path="res://scripts/fsm/ChoosingBetweenTwoState.gd" id="12_8rt8o"]
 [ext_resource type="PackedScene" uid="uid://ct6q5ory650sj" path="res://scenes/char_select.tscn" id="12_45n5i"]
 [ext_resource type="Script" uid="uid://br0e5wv48c8am" path="res://scripts/fsm/states/DiceRollState.gd" id="12_qpq1n"]
 [ext_resource type="Theme" uid="uid://crsxx03sxlctt" path="res://themes/damage_type.tres" id="13_82k3h"]
@@ -30,6 +32,8 @@
 [ext_resource type="Theme" uid="uid://dayka6ji4lppa" path="res://themes/are_you_sure.tres" id="15_2g0je"]
 [ext_resource type="PackedScene" uid="uid://y8ob0xjtra4c" path="res://scenes/dice_control.tscn" id="16_v5q7i"]
 [ext_resource type="Texture2D" uid="uid://bo53uonhe4fn2" path="res://images/jopa.png" id="17_ew0fu"]
+[ext_resource type="Script" uid="uid://b065ek3cswyco" path="res://scripts/fsm/states/GettingAttackResponceState.gd" id="17_qsyft"]
+[ext_resource type="Script" uid="uid://dxl7l0mxgmgtk" path="res://scripts/fsm/states/EvadingState.gd" id="18_jx0gt"]
 [ext_resource type="PackedScene" uid="uid://cwg832bxjw8eo" path="res://scenes/char_info_choose_scroll_container.tscn" id="18_sbdxq"]
 [ext_resource type="Script" uid="uid://6xnsppwgbmek" path="res://scripts/camera_script.gd" id="19_yftqc"]
 [ext_resource type="Script" uid="uid://bh82p2aly2rtj" path="res://scripts/players_handler.gd" id="20_mmhri"]
@@ -71,12 +75,18 @@ script = ExtResource("7_aa6mp")
 [node name="ChoosingTarget" type="Node" parent="StateMachine"]
 script = ExtResource("7_ju72t")
 
+[node name="ChoosingUnitOnCell" type="Node" parent="StateMachine"]
+script = ExtResource("9_mx07d")
+
 [node name="Defending" type="Node" parent="StateMachine"]
 script = ExtResource("6_ju72t")
 
 [node name="ConfirmAction" type="Node" parent="StateMachine"]
 unique_name_in_owner = true
 script = ExtResource("10_aa6mp")
+
+[node name="ChoosingBetweenTwo" type="Node" parent="StateMachine"]
+script = ExtResource("12_8rt8o")
 
 [node name="Parrying" type="Node" parent="StateMachine"]
 script = ExtResource("11_jd2tu")
@@ -90,6 +100,9 @@ script = ExtResource("7_xvrtx")
 [node name="Spectator" type="Node" parent="StateMachine"]
 script = ExtResource("8_aa6mp")
 
+[node name="GettingAttackResponce" type="Node" parent="StateMachine"]
+script = ExtResource("17_qsyft")
+
 [node name="UseSkill" type="Node" parent="StateMachine"]
 
 [node name="Death" type="Node" parent="StateMachine"]
@@ -98,7 +111,8 @@ script = ExtResource("8_aa6mp")
 
 [node name="InitialSpawning" type="Node" parent="StateMachine"]
 
-[node name="Node14" type="Node" parent="StateMachine"]
+[node name="Evading" type="Node" parent="StateMachine"]
+script = ExtResource("18_jx0gt")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_1bpim")
@@ -1372,10 +1386,6 @@ spawn_path = NodePath("..")
 [connection signal="pressed" from="GUI/character_selection_container/get_selected_character" to="players_handler" method="get_selected_servant"]
 [connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/regular_damage_button" to="." method="_on_regular_damage_button_pressed"]
 [connection signal="pressed" from="GUI/type_of_damage_choose_buttons_box/magical_damage_button" to="." method="_on_magical_damage_button_pressed"]
-[connection signal="pressed" from="GUI/You_were_attacked_container/you_were_attacked_options_container/YOU_WERE_ATTACKED_EVADE_OPTION_BUTTON" to="." method="_on_evade_button_pressed"]
-[connection signal="pressed" from="GUI/You_were_attacked_container/you_were_attacked_options_container/YOU_WERE_ATTACKED_DEF_OPTION_BUTTON" to="." method="_on_defence_button_pressed"]
-[connection signal="pressed" from="GUI/You_were_attacked_container/you_were_attacked_options_container/YOU_WERE_ATTACKED_PARRY_OPTION_BUTTON" to="." method="_on_parry_button_pressed"]
-[connection signal="pressed" from="GUI/You_were_attacked_container/you_were_attacked_options_container/YOU_WERE_ATTACKED_PHANTASM_OPTION_BUTTON" to="." method="_on_phantasm_evation_button_pressed"]
 [connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_sure_button" to="." method="_on_im_sure_button_pressed"]
 [connection signal="pressed" from="GUI/are_you_sure_main_container/are_you_sure_buttons_container/im_not_sure_button" to="." method="_on_im_not_sure_button_pressed"]
 [connection signal="resized" from="GUI/choose_sprite_main_VBoxContainer/choose_sprite_ScrollContainer" to="players_handler" method="_on_choose_sprite_scroll_container_resized"]

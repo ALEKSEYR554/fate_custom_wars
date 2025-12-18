@@ -2,6 +2,7 @@ class_name BattleStateMachine extends Node
 
 @export var initial_state: BattleState
 @onready var field = $".." # Ссылка на родителя (Field)
+@onready var players_handler: Node2D = %players_handler
 
 var current_state: BattleState
 
@@ -14,6 +15,7 @@ func _ready():
 		if child is BattleState:
 			child.field = field
 			child.fsm = self
+			child.players_handler=players_handler
 	
 	# Запускаем машину (только на сервере, если Host Authoritative)
 	if multiplayer.is_server():
@@ -29,6 +31,8 @@ func change_state_for_pu_ud(pu_id: String, state_name: String, data: Dictionary 
 			if data.get("Initial Spawn",false):
 				Globals.pu_id_to_current_action[pu_id]="initial_spawn"
 		"ChoosingTarget":
+			Globals.pu_id_to_current_action[pu_id]="choosing_target"
+		"Attacking":
 			Globals.pu_id_to_current_action[pu_id]="attack"
 
 	

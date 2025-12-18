@@ -6,10 +6,16 @@ func enter(_data:Dictionary={}):
 	super.enter(_data)
 	print("Entering ",self.name," State")
 	
-	var var_name=_data.get("var_name",null)
-	if var_name==null:
-		push_error("No var_name in ",self.name, "state data=",_data)
+	var parry_count_max=_data.get("parry_count_max",null)
+	if parry_count_max==null:
+		push_error("No parry_count_max in ",self.name, " state data=",_data)
 		return
+	
+	var current_parry_count=_data.get("current_parry_count",null)
+	if current_parry_count==null:
+		push_error("No current_parry_count in ",self.name, " state data=",_data)
+		return
+	
 	
 	
 func exit():
