@@ -3,6 +3,8 @@ extends Node2D
 #region Onready
 @onready var field = self.get_parent()
 
+@onready var fsm = %StateMachine
+
 @onready var host_buttons:VBoxContainer = %host_buttons
 
 @onready var file_dialog:FileDialog = $"../FileDialog"
@@ -59,7 +61,7 @@ extends Node2D
 #endregion
 const BASE_SERVANT = preload("res://scenes/base_servant.tscn")
 #region Usable Variables
-var custom_id_to_skill:Dictionary={}
+#var custom_id_to_skill:Dictionary={}
 var turns_order_by_pu_id:Array=[]
 
 var teams_by_pu_id:Array=[]
@@ -102,26 +104,24 @@ var current_users_ready:int=0
 var loaded_done_count:int=0
 var loaded_arr:Array
 
-var servant_name_to_pu_id={}
-
 var last_player_button_pressed:Button=null
 var player_in_teams_choosen_pu_id:String=""
 
-var additional_allies={}
-var additional_enemies=[]
+#var additional_allies={}
+#var additional_enemies=[]
 #endregion
 
-signal servant_loaded(char_info:Dictionary)
+#signal servant_loaded(char_info:Dictionary)
 signal everyone_loaded
 
 signal next_turn_pass
-signal chosen_allie(char_info:CharInfo)
-signal buff_removed
-signal buffs_cooldown_reduced
-signal skills_cooldown_reduced
-signal iddd_reqw(id:String)
+#signal chosen_allie(char_info:CharInfo)
+#signal buff_removed
+#signal buffs_cooldown_reduced
+#signal skills_cooldown_reduced
+#signal iddd_reqw(id:String)
 
-signal custom_choice_used(result:bool)
+#signal custom_choice_used(result:bool)
 #region CONSTANTS
 const CUSTOM_TYPES = {PHANTASM = "phantasm", POTION_CREATING = "potion creating", POTION_USING = "potion using", BUFF_CHOOSING="buff choosing"}
 const TEXTURE_SIZE:int=200
@@ -155,28 +155,6 @@ func _ready():
 	skill_info_tab_container.set_tab_title(2,"Third Skill")
 	skill_info_tab_container.set_tab_title(3,"Class Skills")
 	return
-
-@rpc("any_peer","reliable","call_local")
-func id_requested():
-	var sender_peer_id = multiplayer.get_remote_sender_id()
-	var id_to_send=Globals.uniqq_ids.pick_random()
-	Globals.uniqq_ids.erase(id_to_send)
-
-	rpc_id(sender_peer_id,"get_id",id_to_send)
-
-
-
-@rpc("authority","reliable","call_local")
-func get_id(id:String):
-
-	iddd_reqw.emit(id)
-
-func get_uniqq_id_from_host()->String:
-	
-	rpc_id(1,"id_requested")
-	var output=await iddd_reqw
-	return output
-
 
 func add_servants_translations_for_servant_name(servant_node:Node2D,servant_path:String,servant_name_just_name:String)->void:
 	var servant_folder=Globals.user_folder+"/servants/"+str(servant_path)
@@ -228,6 +206,7 @@ func _recursive_merge_descriptions(data, translations_map):
 			for item in data:
 				_recursive_merge_descriptions(item, translations_map)
 
+
 func apply_initial_weapon_buffs(player_node: Node2D) -> void:
 	for skill_name in player_node.skills:
 		var skill = player_node.skills[skill_name]
@@ -256,10 +235,6 @@ func apply_initial_weapon_buffs(player_node: Node2D) -> void:
 					player_node.buffs.append(buff)
 
 
-
-
-
-@rpc("call_local","any_peer","reliable")
 func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_summon:bool=false,summon_buff_info:Dictionary={}):
 	print("loading servant for pu_id=",pu_id)
 
@@ -447,12 +422,10 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	field.unit_uniq_id_to_kletki_ids_owned[get_id_from_hostt]=[]
 
 
-	servant_name_to_pu_id[player.name]=pu_id
 	#Globals.pu_id_player_info[pu_id]["servant_name"]=player.name
 	
-	print("servant_name_to_pu_id=",servant_name_to_pu_id)
 
-	print("emiting servant_loaded = ",pl_info.to_dictionary())
+	#print("emiting servant_loaded = ",pl_info.to_dictionary())
 
 
 	var servant_script_to_get_stats=load(Globals.user_folder+'/servants/'+player.script_path).new()
@@ -478,7 +451,7 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 
 	self.add_child(player,true)
 	await get_tree().create_timer(0.1).timeout
-	servant_loaded.emit(pl_info.to_dictionary())
+	#servant_loaded.emit(pl_info.to_dictionary())
 
 	
 	#print(rand_kletka)
@@ -486,15 +459,6 @@ func load_servant(pu_id:String,load_info:Dictionary,get_id_from_hostt:String,is_
 	#jopa.position = cord
 	#set_random_teams()
 	#return player
-
-
-
-
-func get_self_servant_node(unit_id:int=field.current_unit_id)->Node2D:
-	
-	return Globals.pu_id_player_info[Globals.self_pu_id]["units"][unit_id]
-	#push_error("no self servant found for pu_id=",Globals.self_pu_id," unit_id=",unit_id,
-	# 'Globals.pu_id_player_info[Globals.self_pu_id]["units"]=',Globals.pu_id_player_info[Globals.self_pu_id]["units"])
 
 func get_selected_servant()->void:
 	var servant_ascensions:Dictionary=char_select.get_current_servant()
@@ -585,9 +549,6 @@ func initialise_start_variables(char_info_list:Array):
 			tmp_team.erase(player)
 			Globals.pu_id_to_allies[player]["allies"].append_array(tmp_team)
 	pass
-
-
-
 
 
 @rpc("any_peer","call_local","reliable")
@@ -681,11 +642,12 @@ func start():
 #endregion
 
 #region Turns Handler
-@rpc("authority","call_local","reliable")
+
 func pass_next_turn(pu_id:String)->void:
-	if pu_id==current_player_pu_id_turn:
-		field.my_turn=false
-		next_turn_pass.emit()
+	field.fsm.change_state_for_pu_ud(pu_id,"Spectator",{})
+	#if pu_id==current_player_pu_id_turn:
+	#	field.my_turn=false
+	next_turn_pass.emit()
 		
 
 
@@ -724,7 +686,8 @@ func turns_loop() -> void:
 			rpc("update_current_player_turn",current_player_pu_id_turn)
 
 			Globals.pu_id_to_current_action[pu_id]="wait"
-			field.rpc_id(peer_id,"start_turn",pu_id)
+			#field.rpc_id(peer_id,"start_turn",pu_id)
+			field.prepare_start_turn_data_for_pu_id(pu_id)
 			await next_turn_pass
 		turns_counter+=1
 		turn_update(turns_counter)
@@ -768,15 +731,18 @@ func player_info_button_pressed(pu_id:String):
 		#servant_info_from_pu_id(peer_id)
 
 
-func choose_allie(range_to_search:int=-1)->Array:
+func get_allies_cells_ids_for_char_info(char_info:CharInfo,range_to_search:int=-1)->Array:
 	var ketki_with_allies=[]
-	for char_info in get_allies_char_info():
-		ketki_with_allies.append(field.char_info_to_kletka_number(char_info))
+	var pu_id = char_info.pu_id
+
+	for allie_char_info in get_allies_char_info_for_pu_id(pu_id):
+		ketki_with_allies.append(field.char_info_to_kletka_number(allie_char_info))
 	
 	if range_to_search<=0:
 		pass
 	else:
-		var ids_in_range:Array=field.get_kletki_ids_with_players_you_can_reach_in_steps(range_to_search)
+		var current_char_kletka = field.get_current_kletka_id_for_char_info(char_info)
+		var ids_in_range:Array=field.get_kletki_ids_with_players_you_can_reach_in_steps(range_to_search,current_char_kletka)
 		var new_array=[]
 		for kletka_id in ketki_with_allies:
 			if kletka_id in ids_in_range:
@@ -784,37 +750,40 @@ func choose_allie(range_to_search:int=-1)->Array:
 		
 		ketki_with_allies=new_array
 	
-	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
-	field.current_action="choose_allie"
-	var return_char_info:CharInfo = await chosen_allie
-	#var return_pu_id=return_char_info.pu_id
-	#var return_unit_id=return_char_info.unit_id
+	return ketki_with_allies
+	#field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
+	#field.current_action="choose_allie"
+	#var return_char_info:CharInfo = await chosen_allie
+	##var return_pu_id=return_char_info.pu_id
+	##var return_unit_id=return_char_info.unit_id
+#
+	#return [return_char_info]
 
-	return [return_char_info]
 
-
-func choose_enemie(range_to_search:int=-1)->Array:
-	var ketki_with_allies=[]
-	for char_info in get_enemies_teams_char_info():
-		ketki_with_allies.append(field.char_info_to_kletka_number(char_info))
+func get_enemies_cells_ids_for_char_info(char_info:CharInfo,range_to_search:int=-1)->Array:
+	var ketki_with_enemies=[]
+	var pu_id = char_info.pu_id
+	for enemie_char_info in get_enemies_teams_char_info():
+		ketki_with_enemies.append(field.char_info_to_kletka_number(enemie_char_info))
 	
 	if range_to_search<=0:
 		pass
 	else:
-		var ids_in_range:Array=field.get_kletki_ids_with_players_you_can_reach_in_steps(range_to_search)
+		var current_char_cell = field.get_current_kletka_id_for_char_info(char_info)
+		var ids_in_range:Array=field.get_kletki_ids_with_players_you_can_reach_in_steps(range_to_search,current_char_cell)
 		var new_array=[]
-		for kletka_id in ketki_with_allies:
+		for kletka_id in ketki_with_enemies:
 			if kletka_id in ids_in_range:
 				new_array.append(kletka_id)
 		
-		ketki_with_allies=new_array
+		ketki_with_enemies=new_array
 
-	
-	field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
-	field.current_action="choose_allie"
-	var return_char_info:CharInfo = await chosen_allie
-
-	return [return_char_info]
+	return ketki_with_enemies
+	#field.choose_glowing_cletka_by_ids_array(ketki_with_allies)
+	#field.current_action="choose_allie"
+	#var return_char_info:CharInfo = await chosen_allie
+#
+	#return [return_char_info]
 
 
 func get_item_description(item)->String:
@@ -831,7 +800,7 @@ func get_item_description(item)->String:
 	return out
 
 
-func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info())->void:
+func show_skill_info_tab(char_info:CharInfo=field.get_current_self_char_info.())->void:
 	print("=====================")
 	#var servant_skills:Dictionary=Globals.pu_id_player_info[pu_id]["servant_node"].skills
 	var servant_skills:Dictionary=char_info.get_node().skills
@@ -948,14 +917,6 @@ func servant_info_from_pu_id(pu_id:String,advanced:bool=show_buffs_advanced_way_
 		servant_info_skills_textedit.text+=display_buffs
 
 
-
-	
-
-
-
-
-
-
 func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
 	print("fill_custom_thing")
 	print("custom_items="+str(custom_items_dict))
@@ -1002,6 +963,19 @@ func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
 				
 		#print("ff\n\n")
 		print_debug("custom_item="+str(custom_item))
+
+		tt_edit.set_meta("skill_info",
+			{"min_cost":cost,
+			"Type":type,
+			"Effect":current_buff_effect,
+			"Description":get_item_description(custom_item)
+			}
+		)
+		
+		
+		
+
+		#можно хранить саму дату умения в set_meta чтобы без переменной глобальной было
 		custom_id_to_skill[custom_item_name]={"min_cost":cost,
 		"Type":type,"Effect":current_buff_effect,"Description":get_item_description(custom_item)}
 		print_debug(str("custom_id_to_skill=",custom_id_to_skill))
@@ -1010,12 +984,13 @@ func fill_custom_thing(custom_items_dict:Dictionary,type="")->void:
 
 func _on_custom_choices_tab_container_tab_changed(tab)->void:
 	#return
-	
+	var tab_node = custom_choices_tab_container.get_tab_control(tab)
+	var custom_id_to_skill = tab_node.get_meta("skill_info")
 	#JUST IN CASE
 	if custom_id_to_skill=={}: return
 	use_custom_button.disabled=false
 	
-	var costt=custom_id_to_skill[custom_choices_tab_container.get_tab_control(tab).name]["min_cost"]
+	var costt=custom_id_to_skill[tab_node.name]["min_cost"]
 	match costt["Type"]:
 		"NP":
 			use_custom_label.text="Cost: "+str(costt["value"]," ",costt["Type"])
@@ -1026,7 +1001,10 @@ func _on_custom_choices_tab_container_tab_changed(tab)->void:
 
 func _on_use_custom_button_pressed()->void:
 	#print(custom_id_to_skill[custom_choices_tab_container.current_tab])
-	var custom_id=custom_choices_tab_container.get_current_tab_control().name
+	var tab_node = custom_choices_tab_container.get_current_tab_control()
+	var custom_id_to_skill = tab_node.get_meta("skill_info")
+
+	var custom_id=tab_node.name
 	custom_choices_tab_container.visible=false
 	use_custom_but_label_container.visible=false
 	field.hide_all_gui_windows("use_custom")
@@ -1039,7 +1017,7 @@ func _on_use_custom_button_pressed()->void:
 		CUSTOM_TYPES.POTION_CREATING:
 			var dict={custom_id:custom_id_to_skill[custom_id]}
 			#dict.merge(custom_id_to_skill[custom_id])
-			rpc("add_item_to_char_info",field.get_current_self_char_info().to_dictionary(),dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
+			rpc("add_item_to_char_info",field.get_current_self_char_info.().to_dictionary(),dict,custom_id) #{"Name":custom_id,"Effect":custom_id_to_skill[custom_id]["Effect"],"range":custom_id_to_skill[custom_id]["range"]})
 			field.reduce_one_action_point(0)
 			#rpc("use_skill",custom_id_to_skill[custom_id]["Effect"])
 		CUSTOM_TYPES.BUFF_CHOOSING:
@@ -1058,9 +1036,6 @@ func _on_use_custom_button_pressed()->void:
 				await field.sleep(0.1)
 				custom_choice_used.emit(result)
 	
-	
-
-@rpc("any_peer","call_local","reliable")
 func add_item_to_char_info(char_info_dic:Dictionary,item:Dictionary,item_name:String)->void:
 	var char_info=CharInfo.from_dictionary(char_info_dic)
 
@@ -1077,7 +1052,7 @@ func add_item_to_char_info(char_info_dic:Dictionary,item:Dictionary,item_name:St
 	#var new_dict_to_append={new_item_name:item[item_name]}
 	unit_unique_id_to_items_owned[char_info.get_uniq_id()][new_item_name]=item[item_name]
 
-@rpc("any_peer","call_local","reliable")
+
 func change_game_stat_for_char_info(char_info_dic:Dictionary,stat:String,value_to_add:int,reset:bool=false)->void:
 
 	var char_info=CharInfo.from_dictionary(char_info_dic)
@@ -1175,7 +1150,7 @@ func get_current_time()->String:
 		return "Day"
 	#return ""
 
-func check_condition_wrapper(condition:Dictionary):
+func check_condition_wrapper_for_char_info(condition:Dictionary,char_info:CharInfo):
 	var who_to_check=condition.get("Who To Check","")
 	var what_to_check=condition.get("What To Check","")
 	var bigger=condition.get("Bigger Than",null)
@@ -1187,12 +1162,12 @@ func check_condition_wrapper(condition:Dictionary):
 		return false
 	
 	#var pu_id_to_check:Array
-	var char_info_to_check:Array
+	var char_infos_to_check:Array
 	match who_to_check:
 		"Enemie":
-			char_info_to_check=get_enemies_teams()
+			char_infos_to_check=get_enemies_teams_for_char_info(char_info)
 		"Self":
-			char_info_to_check=[field.get_current_self_char_info()]
+			char_infos_to_check=[char_info]
 		
 	rpc("add_to_advanced_logs",
 		"ADVANCED_LOG_BUFF_CONDITION_WHO_TO_CHECK",
@@ -1200,26 +1175,26 @@ func check_condition_wrapper(condition:Dictionary):
 	)
 
 	var condition_check=false
-	for char_info in char_info_to_check:
+	for char_info_to_check in char_infos_to_check:
 		#var pu_id_node=Globals.pu_id_player_info[pu_id]["servant_node"]
-		var char_info_node=char_info.get_node()
+		var char_info_node=char_info_to_check.get_node()
 		var stat_to_check
 		match what_to_check:
 			"Magic Power":
 				#stat_to_check=peer_node.magic["Power"]
-				stat_to_check=get_char_info_magical_attack(char_info)
+				stat_to_check=get_char_info_magical_attack(char_info_to_check)
 			"Magic Resistance":
 				#stat_to_check=peer_node.magic["Resistance"]
-				stat_to_check=get_char_info_magical_defence(char_info)
+				stat_to_check=get_char_info_magical_defence(char_info_to_check)
 			"Magic Rank":
 				stat_to_check=char_info_node.magic["Rank"]
 			"Attack Power":
-				stat_to_check=get_char_info_attack_power(char_info)
+				stat_to_check=get_char_info_attack_power(char_info_to_check)
 			"Trait":
-				var traits=get_char_info_traits(char_info)
+				var traits=get_char_info_traits(char_info_to_check)
 				return intersect(traits,exact)
 			"Attack Range":
-				stat_to_check=get_char_info_attack_range(char_info)
+				stat_to_check=get_char_info_attack_range(char_info_to_check)
 			"Attribute":
 				stat_to_check=char_info_node.attribute
 			"Ideology":
@@ -1229,26 +1204,26 @@ func check_condition_wrapper(condition:Dictionary):
 				return intersect(ideology,exact)
 				
 			"Class":
-				var ser_class=get_char_info_class(char_info)
+				var ser_class=get_char_info_class(char_info_to_check)
 				if typeof(exact)!=TYPE_STRING:
 					continue
 				return exact==ser_class
 			"HP":
 				stat_to_check=char_info_node.hp
 			"Gender":
-				stat_to_check=get_char_info_gender(char_info)
+				stat_to_check=get_char_info_gender(char_info_to_check)
 			"Ascension Stage":
-				stat_to_check=char_info.get_node().ascension_stage
+				stat_to_check=char_info_to_check.get_node().ascension_stage
 			"Strength":
-				stat_to_check=get_char_info_strength(char_info)
+				stat_to_check=get_char_info_strength(char_info_to_check)
 			"Agility":
-				stat_to_check=get_char_info_agility_rank(char_info)
+				stat_to_check=get_char_info_agility_rank(char_info_to_check)
 			"Endurance":
-				stat_to_check=get_char_info_endurance(char_info)
+				stat_to_check=get_char_info_endurance(char_info_to_check)
 			"Luck":
-				stat_to_check=get_char_info_luck(char_info)
+				stat_to_check=get_char_info_luck(char_info_to_check)
 			"Buff Name":
-				if char_info_has_active_buff(char_info,exact):
+				if char_info_has_active_buff(char_info_to_check,exact):
 					rpc("add_to_advanced_logs",
 						"ADVANCED_LOG_BUFF_CONDITION_CHECK_BUFF_NAME",
 						{"buff":exact}
@@ -1580,13 +1555,8 @@ func get_char_info_luck(char_info:CharInfo)->String:
 
 #endregion
 
-
-
-func servant_name_to_pu_id_(servant_name:String)->String:
-	
-	return ""
-
 func _on_phantasm_pressed()->void:
+	#local function on server request made
 	use_custom_button.disabled=false
 	use_custom_label.visible=false
 	if get_self_servant_node().phantasm_charge<6:
@@ -1595,33 +1565,24 @@ func _on_phantasm_pressed()->void:
 		use_custom_button.disabled=true
 		pass
 	
-	if char_info_has_active_buff(field.get_current_self_char_info(),"NP Seal"):
+	if char_info_has_active_buff(field.get_current_self_char_info.(),"NP Seal"):
 		custom_choices_tab_container.visible=false
 		use_custom_but_label_container.visible=false
 		field.info_table_show(tr("NP_IS_SEALED_BY_DEBUFF"))
 		await field.info_ok_button.pressed
-		return
+		use_custom_button.disabled=true
 	
 	
 	fill_custom_thing(get_self_servant_node().phantasms,CUSTOM_TYPES.PHANTASM)
-	#for phantasm_name in Globals.self_servant_node.phantasms_info_array:
-		#var tt_edit=TextEdit.new()
-		#tt_edit.editable=false
-		#tt_edit.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
-		#tt_edit.name=phantasm_name["Name"]
-		#tt_edit.text=phantasm_name["Text"]
-		#custom_choices_tab_container.add_child(tt_edit,true)
+
 	field.hide_all_gui_windows("use_custom")
-	#field.are_you_sure_main_container.visible=true
-	#await field.are_you_sure_signal
-	#if field.are_you_sure_result=="no":
-	#	return
-	#Globals.self_servant_node.phantasm()
-	pass # Replace with function body.
 
-func get_maximum_overcharge_name_available(phantasms_config: Dictionary) -> String:
+	pass 
 
-	var overcharge_up_buff=char_info_has_active_buff(field.get_current_self_char_info(),"Overcharge Up")
+
+func get_maximum_overcharge_name_available_for_char_info(char_info:CharInfo,phantasms_config: Dictionary) -> String:
+
+	var overcharge_up_buff=char_info_has_active_buff(char_info,"Overcharge Up")
 
 	var sorted_by_cost = []
 	for phantasm_name in phantasms_config:
@@ -1648,12 +1609,7 @@ func get_maximum_overcharge_name_available(phantasms_config: Dictionary) -> Stri
 		return "" 
 
 
-
-
-
-
-
-func use_phantasm(phantasm_info):
+func use_phantasm_for_char_info(char_info_using_phantasm,phantasm_info):
 	var overcharge_can_be_used=""
 	#for overcharge in phantasm_info:#just bad info formation
 	#	if overcharge=="Name":
@@ -1661,26 +1617,11 @@ func use_phantasm(phantasm_info):
 		#checking maximum available overcharge that can be used right now
 
 	#	if Globals.self_servant_node.phantasm_charge>=phantasm_info[overcharge]["Cost"]:
-	overcharge_can_be_used=get_maximum_overcharge_name_available(phantasm_info)
+	overcharge_can_be_used=get_maximum_overcharge_name_available_for_char_info(char_info_using_phantasm,phantasm_info)
 			
 			
 	print(str("using overchage=",overcharge_can_be_used))
 	var overcharge_use=phantasm_info[overcharge_can_be_used]
-	
-	"""
-	for skill_info_hash in overcharge_use["effect_after_attack"]:
-		var cast=skill_info_hash["Cast"]
-		var range=0
-		if typeof(cast)==TYPE_ARRAY:
-			range=cast[1]
-			cast=cast[0]
-		var skill_info_array=skill_info_hash["Buffs"]
-		
-		if typeof(skill_info_array)==TYPE_DICTIONARY:
-			skill_info_array=[skill_info_array]
-		match cast.to_lower():
-			"Phantasm Attacked"
-	"""
 	
 	var attacked_by_phantasm
 	
@@ -1709,9 +1650,9 @@ func use_phantasm(phantasm_info):
 		await use_skill(overcharge_use["effect_after_attack"],attacked_by_phantasm)
 	
 	
-	rpc("charge_np_to_char_info_by_number",field.get_current_self_char_info().to_dictionary(),-overcharge_use["Cost"])
+	rpc("charge_np_to_char_info_by_number",field.get_current_self_char_info.().to_dictionary(),-overcharge_use["Cost"])
 	#for effect in 
-	rpc("finish_attack",field.get_current_self_char_info().to_dictionary())
+	rpc("finish_attack",field.get_current_self_char_info.().to_dictionary())
 	
 	pass
 
@@ -1768,7 +1709,7 @@ func phantasm_in_range(phantasm_config,type="Single"):
 	match type:
 		"Single":
 			tmp=await choose_single_in_range(atk_range)
-			tmp.erase(field.get_current_self_char_info())
+			tmp.erase(field.get_current_self_char_info.())
 		"All enemies":
 			tmp=await get_all_enemies_in_range(atk_range)
 	for char_info in tmp:
@@ -1791,7 +1732,7 @@ func phantasm_in_range(phantasm_config,type="Single"):
 func _on_free_phantasm_pressed():
 	#pu_id_player_info[Globals.self_pu_id]["servant_node"].phantasm_charge+=6
 	#field.disable_every_button()
-	rpc("charge_np_to_char_info_by_number",field.get_current_self_char_info().to_dictionary(),6)
+	rpc("charge_np_to_char_info_by_number",field.get_current_self_char_info.().to_dictionary(),6)
 	pass
 
 func get_all_pu_ids():
@@ -1815,7 +1756,7 @@ func get_all_char_infos():
 			out_arr.append(CharInfo.new(pu_id,unit_id))
 	return out_arr
 
-func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_current_self_char_info()):
+func choose_single_in_range(_range,char_info_to_search:CharInfo=field.get_current_self_char_info.()):
 	var ketki_array=[]
 	var pur_id_kletka=get_char_info_kletka_number(char_info_to_search)
 	print("choose_single_in_range pur_id_kletka=",pur_id_kletka)
@@ -1877,7 +1818,7 @@ func get_allies(pu_id_to_search:String=Globals.self_pu_id):
 	pass
 	#cast self,allies, 
 
-func get_allies_char_info(char_info_to_search:CharInfo=field.get_current_self_char_info()):
+func get_allies_char_info(char_info_to_search:CharInfo=field.get_current_self_char_info.()):
 
 	var enemies_pu_ids=get_allies(char_info_to_search.pu_id)
 	print("enemies_pu_ids=",enemies_pu_ids)
@@ -1887,7 +1828,7 @@ func get_allies_char_info(char_info_to_search:CharInfo=field.get_current_self_ch
 		for unit_id in Globals.pu_id_player_info[pu_id]["units"].keys():
 			output_char_infos.append(CharInfo.new(pu_id,unit_id))
 	print("get_allies_char_info=",output_char_infos)
-	output_char_infos.append(field.get_current_self_char_info())
+	output_char_infos.append(field.get_current_self_char_info.())
 	return output_char_infos
 	#cast self,allies, 
 
@@ -1902,7 +1843,7 @@ func get_enemies_teams_char_info_uniq_ids()->Array:
 			
 	return output_char_infos
 
-func get_all_enemies_in_range(_range,char_info_to_search:CharInfo=field.get_current_self_char_info())->Array:
+func get_all_enemies_in_range(_range,char_info_to_search:CharInfo=field.get_current_self_char_info.())->Array:
 	var enemies=get_enemies_teams_char_info_uniq_ids()
 	var out=[]
 	for char_info in get_everyone_in_range(_range,char_info_to_search):
@@ -1910,7 +1851,7 @@ func get_all_enemies_in_range(_range,char_info_to_search:CharInfo=field.get_curr
 			out.append(char_info)
 	return out
 
-func get_everyone_in_range(range_local:int,char_info_to_search:CharInfo=field.get_current_self_char_info())->Array:
+func get_everyone_in_range(range_local:int,char_info_to_search:CharInfo=field.get_current_self_char_info.())->Array:
 	var out=[]
 	#var kletka_id=0
 	var char_info_kletk_id=get_char_info_kletka_number(char_info_to_search)
@@ -1956,7 +1897,7 @@ func get_buff_types(buff:Dictionary)->Array:
 	#print_debug("buff types=",buff_specific_types)
 	return buff_specific_types
 
-func get_all_allies_in_range(_range:int,char_info_to_search:CharInfo=field.get_current_self_char_info())->Array:
+func get_all_allies_in_range(_range:int,char_info_to_search:CharInfo=field.get_current_self_char_info.())->Array:
 	var allies=get_allies_char_info(char_info_to_search)
 	var out=[]
 	for char_info in get_everyone_in_range(_range,char_info_to_search):
@@ -1976,7 +1917,7 @@ func can_char_info_attack_char_info(char_info:CharInfo,char_into_to_attack:CharI
 
 
 func can_use_mandness_enhancement() -> bool:
-	var self_bufs=get_char_info_buffs(field.get_current_self_char_info())
+	var self_bufs=get_char_info_buffs(field.get_current_self_char_info.())
 	
 	for buff in self_bufs:
 		if buff.get("Type",""):
@@ -2044,7 +1985,7 @@ func replace_value_with_dice_result(replace_wrap_info:Dictionary, buff_info_arra
 
 
 
-func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:CharInfo=field.get_current_self_char_info())->bool:
+func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:CharInfo=field.get_current_self_char_info.())->bool:
 	#trait_name is used if "Damange 2х Against Trait"
 	#String
 	var was_skill_used=false
@@ -2191,7 +2132,7 @@ func use_skill(skill_info_dictionary,custom_cast:Array=[],used_by_char_info:Char
 				"Attacking Phantasm Absorb":
 					usage_successful = absorb_attacking_phantasm_from_cast(self_char_info,cast)
 				"Attack Restrict Against Player":
-					single_skill_info["player_id"]=field.get_current_self_char_info().get_uniq_id()
+					single_skill_info["player_id"]=field.get_current_self_char_info.().get_uniq_id()
 					var new_cast=[]
 					for cast_single in cast:
 						new_cast=cast_single.to_dictionary()
@@ -2268,7 +2209,7 @@ func _on_sprite_choose_file_dialog_file_selected(path)->void:
 	#var imageData = image.data
 	#imageData["format"] = image.get_format()
 	#print("imageData=",imageData)
-	#var char_info=field.get_current_self_char_info()
+	#var char_info=field.get_current_self_char_info.()
 	#rpc("change_char_info_sprite_from_image_data",char_info.to_dictionary(),imageData)
 	pass
 
@@ -2788,7 +2729,8 @@ func roll_dice_for_result(skill_info:Dictionary,cast:Array):
 			#await field.sleep(0.2)
 			#field.rpc_id(pu_peer_id,"receice_dice_roll_results",dice_result)
 			await field.sleep(0.2)
-			field.rpc_id(pu_peer_id,"set_action_status",field.get_current_self_char_info().to_dictionary(),"roll_dice_for_result",char_info.to_dictionary(),dice_result)
+			
+			field.rpc_id(pu_peer_id,"set_action_status",field.get_current_self_char_info.().to_dictionary(),"roll_dice_for_result",char_info.to_dictionary(),dice_result)
 
 			var status= await field.attack_response
 			print("Status dice roll result=",status)
@@ -3203,8 +3145,8 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 		"costume": 0
 	}
 
-	rpc("load_servant",Globals.self_pu_id,ascention,id_to_send,true,summon_buff_info)
-	var char_info_loaded=await servant_loaded
+	load_servant(Globals.self_pu_id,ascention,id_to_send,true,summon_buff_info)
+	#var char_info_loaded=await servant_loaded
 
 	char_info_loaded=CharInfo.from_dictionary(char_info_loaded)
 	print("servant loaded signal got")
@@ -3228,7 +3170,7 @@ func summon_someone(char_info:CharInfo,summon_buff_info:Dictionary):
 func start_presence_concealment_for_char_info(char_info:CharInfo):
 	char_info.get_node().visible=false
 	var cur_kletka_before=field.get_current_kletka_id()
-	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
+	if char_info.get_uniq_id()==field.get_current_self_char_info.().get_uniq_id():
 		#field.get_current_kletka_id()=-1
 		pass
 	field.dismount_char_info(char_info)
@@ -3389,7 +3331,7 @@ func charge_np_to_char_info_by_number(char_info_dic:Dictionary,number:int,source
 	if new_number>12:
 		char_info.get_node().phantasm_charge=12
 	#change_phantasm_charge_on_pu_id
-	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
+	if char_info.get_uniq_id()==field.get_current_self_char_info.().get_uniq_id():
 		get_self_servant_node().phantasm_charge=char_info.get_node().phantasm_charge
 		%np_points_number_label.text=str(char_info.get_node().phantasm_charge)
 
@@ -3429,13 +3371,6 @@ func get_char_info_strength(char_info:CharInfo)->String:
 				output_strength=gennder
 
 	return output_strength
-
-
-
-func get_charInfo_from_pu_id_unit_id(pu_id:String,unit_id:int)->CharInfo:
-	var rett_val=CharInfo.new(pu_id,unit_id)
-	return rett_val
-	#return Globals.pu_id_player_info[pu_id]["units"][unit_id]
 
 
 @rpc("any_peer","reliable","call_local")
@@ -3778,7 +3713,7 @@ func take_damage_to_char_info(char_info_dic:Dictionary,damage_amount:int,can_kil
 	
 	
 	update_hp_on_char_info(char_info.to_dictionary(),new_hp)
-	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
+	if char_info.get_uniq_id()==field.get_current_self_char_info.().get_uniq_id():
 		field.rpc("systemlog_message",str(Globals.nickname," took ",damage_amount," damage, now HP=", new_hp))
 		rpc("add_to_advanced_logs",
 			"ADVANCED_LOG_PLAYER_TOOK_DAMAGE",
@@ -3889,7 +3824,7 @@ func check_if_all_pu_id_units_dead(pu_id:String)->bool:
 @rpc("any_peer","reliable","call_local")
 func update_hp_on_char_info(char_info_dic:Dictionary,hp_to_set:int)->void:
 	var char_info:CharInfo=CharInfo.from_dictionary(char_info_dic)
-	if char_info.get_uniq_id()==field.get_current_self_char_info().get_uniq_id():
+	if char_info.get_uniq_id()==field.get_current_self_char_info.().get_uniq_id():
 		current_hp_value_label.text=str(hp_to_set)
 	char_info.get_node().hp=hp_to_set
 
@@ -3935,10 +3870,10 @@ func _on_use_skill_button_pressed():
 	var skill_consume_action=true
 	var succesfully
 
-	var char_info:CharInfo=field.get_current_self_char_info()
+	var char_info:CharInfo=field.get_current_self_char_info.()
 
 	var one_time_skills=false
-	var cur_node=field.get_current_self_char_info().get_node()
+	var cur_node=field.get_current_self_char_info.().get_node()
 	if cur_node.summon_check:
 		one_time_skills = cur_node.one_time_skills
 
@@ -4083,7 +4018,7 @@ func _on_use_skill_button_pressed():
 		rpc("change_game_stat_for_char_info",char_info.to_dictionary(),"total_skill_used",1)
 	%MAKE_ACTION_BUTTON.disabled=false
 	field.skill_info_show_button.disabled=false
-	rpc("finish_attack",field.get_current_self_char_info().to_dictionary())
+	rpc("finish_attack",field.get_current_self_char_info.().to_dictionary())
 	pass # Replace with function body.
 
 func char_info_has_buff(char_info:CharInfo,buff_name:String):
@@ -4170,8 +4105,8 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 
 		print("removing group_uniq_id to weapon buffs from weapon desc=",current_weapon_description, " weapon_uniq_id=",weapon_uniq_id)
 		
-		remove_char_info_buffs_by_uniq_id(field.get_current_self_char_info().to_dictionary(), weapon_uniq_id, true, true)
-		rpc("remove_char_info_buffs_by_uniq_id", field.get_current_self_char_info().to_dictionary(), weapon_uniq_id, true, true)
+		remove_char_info_buffs_by_uniq_id(field.get_current_self_char_info.().to_dictionary(), weapon_uniq_id, true, true)
+		rpc("remove_char_info_buffs_by_uniq_id", field.get_current_self_char_info.().to_dictionary(), weapon_uniq_id, true, true)
 		
 		
 		print("previous weapon buffs removed")
@@ -4186,25 +4121,25 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		folderr=Globals.user_folder
 	
 	print("change_char_info_sprite_from_path")
-	var sprite_base_name="sprite_stage_"+field.get_current_self_char_info().get_node().ascension_stage
+	var sprite_base_name="sprite_stage_"+field.get_current_self_char_info.().get_node().ascension_stage
 
-	if field.get_current_self_char_info().get_node().costume_stage:
-		sprite_base_name+="_costume_"+field.get_current_self_char_info().get_node().costume_stage
+	if field.get_current_self_char_info.().get_node().costume_stage:
+		sprite_base_name+="_costume_"+field.get_current_self_char_info.().get_node().costume_stage
 
-	rpc("change_char_info_sprite_from_path",field.get_current_self_char_info().to_dictionary(),
-	str(folderr)+field.get_current_self_char_info().get_node().servant_path+
+	rpc("change_char_info_sprite_from_path",field.get_current_self_char_info.().to_dictionary(),
+	str(folderr)+field.get_current_self_char_info.().get_node().servant_path+
 	"/sprite_"+str(weapon_name_to_change_to).to_lower()+".png")
 	
-	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),
+	rpc("change_char_info_servant_stat",field.get_current_self_char_info.().to_dictionary(),
 		"attack_range",weapons_array[weapon_name_to_change_to]["Range"])
-	rpc("change_char_info_servant_stat",field.get_current_self_char_info().to_dictionary(),
+	rpc("change_char_info_servant_stat",field.get_current_self_char_info.().to_dictionary(),
 		"attack_power",weapons_array[weapon_name_to_change_to]["Damage"])
 	
 	if weapons_array[weapon_name_to_change_to].get("Is One Hit Per Turn",false):
-		rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],"Maximum Hits Per Turn",true,true)
-		rpc("add_buff",[field.get_current_self_char_info().to_dictionary()],{"Name":"Maximum Hits Per Turn","Type":"Passive", "Power":1})
+		rpc("remove_buff",[field.get_current_self_char_info.().to_dictionary()],"Maximum Hits Per Turn",true,true)
+		rpc("add_buff",[field.get_current_self_char_info.().to_dictionary()],{"Name":"Maximum Hits Per Turn","Type":"Passive", "Power":1})
 	else:
-		rpc("remove_buff",[field.get_current_self_char_info().to_dictionary()],"Maximum Hits Per Turn",true,true)
+		rpc("remove_buff",[field.get_current_self_char_info.().to_dictionary()],"Maximum Hits Per Turn",true,true)
 	
 	print("adding new weapon buff")
 	if weapons_array[weapon_name_to_change_to].has("Buff"):
@@ -4217,7 +4152,7 @@ func change_weapon(weapon_name_to_change_to,class_skill_number)->void:
 		for i in range(new_weapon_buffs.size()):
 			new_weapon_buffs[i]["group_uniq_id"] = new_weapon_uniq_id
 
-		rpc("add_buff_array", [field.get_current_self_char_info().to_dictionary()], new_weapon_buffs)
+		rpc("add_buff_array", [field.get_current_self_char_info.().to_dictionary()], new_weapon_buffs)
 
 
 
@@ -4225,7 +4160,7 @@ func _on_items_pressed()->void:
 	#{ "Heal Potion": { "min_cost": { "Type": "Free", "value": 0 }, "Type": "potion creating", "Effect": [{ "Name": "Heal", "Power": 5 }], "range": 2, "description": "(Зелье лечения: Восполняет 5 очков здоровья, а также снимает все дебаффы себе или другому слуге в радиусе двух клеток)" } }
 	
 	
-	var items_array=unit_unique_id_to_items_owned[field.get_current_self_char_info().get_uniq_id()].duplicate(true)
+	var items_array=unit_unique_id_to_items_owned[field.get_current_self_char_info.().get_uniq_id()].duplicate(true)
 	
 	print("\n\nitems_array="+str(items_array))
 	#var items_descriptions={}
@@ -4302,7 +4237,7 @@ func flip_char_info_sprite(char_info_dic:Dictionary)->void:
 	pass
 
 func _on_flip_sprite_button_pressed():
-	rpc("flip_char_info_sprite",field.get_current_self_char_info().to_dictionary())
+	rpc("flip_char_info_sprite",field.get_current_self_char_info.().to_dictionary())
 	pass # Replace with function body.
 
 

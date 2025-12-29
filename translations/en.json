@@ -193,5 +193,8 @@
     "DICE_ROLL_RESULT_REROLL_DICES":"Enemy rolled the same dice, reroll to retry",
     "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION":"Do you want to upload image from drive or choose other servant sprite?",
     "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_UPLOAD":"Upload from drive",
-    "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_SPRITE":"Choose servant sprite"
+    "CHANGE_APPEARANCE_QUESTION_IMAGE_LOCATION_SPRITE":"Choose servant sprite",
+    "YOU_HAVE_UNPLAYED_UNITS_QUESTION":"You have unplayed units. Do you want to skip their turn?",
+    "YOU_HAVE_UNPLAYED_UNITS_QUESTION_AGREEMENT":"Skip turn",
+    "YOU_HAVE_UNPLAYED_UNITS_QUESTION_DISAGREEMENT":"Choose unit"
 }

@@ -89,8 +89,7 @@ func collect_all_nesessary_veriables()->Dictionary:
 		"unit_uniq_id_player_game_stat_info":players_handler_node.unit_uniq_id_player_game_stat_info.duplicate(true),
 		"pu_id_to_command_spells_int":players_handler_node.pu_id_to_command_spells_int.duplicate(true),
 		"unit_unique_id_to_items_owned":players_handler_node.unit_unique_id_to_items_owned.duplicate(true),
-		"pu_id_to_inventory_array":players_handler_node.pu_id_to_inventory_array.duplicate(true),
-		"servant_name_to_pu_id":players_handler_node.servant_name_to_pu_id.duplicate(true)
+		"pu_id_to_inventory_array":players_handler_node.pu_id_to_inventory_array.duplicate(true)
 	}
 
 	output["game_field"]={

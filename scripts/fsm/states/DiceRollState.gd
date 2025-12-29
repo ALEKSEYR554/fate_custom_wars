@@ -46,6 +46,8 @@ func handle_network_message(message: String, net_data: Dictionary):
 			field.parry_rolled(net_data)
 		"evade_rolleds":
 			field.evade_rolled(net_data)
+		"defence_rolleds":
+			field.defence_rolled(net_data)
 
 func exit():
 	

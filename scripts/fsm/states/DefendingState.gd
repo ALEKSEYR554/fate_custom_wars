@@ -140,7 +140,7 @@ func handle_network_message(message: String, net_data: Dictionary):
 			#you_were_attacked_container.visible=false
 			var conf_action_data={
 					"char_info_dic":char_info.to_dictionary(),
-					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_PARRY",
+					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_EVADE",
 					"action_after_confirming_action":"evade",
 					
 					"action_after_dice_roll":"evade_rolleds",
@@ -148,7 +148,17 @@ func handle_network_message(message: String, net_data: Dictionary):
 			conf_action_data.merge(net_data)
 			
 			fsm.change_state_for_pu_ud(pu_id,"ConfirmAction",conf_action_data)
+		"defence":
+			var conf_action_data={
+					"char_info_dic":char_info.to_dictionary(),
+					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_DEFENCE",
+					"action_after_confirming_action":"defence",
+					
+					"action_after_dice_roll":"defence_rolleds",
+				}
+			conf_action_data.merge(net_data)
 			
+			fsm.change_state_for_pu_ud(pu_id,"ConfirmAction",conf_action_data)
 
 func on_parry_pressed():
 	option_choosen_signal.emit("parry")

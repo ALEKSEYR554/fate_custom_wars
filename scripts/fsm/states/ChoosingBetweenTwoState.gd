@@ -4,12 +4,12 @@ func enter(_data:Dictionary={}):
 	super.enter(_data)
 	print("Entering ChoosingBetweenTwo State")
 	#{
-		#"question":"ENTER_MOUNT_QUESTION",
-		#"agreement":"ENTER_MOUNT_QUESTION_AGREEMENT",
-		#"disagreement":"ENTER_MOUNT_QUESTION_DISAGREEMENT",
+		#"choose_between_two_question":"ENTER_MOUNT_QUESTION",
+		#"first_option":"ENTER_MOUNT_QUESTION_AGREEMENT",
+		#"second_option":"ENTER_MOUNT_QUESTION_DISAGREEMENT",
 		#
-		#"agreement_case_name":"mounting",
-		#"disagreement_case_name":null,
+		#"first_option_action":"mounting",
+		#"second_option_action":null,
 		#
 		#"required_data":{
 			#"glowing_kletka_number_selected":glowing_kletka_number_selected
@@ -76,6 +76,10 @@ func handle_network_message(message: String, net_data: Dictionary):
 		"choosed_magical_damage_type_for_counter_attack":
 			net_data["damage_type"]=players_handler.DAMAGE_TYPE.MAGICAL
 			fsm.change_state_for_pu_ud(pu_id,"Attacking",net_data)
+		"ChoosingBetweenTwo":
+			fsm.change_state_for_pu_ud(pu_id,"StartTurn",net_data)
+		"pass_pu_id_turn":
+			players_handler.pass_next_turn(pu_id)
 		
 	
 

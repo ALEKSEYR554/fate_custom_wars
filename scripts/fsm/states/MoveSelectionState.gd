@@ -8,21 +8,21 @@ func enter(_data:Dictionary={}):
 	field.end_turn_button.disabled = false
 	field.move_button.disabled = true
 	
-	field.blinking_glow_button=false
-	field.glow_cletki_node.visible=false
+	field.blinking_glow_button = false
+	field.glow_cletki_node.visible = false
 	
 	#field.current_action="move"
 	
-	var current_kletka=_data.get("Current Kletka",null)
-	
-	if current_kletka==null:
+	var current_kletka = _data.get("Current Kletka",null)
+	if current_kletka == null:
 		push_error("no current kletka sent from server")
+		return
 	
-	var kletki_awailable=_data.get("Available Kletki",null)
+	var kletki_awailable = _data.get("Available Kletki",null)
 	
-	if kletki_awailable==null:
+	if kletki_awailable == null:
 		push_error("no Available Kletki sent from server")
-	
+		return
 	
 	field.choose_glowing_cletka_by_ids_array(kletki_awailable)
 	var glowing_kletka_number_selected = await field.glow_kletka_pressed_signal
@@ -38,7 +38,7 @@ func enter(_data:Dictionary={}):
 		message="initial_spawn"
 	else:
 		message="move"
-	rpc_id(1,"handle_network_message",)
+	rpc_id(1,"handle_network_message",message,net_data)
 	
 	
 @rpc("any_peer","call_local","reliable")
@@ -98,6 +98,18 @@ func handle_network_message(message: String, net_data: Dictionary):
 				else:
 					print("player cant ride this mount")
 			
+			var presence_cons_stun=net_data.get("stun",null)
+			if presence_cons_stun != null:
+				if presence_cons_stun == true:
+					players_handler.add_buff([char_info.to_dictionary()],
+					{"Name":"Paralysis",
+						"Duration":1,
+						"Power":1
+						}
+					)
+				field.show_char_info_servant_node(char_info.to_dictionary(),true)
+				players_handler.remove_buff([char_info.to_dictionary()],"Presence Concealment",true)
+
 			fsm.change_state_for_pu_ud(pu_id,"Moving",net_data)
 			
 func exit():

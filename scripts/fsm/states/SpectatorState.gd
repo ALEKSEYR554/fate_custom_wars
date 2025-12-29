@@ -4,7 +4,7 @@ extends BattleState
 
 func enter(_data:Dictionary={}):
 	super.enter(_data)
-	print("Entering ",self.name," State")
+	print("Entering Spectator State")
 	
 	field.current_action="wait"
 	

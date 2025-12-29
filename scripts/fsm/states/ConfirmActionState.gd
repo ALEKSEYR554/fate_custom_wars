@@ -59,12 +59,20 @@ func handle_network_message(message: String, net_data: Dictionary):
 				fsm.change_state_for_pu_ud(pu_id,"DiceRoll",net_data)
 			"choose_damage_type_before_counter_attack":
 				fsm.change_state_for_pu_ud(pu_id,"ChooseBetweenTwo",net_data)
+			"defence":
+				fsm.change_state_for_pu_ud(pu_id,"DiceRoll",net_data)
+			"release_from_Presence_Concealment_with_stun":
+				fsm.change_state_for_pu_ud(pu_id,"MoveSelection",net_data)
 	else:
 		match message:
 			"parry":
 				fsm.change_state_for_pu_ud(pu_id,"Defending",net_data)
 			"evade":
 				fsm.change_state_for_pu_ud(pu_id,"Defending",net_data)
+			"defence":
+				fsm.change_state_for_pu_ud(pu_id,"Defending",net_data)
+			"release_from_Presence_Concealment_with_stun":
+				fsm.change_state_for_pu_ud(pu_id,"UnitTurnState",net_data)
 	
 
 func exit():
