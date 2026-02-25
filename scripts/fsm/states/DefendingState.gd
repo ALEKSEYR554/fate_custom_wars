@@ -4,7 +4,21 @@ signal option_choosen_signal(option:String)
 
 func enter(_data:Dictionary={}):
 	super.enter(_data)
-	print("Entering ",self.name," State")
+	print("Entering Defending State")
+	"""
+	{
+		attacker_char_info_dic:Dictionary,
+		defender_char_info_dic:Dictionary,
+		attacker_dices:Dictionary,
+		defender_can_parry:bool,
+		defender_can_defence:bool,
+		defender_can_evade:bool,
+
+		current_parry_count:int,
+		parry_count_max:int,
+
+	}
+	"""
 	
 	var attacker_char_info_dic=_data.get("attacker_char_info_dic",null)
 	if attacker_char_info_dic==null:
@@ -86,15 +100,15 @@ func enter(_data:Dictionary={}):
 	field.you_were_attacked_container.visible = true
 	var option_choosen = await option_choosen_signal
 	
-	var parry_count_max = _data.get("parry_count_max")
-	var current_parry_count = _data.get("current_parry_count",0)
+	#var parry_count_max = _data.get("parry_count_max")
+	#var current_parry_count = _data.get("current_parry_count",0)
 	
-	var attack_answer_data={
-		"pu_id":Globals.self_pu_id,
-		"parry_count_max":parry_count_max,
-		"attacker_dices":attacker_dices
-	}
-	rpc_id(1,"handle_network_message",attack_answer_data)
+	#var attack_answer_data={
+	#	"pu_id":Globals.self_pu_id,
+	#	"parry_count_max":parry_count_max,
+	#	"attacker_dices":attacker_dices
+	#}
+	rpc_id(1,"handle_network_message",option_choosen,_data)
 
 @rpc("any_peer","call_local","reliable")
 func handle_network_message(message: String, net_data: Dictionary):

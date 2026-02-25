@@ -23,11 +23,11 @@ func enter(_data:Dictionary={}):
 	
 	
 
-	var net_data={
-		"pu_id":Globals.self_pu_id,
-		"current_char_info_dic":current_char_info.to_dictionary()
-	}
-	rpc_id(1,"handle_network_message","attacking",net_data)
+	#var net_data={
+	#	"pu_id":Globals.self_pu_id,
+	#	"current_char_info_dic":current_char_info.to_dictionary()
+	#}
+	rpc_id(1,"handle_network_message","attacking",_data)
 
 @rpc("any_peer","call_local","reliable")
 func handle_network_message(message: String, net_data: Dictionary):

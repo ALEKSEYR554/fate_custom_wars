@@ -134,18 +134,21 @@ var skills={
 	"Cooldown":0,
 	"Description ID":"Second Skill",
 	"Consume Action":false,
+	"Cost":
+		{
+			"Currency":"NP",
+			"Amount":1
+		},
 	"Effect":[
-		{"Buffs":[
-			{"Name":"Additional Move",
-				"Duration":1,
-				"Power":1
-			}
+		{
+			"Buffs":[
+				{"Name":"Additional Move",
+					"Duration":1,
+					"Power":1
+				}
 			],
-		"Cost":{
-				"Currency":"NP",
-				"Amount":1
-				},
-		"Cast":"Self"}
+			"Cast":"Self"
+		}
 		]
 },
 

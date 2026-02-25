@@ -16,16 +16,16 @@ func enter(_data:Dictionary={}):
 		push_error("No confirm_action_action_text in ",self.name, " state data=",_data)
 		return
 	
-	var parry_count_max = _data.get("parry_count_max")
-	var current_parry_count = _data.get("current_parry_count",0)
+	#var parry_count_max = _data.get("parry_count_max")
+	#var current_parry_count = _data.get("current_parry_count",0)
 	
-	var data={
-		"action_after_confirming_action":action_after_confirming_action,
-		"parry_count_max":parry_count_max,
-		"current_parry_count":current_parry_count
-	}
+	#var data={
+	#	"action_after_confirming_action":action_after_confirming_action,
+	#	"parry_count_max":parry_count_max,
+	#	"current_parry_count":current_parry_count
+	#}
 	
-	answer_button_pressed_agreed.connect(answer_button_pressed.bind(data))
+	answer_button_pressed_agreed.connect(answer_button_pressed.bind(_data))
 	
 	field.are_you_sure_label.text = tr("ARE_YOU_SURE_YOU_WANT_TO_QUESTION").format({"action":tr(confirm_action_action_text)})
 	field.are_you_sure_label.visible = true
@@ -39,7 +39,7 @@ func answer_button_pressed(agreed:bool,data):
 		"agreed":agreed
 	}
 	new_data.merge(data)
-	rpc_id(1,"handle_network_message",action_after_confirming_action)
+	rpc_id(1,"handle_network_message",action_after_confirming_action,new_data)
 
 @rpc("any_peer","call_local","reliable")
 func handle_network_message(message: String, net_data: Dictionary):
@@ -63,6 +63,8 @@ func handle_network_message(message: String, net_data: Dictionary):
 				fsm.change_state_for_pu_ud(pu_id,"DiceRoll",net_data)
 			"release_from_Presence_Concealment_with_stun":
 				fsm.change_state_for_pu_ud(pu_id,"MoveSelection",net_data)
+			"attack_start_no_parry":
+				field.attack_pre_dice_roll(net_data)
 	else:
 		match message:
 			"parry":
@@ -73,6 +75,11 @@ func handle_network_message(message: String, net_data: Dictionary):
 				fsm.change_state_for_pu_ud(pu_id,"Defending",net_data)
 			"release_from_Presence_Concealment_with_stun":
 				fsm.change_state_for_pu_ud(pu_id,"UnitTurnState",net_data)
+			"attack_start_no_parry":
+				players_handler.rpc("add_to_advanced_logs",
+				"ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE")
+				
+				fsm.change_state_for_pu_ud(pu_id,"Idle",net_data)
 	
 
 func exit():

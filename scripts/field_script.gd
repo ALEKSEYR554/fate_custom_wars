@@ -736,8 +736,11 @@ func glow_cletka_pressed(glow_kletka_selected):
 	blinking_glow_button=false
 	blink_timer_node.timeout.emit()
 	var glowing_kletka_number_selected_local=int(glow_kletka_selected.name.trim_prefix("glow "))
-	rpc_id(1,"client_pressed_glow_kletka",glowing_kletka_number_selected_local,Globals.self_pu_id)
-	pass
+
+	%ChoosingTarget.glow_cell_pressed(glowing_kletka_number_selected_local)
+
+	#rpc_id(1,"client_pressed_glow_kletka",glowing_kletka_number_selected_local,Globals.self_pu_id)
+	#pass
 
 @rpc("any_peer","call_local","reliable")
 func client_pressed_glow_kletka(glowing_kletka_number_selected_temp,pu_id):
@@ -747,14 +750,10 @@ func client_pressed_glow_kletka(glowing_kletka_number_selected_temp,pu_id):
 	print("glow_cletka_pressed, current_action="+str(Globals.pu_id_to_action_points[pu_id]))
 	var glowing_kletka_number_selected=glowing_kletka_number_selected_temp
 	
-	
-	var glow_kletka_selected:Node2D=glow_array[glowing_kletka_number_selected]
 	var char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
 
 	var current_action=Globals.pu_id_to_current_action[char_info.pu_id]
 	
-	print(glow_kletka_selected)
-	print(current_action)
 	match current_action:
 		"initial_spawn":
 			
@@ -1472,16 +1471,23 @@ func can_char_info_evade_defence_parry_against_char_info(defender_char_info:Char
 
 func pu_id_attack_player_on_kletka_id(pu_id:String, kletka_id:int, data={}):
 	if not multiplayer.is_server(): return
-	
-	var damage_type:String = data.get("damage_type","Physical")
-	var consume_action_point:bool = data.get("consume_action_point",true)
-	var phantasm_config = data.get("phantasm_config",{})
-	
-	
-	
+
 	var attacker_char_info:CharInfo=get_current_char_info_for_pu_id(pu_id)
 	
 	var defender_char_info:CharInfo =await await_choose_char_info_on_kletka_id_from_client(attacker_char_info.pu_id,kletka_id)
+
+	char_info_attack_char_info(attacker_char_info,defender_char_info,data)
+
+func char_info_attack_char_info(attacker_char_info,defender_char_info,data={}):
+	if not multiplayer.is_server(): return
+
+	var pu_id = attacker_char_info.pu_id
+	var damage_type:String = data.get("damage_type","Physical")
+	var consume_action_point:bool = data.get("consume_action_point",true)
+	var phantasm_config = data.get("phantasm_config",{})
+
+	var kletka_id = data.get("kletka_id_selected_for_attack",-1)
+
 	var attacker_peer_id=Globals.pu_id_player_info[pu_id]["current_peer_id"]
 	
 	players_handler.rpc("add_to_advanced_logs",
@@ -1528,27 +1534,31 @@ func pu_id_attack_player_on_kletka_id(pu_id:String, kletka_id:int, data={}):
 				false
 			)
 			
-			var confirm_action_data=get_base_fsm_data_for_pu_id(pu_id)
+			#var confirm_action_data=get_base_fsm_data_for_pu_id(pu_id)
 			
-			confirm_action_data.merge(
+			data.merge(
 				{
-					"action":"attack_start_no_parry",
-					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK"
+					"action_after_confirming_action":"attack_start_no_parry",
+					"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_ATTACK",
+					"attacker_char_info_dic":attacker_char_info.to_dictionary(),
+					"defender_char_info_dic":defender_char_info.to_dictionary(),
+					"damage_type":damage_type
 				}
 			)
 			
-			fsm.change_state_for_pu_ud(pu_id,"ConfirmAction",confirm_action_data)
+			fsm.change_state_for_pu_ud(pu_id,"ConfirmAction",data)
 			
-			var are_you_sure_result=await are_you_sure_signal_from_client
+			#var are_you_sure_result=await are_you_sure_signal_from_client
 			
-			if are_you_sure_result=="ARE_YOU_SURE_DISAGREEMENT":
-				players_handler.rpc("add_to_advanced_logs",
-				"ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE")
-				
-				fsm.change_state_for_pu_ud(pu_id,"Idle",get_base_fsm_data_for_pu_id(pu_id))
-				
-				return
-			
+			#if are_you_sure_result=="ARE_YOU_SURE_DISAGREEMENT":
+			#	players_handler.rpc("add_to_advanced_logs",
+			#	"ADVANCED_LOG_USER_STOPPED_ATTACK_AFTER_ARE_YOU_SURE")
+			#	
+			#	fsm.change_state_for_pu_ud(pu_id,"Idle",get_base_fsm_data_for_pu_id(pu_id))
+			#	
+			#	return
+
+
 		#else:
 			#rpc_id(
 				#attacker_peer_id,
@@ -1568,28 +1578,35 @@ func pu_id_attack_player_on_kletka_id(pu_id:String, kletka_id:int, data={}):
 			#)
 		
 		
-		
-		var dice_roll_data=get_base_fsm_data_for_pu_id(pu_id)
-		dice_roll_data.merge(data)
-		
-		dice_roll_data.merge(
-			{
-				"action_name":"Attack",
-				"can_reroll":can_char_info_reroll_dice_for_type(attacker_char_info,"Attack"),
-				"reroll_amount":get_char_info_rerolls_amount_for_type(attacker_char_info,"Attack"),
-				
-				"action_after_dice_roll":"attack_after_attacker_dice_roll",
-				
-				"attacker_char_info_dic":attacker_char_info.to_dictionary(),
-				"defender_char_info_dic":defender_char_info.to_dictionary(),
-				"damage_type":damage_type
-			}
-		)
-		
-		
-		
-		fsm.change_state_for_pu_ud(pu_id,"DiceRoll",dice_roll_data)
-		
+func attack_pre_dice_roll(data):
+
+	#var dice_roll_data=get_base_fsm_data_for_pu_id(pu_id)
+	#dice_roll_data.merge(data)
+	var attacker_char_info = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
+
+
+
+	data.merge(
+		{
+			"action_name":"Attack",
+			"can_reroll":can_char_info_reroll_dice_for_type(attacker_char_info,"Attack"),
+			"reroll_amount":get_char_info_rerolls_amount_for_type(attacker_char_info,"Attack"),
+			
+			"action_after_dice_roll":"attack_after_attacker_dice_roll"
+		}
+	)
+	
+	
+	
+	fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"DiceRoll",data)
+
+func get_dice_roll_data_for_char_info_for_action_name(char_info:CharInfo,action_name:String)->Dictionary:
+	return {
+		"action_name":action_name,
+		"can_reroll":can_char_info_reroll_dice_for_type(char_info,action_name),
+		"reroll_amount":get_char_info_rerolls_amount_for_type(char_info,action_name)
+	}
+
 func attack_after_attacker_dice_roll(data={}):
 	
 	var attacker_char_info:CharInfo = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
@@ -1714,7 +1731,7 @@ func parry_rolled(data={}):
 	#dices_main_VBoxContainer.visible=false
 
 
-func evade_pressed(data={}):
+func evade_rolled(data={}):
 	
 	var dice_roll_result = data.get("dice_roll_result")
 	var attacker_dices = data.get("attacker_dices")
@@ -1843,37 +1860,74 @@ func evade_pressed(data={}):
 	
 	
 	
-	if counter_attack and defender_char_info.get_node().can_attack:
-		var atk_rng=players_handler.get_char_info_attack_range(defender_char_info)
-		var attacker_kletka_id=char_info_to_kletka_number(attacker_char_info)
-		
-		#var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_rng).size()
-
-		var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(atk_rng,get_current_kletka_id_for_char_info(defender_char_info))
-
-		print("attempting counter attack kletki_with_players=",kletki_with_players," ? attacker_kletka_id=",attacker_kletka_id)
-
-		if attacker_kletka_id in kletki_with_players:
-			
-			responce_data.merge(
-				{
-					"counter_attack_after_action":true,
-					"counter_attack_attacker_char_info_dic":defender_char_info.to_dictionary(),
-					"counter_attack_defender_char_info_dic":attacker_char_info.to_dictionary(),
-				}
-			)
-			
-			rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," counter attacking"))
-			var player_has_magic_attack=players_handler.get_char_info_magical_attack(defender_char_info)
-			var damage_type_new=players_handler.DAMAGE_TYPE.PHYSICAL
-			if player_has_magic_attack:
-				damage_type_new=await choose_between_two("Choose damage type",players_handler.DAMAGE_TYPE.PHYSICAL,players_handler.DAMAGE_TYPE.MAGICAL)
-			await attack_player_on_kletka_id(attacker_kletka_id,damage_type_new,false)
+	#TODO recover counter attacks
+	#if counter_attack and players_handler.can_char_info_attack_char_info(defender_char_info,attacker_char_info):
+	#	var atk_rng=players_handler.get_char_info_attack_range(defender_char_info)
+	#	var attacker_kletka_id=char_info_to_kletka_number(attacker_char_info)
+	#	
+	#	#var distance_between_enemie=get_path_in_n_steps(get_current_kletka_id(),attacker_kletka_id,atk_rng).size()
+#
+	#	var kletki_with_players=get_kletki_ids_with_players_you_can_reach_in_steps(atk_rng,get_current_kletka_id_for_char_info(defender_char_info))
+#
+	#	print("attempting counter attack kletki_with_players=",kletki_with_players," ? attacker_kletka_id=",attacker_kletka_id)
+#
+	#	if attacker_kletka_id in kletki_with_players:
+	#		
+	#		responce_data.merge(
+	#			{
+	#				"counter_attack_after_action":true,
+	#				"counter_attack_attacker_char_info_dic":defender_char_info.to_dictionary(),
+	#				"counter_attack_defender_char_info_dic":attacker_char_info.to_dictionary(),
+	#			}
+	#		)
+	#		
+	#		rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," counter attacking"))
+	#		var player_has_magic_attack=players_handler.get_char_info_magical_attack(defender_char_info)
+	#		var damage_type_new=players_handler.DAMAGE_TYPE.PHYSICAL
+	#		if player_has_magic_attack:
+	#			damage_type_new=await choose_between_two("Choose damage type",players_handler.DAMAGE_TYPE.PHYSICAL,players_handler.DAMAGE_TYPE.MAGICAL)
+	#		await attack_player_on_kletka_id(attacker_kletka_id,damage_type_new,false)
 	
 	fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
 	
 	#attack_answered.emit()
 
+func defence_rolled(data={}):
+	
+	var dice_roll_result = data.get("dice_roll_result")
+	var attacker_dices = data.get("attacker_dices")
+	var defender_char_info = CharInfo.from_dictionary(data.get("defender_char_info_dic"))
+	var attacker_char_info = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
+	var damage_type = data.get("damage_type")
+	
+	
+	increase_dice_result_to_action_name_with_buffs_for_char_info(defender_char_info,"Defence")
+	
+	var responce_data = get_base_fsm_data_for_pu_id(attacker_char_info.pu_id)
+	responce_data["defender_char_info_dic"]=defender_char_info.to_dictionary()
+	responce_data.merge(data)
+	responce_data["attack_responce"]="defending"
+	
+	
+	
+	#rpc_id(attacked_by_peer_id,"answer_attack","defending")
+	var damage_to_take=players_handler.calculate_damage_to_take(attacker_char_info,attacker_dices,damage_type,"Defence")
+	
+	
+	calculating_damage_after_attack_ended(
+			{
+				"defender_char_info":defender_char_info,
+				"attacker_char_info":attacker_char_info,
+				"damage_type":damage_type,
+				"attacker_dices":attacker_dices
+			}
+		)
+	
+	
+	#rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," defending by throwing ",dice_roll_result["defence_dice"]))
+	
+	fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
+	#dices_main_VBoxContainer.visible=false
 
 func calculating_damage_after_attack_ended(data={}):
 	var defender_char_info:CharInfo = data.get("defender_char_info")
@@ -1924,8 +1978,9 @@ func attack_responce_handle_for_char_info_from_char_info(data={}):
 	var attacker_char_info:CharInfo =  data.get("attacker_char_info")
 	var damage_type:String = data.get("damage_type")
 	var parry_count_max = data.get("parry_count_max")
-	var kletka_id_selected = data.get("kletka_id_selected")
+	var kletka_id_selected_for_attack = data.get("kletka_id_selected_for_attack")
 	var consume_action_point = data.get("consume_action_point")
+	var phantasm_config = data.get("phantasm_config",{})
 	
 	var counter_attack_after_action = data.get("counter_attack_after_action",false)
 	var counter_attack_attacker_char_info:CharInfo = null
@@ -1936,7 +1991,7 @@ func attack_responce_handle_for_char_info_from_char_info(data={}):
 		counter_attack_attacker_char_info = CharInfo.from_dictionary(data.get("counter_attack_attacker_char_info_dic"))
 		counter_attack_defender_char_info = CharInfo.from_dictionary(data.get("counter_attack_defender_char_info_dic"))
 		
-	
+
 	var hitted=false
 	match attack_responce_string:
 		"parried":
@@ -1995,7 +2050,7 @@ func attack_responce_handle_for_char_info_from_char_info(data={}):
 	roll_dice_optional_label.visible=false
 	
 	if damage_type=="Physical" and players_handler.get_char_info_attack_range(attacker_char_info)<=2: 
-		move_player_from_kletka_id1_to_id2(attacker_char_info,kletka_id_selected,get_current_kletka_id_for_char_info(attacker_char_info),true)
+		move_player_from_kletka_id1_to_id2(attacker_char_info,kletka_id_selected_for_attack,get_current_kletka_id_for_char_info(attacker_char_info),true)
 	
 	if damage_type!="Phantasm" or consume_action_point:
 		if defender_char_info.get_node().additional_attack>=1:
@@ -2005,25 +2060,41 @@ func attack_responce_handle_for_char_info_from_char_info(data={}):
 			reduce_one_action_point_for_pu_id(attacker_char_info.pu_id,-1,"attack")
 			players_handler.rpc("add_to_advanced_logs","ADVANCED_LOG_ATTACKER_REDUCED_ACTION_POINT")
 	
+	#TODO counter attack activate
+	#if counter_attack_after_action:
+	#	var counter_attack_data = {
+	#		"defender_char_info_dic":data.get("counter_attack_defender_char_info_dic"),
+	#		"kletka_id_selected_for_attack":get_current_kletka_id_for_char_info(defender_char_info),
+	#		
+	#		"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK",
+	#		"action_after_confirming_action":"choose_damage_type_before_counter_attack",
+	#	
+	#		
+	#		"choose_between_two_question":"Choose damage type",
+	#		
+	#		"first_option":players_handler.DAMAGE_TYPE.PHYSICAL,
+	#		"second_option":players_handler.DAMAGE_TYPE.MAGICAL,
+	#		"first_option_action":"choosed_physical_damage_type_for_counter_attack",
+	#		"second_option_action":"choosed_magical_damage_type_for_counter_attack",
+	#	}
+	#	fsm.change_state_for_pu_ud(counter_attack_attacker_char_info.pu_id,"ConfirmAction",counter_attack_data)
 	
-	if counter_attack_after_action:
-		var counter_attack_data = {
-			"defender_char_info_dic":data.get("counter_attack_defender_char_info_dic"),
-			"kletka_id_selected":get_current_kletka_id_for_char_info(defender_char_info),
-			
-			"confirm_action_action_text":"ARE_YOU_SURE_YOU_WANT_TO_ACTION_COUNTER_ATTACK",
-			"action_after_confirming_action":"choose_damage_type_before_counter_attack",
-		
-			
-			"choose_between_two_question":"Choose damage type",
-			
-			"first_option":players_handler.DAMAGE_TYPE.PHYSICAL,
-			"second_option":players_handler.DAMAGE_TYPE.MAGICAL,
-			"first_option_action":"choosed_physical_damage_type_for_counter_attack",
-			"second_option_action":"choosed_magical_damage_type_for_counter_attack",
-		}
-		fsm.change_state_for_pu_ud(counter_attack_attacker_char_info.pu_id,"ConfirmAction",counter_attack_data)
-	
+	if hitted:
+		if phantasm_config.has("effect_on_success_attack"):
+			if attack_responce_string!="evaded" or attack_responce_string!="parried":
+				players_handler.use_skill(phantasm_config["effect_on_success_attack"])
+
+
+	if data.get("char_infos_to_attack_queue",{}) !={}:
+		var char_info_dics_to_attack = data.get("char_infos_to_attack_queue",{})
+		var char_info_dic_to_attack = char_info_dics_to_attack.pop_front()
+		data["defender_char_info_dic"] = char_info_dic_to_attack
+		data["char_infos_to_attack_queue"] = char_info_dics_to_attack
+
+
+		fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"Attacking",data)
+
+
 
 
 
@@ -2279,44 +2350,6 @@ func remove_evade_buff_after_hit_for_char_info(char_info_dic:Dictionary):
 					Globals.pu_id_player_info[char_info.pu_id]["units"][char_info.unit_id].buffs[i]["Power"]-=1
 				
 
-func defence_rolled(data={}):
-	
-	var dice_roll_result = data.get("dice_roll_result")
-	var attacker_dices = data.get("attacker_dices")
-	var defender_char_info = CharInfo.from_dictionary(data.get("defender_char_info_dic"))
-	var attacker_char_info = CharInfo.from_dictionary(data.get("attacker_char_info_dic"))
-	var damage_type = data.get("damage_type")
-	
-	
-	increase_dice_result_to_action_name_with_buffs_for_char_info(defender_char_info,"Defence")
-	
-	var responce_data = get_base_fsm_data_for_pu_id(attacker_char_info.pu_id)
-	responce_data["defender_char_info_dic"]=defender_char_info.to_dictionary()
-	responce_data.merge(data)
-	responce_data["attack_responce"]="defending"
-	
-	
-	
-	#rpc_id(attacked_by_peer_id,"answer_attack","defending")
-	var damage_to_take=players_handler.calculate_damage_to_take(attacker_char_info,attacker_dices,damage_type,"Defence")
-	
-	
-	calculating_damage_after_attack_ended(
-			{
-				"defender_char_info":defender_char_info,
-				"attacker_char_info":attacker_char_info,
-				"damage_type":damage_type,
-				"attacker_dices":attacker_dices
-			}
-		)
-	
-	
-	#rpc("systemlog_message",str(get_char_info_nick(defender_char_info)," defending by throwing ",dice_roll_result["defence_dice"]))
-	
-	fsm.change_state_for_pu_ud(attacker_char_info.pu_id,"GettingAttackResponce",responce_data)
-	#dices_main_VBoxContainer.visible=false
-
-
 
 func _on_parry_button_pressed():
 	
@@ -2464,7 +2497,8 @@ func pu_id_pressed_damage_type_button(pu_id:String,type:String):
 		{
 			"cells_to_choose":kk,
 			"type":"attack",
-			"damage_type":type
+			"damage_type":type,
+			"action_after_choosing_kletka_id":"choosing_unit_on_cell_to_attack"
 		}
 	)
 	
@@ -2770,7 +2804,10 @@ func field_manipulation(buff_config:Dictionary):
 	var range_of_manipulatons=buff_config.get("Range",0)
 	var kletka_config=buff_config.get("Config",0)
 	var amount_kletki=buff_config.get("Amount",1)
-	kletka_config["Owner"]=get_current_self_char_info().get_uniq_id()
+
+	#TODO
+	#kletka_config["Owner"]=get_current_self_char_info().get_uniq_id()
+
 	kletka_config["Turn Casted"]=players_handler.turns_counter
 	kletka_config["Color"]=Globals.self_field_color
 	
@@ -2851,67 +2888,69 @@ func capture_field_kletki(amount,config_of_kletka,owner_char_info:CharInfo):
 	print("capture_field_kletki, pu_id="+str(Globals.self_pu_id))
 	print("amount=="+str(amount))
 	
-	var available_to_capture=[]
-	config_of_kletka_to_capture=config_of_kletka
-	current_action="field capture"
-	
-	
-	#var owner_pu_id=config_of_kletka["Owner"]
-	
-	#print("connected="+str(connected))
-	temp_kletka_capture_config=config_of_kletka
-	
-	temp_kletka_capture_config.merge({"turn_casted":players_handler.turns_counter})
-	
-	
-	#var owner_char_info=temp_kletka_capture_config["Owner"]
-	var owner_uniq_id=owner_char_info.get_uniq_id()
-	temp_kletka_capture_config["Owner"]=owner_uniq_id
-
-
-
-	print("owner_uniq_id=",owner_uniq_id)
-	#var owner_char_info=players_handler.get_charInfo_from_pu_id_unit_id(own_pu,own_uni_id)
-
-
-	if !unit_uniq_id_to_kletki_ids_owned.has(owner_uniq_id):
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[]
-	
-
-
-
-	temp_kletka_capture_config["Color"]=Globals.self_field_color
-	if unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]==[]:
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[char_info_to_kletka_number(owner_char_info)]
-		rpc("sync_owned_kletki",unit_uniq_id_to_kletki_ids_owned)
-		rpc("capture_single_kletka_sync", char_info_to_kletka_number(owner_char_info),temp_kletka_capture_config)
-	else:
-		unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]+=[char_info_to_kletka_number(owner_char_info)]
-		
-		
-	print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
-	var to_glow_depends_on_owned=[]
-	for amount_to_capture in range(amount):
-		for klettka in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
-			to_glow_depends_on_owned+=connected[klettka].keys()
-			
-		print(str("to_glow_depends_on_owned=",to_glow_depends_on_owned))
-		for klekta_number in to_glow_depends_on_owned:
-			if not kletka_preference[klekta_number].is_empty():
-				continue
-			available_to_capture.append(int(glow_array[klekta_number].name.trim_prefix("glow ")))#.visible=true
-		available_to_capture=array_unique(available_to_capture)
-		for already_captured_kletki in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
-			available_to_capture.erase(already_captured_kletki)
-		print("available_to_capture="+str(available_to_capture))
-		choose_glowing_cletka_by_ids_array(array_unique(available_to_capture))
-		await klekta_captured
-		available_to_capture=[]
-		to_glow_depends_on_owned=[]
-		print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
-	pass
-	
-	current_action="wait"
+	return false
+	#TODO
+	#var available_to_capture=[]
+	#config_of_kletka_to_capture=config_of_kletka
+	##current_action="field capture"
+	#
+	#
+	##var owner_pu_id=config_of_kletka["Owner"]
+	#
+	##print("connected="+str(connected))
+	#temp_kletka_capture_config=config_of_kletka
+	#
+	#temp_kletka_capture_config.merge({"turn_casted":players_handler.turns_counter})
+	#
+	#
+	##var owner_char_info=temp_kletka_capture_config["Owner"]
+	#var owner_uniq_id=owner_char_info.get_uniq_id()
+	#temp_kletka_capture_config["Owner"]=owner_uniq_id
+#
+#
+#
+	#print("owner_uniq_id=",owner_uniq_id)
+	##var owner_char_info=players_handler.get_charInfo_from_pu_id_unit_id(own_pu,own_uni_id)
+#
+#
+	#if !unit_uniq_id_to_kletki_ids_owned.has(owner_uniq_id):
+	#	unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[]
+	#
+#
+#
+#
+	#temp_kletka_capture_config["Color"]=Globals.self_field_color
+	#if unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]==[]:
+	#	unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]=[char_info_to_kletka_number(owner_char_info)]
+	#	rpc("sync_owned_kletki",unit_uniq_id_to_kletki_ids_owned)
+	#	rpc("capture_single_kletka_sync", char_info_to_kletka_number(owner_char_info),temp_kletka_capture_config)
+	#else:
+	#	unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]+=[char_info_to_kletka_number(owner_char_info)]
+	#	
+	#	
+	#print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
+	#var to_glow_depends_on_owned=[]
+	#for amount_to_capture in range(amount):
+	#	for klettka in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
+	#		to_glow_depends_on_owned+=connected[klettka].keys()
+	#		
+	#	print(str("to_glow_depends_on_owned=",to_glow_depends_on_owned))
+	#	for klekta_number in to_glow_depends_on_owned:
+	#		if not kletka_preference[klekta_number].is_empty():
+	#			continue
+	#		available_to_capture.append(int(glow_array[klekta_number].name.trim_prefix("glow ")))#.visible=true
+	#	available_to_capture=array_unique(available_to_capture)
+	#	for already_captured_kletki in unit_uniq_id_to_kletki_ids_owned[owner_uniq_id]:
+	#		available_to_capture.erase(already_captured_kletki)
+	#	print("available_to_capture="+str(available_to_capture))
+	#	choose_glowing_cletka_by_ids_array(array_unique(available_to_capture))
+	#	await klekta_captured
+	#	available_to_capture=[]
+	#	to_glow_depends_on_owned=[]
+	#	print(str("unit_uniq_id_to_kletki_ids_owned=",unit_uniq_id_to_kletki_ids_owned))
+	#pass
+	#
+	#current_action="wait"
 	return true
 
 var kletka_to_add:Node2D
@@ -2941,7 +2980,7 @@ func create_new_cell(single_skill_info:Dictionary):
 
 	kletka_to_add.name="cell "+str(new_id)
 
-	current_action="create_new_cell"
+	#current_action="create_new_cell"
 	
 	var lines_points_array:Array=[]
 
@@ -3035,20 +3074,21 @@ func get_neareset_cells_to_cell_position(cell_position:Vector2, number_of_cells:
 
 
 func _process(_delta):
-	if current_action=="create_new_cell":
-		var mouse_pos = get_global_mouse_position()
-		kletka_to_add.position=mouse_pos
-		var kletki_ids_to_draw_temp_lines_to=get_neareset_cells_to_cell_position(mouse_pos,2)
+	#TODO
+	#f current_action=="create_new_cell":
+	#	var mouse_pos = get_global_mouse_position()
+	#	kletka_to_add.position=mouse_pos
+	#	var kletki_ids_to_draw_temp_lines_to=get_neareset_cells_to_cell_position(mouse_pos,2)
 
-		temp_lines_to_draw[0].clear_points()
-		temp_lines_to_draw[1].clear_points()
+	#	temp_lines_to_draw[0].clear_points()
+	#	temp_lines_to_draw[1].clear_points()
 
 
-		temp_lines_to_draw[0].add_point(mouse_pos,0)
-		temp_lines_to_draw[1].add_point(mouse_pos,0)
-		
-		temp_lines_to_draw[0].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[0]],1)
-		temp_lines_to_draw[1].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[1]],1)
+	#	temp_lines_to_draw[0].add_point(mouse_pos,0)
+	#	temp_lines_to_draw[1].add_point(mouse_pos,0)
+	#	
+	#	temp_lines_to_draw[0].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[0]],1)
+	#	temp_lines_to_draw[1].add_point(cell_positions[kletki_ids_to_draw_temp_lines_to[1]],1)
 
 	pass
 
@@ -3077,76 +3117,183 @@ func _input(event):
 #
 			#	new_cell_created.emit()
 
-func line_attack_phantasm(phantasm_config,dash:bool=false):
+func add_line_attack_cells(net_data,add=true):
+	var cells_ids_array = net_data["multiple_cells_choosen"]
+	for cell_id in cells_ids_array:
+		if add:
+			line_attack_add_remove_kletka_number(cell_id,"add")
+		else:
+			line_attack_add_remove_kletka_number(cell_id,"remove")
+
+func choose_multiple_cells(amount,type,starting_cell_id,_data):
+	#on client
+	var move_ck=[]
+	var already_clicked=[]
+	var temp_current_kletka = starting_cell_id
+	var glowing_kletka_number_selected
+	match type:
+		"line_attack":
+			for count in range(amount):
+				print("get_current_kletka_id()="+str(temp_current_kletka)+" connected[get_current_kletka_id()]="+str(connected[temp_current_kletka]))
+				for i in connected[temp_current_kletka]:
+					if already_clicked.has(i) or i==starting_cell_id:
+						continue
+					move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
+				pass
+				print("move_ck="+str(move_ck))
+				if !move_ck.size()<=0:
+					choose_glowing_cletka_by_ids_array(move_ck)
+					glowing_kletka_number_selected = await glow_kletka_pressed_signal
+				#current_action="wait"
+				move_ck=[]
+				print("cr-klet="+str(temp_current_kletka))
+				temp_current_kletka=glowing_kletka_number_selected
+				already_clicked.append(temp_current_kletka)
+				#rpc("line_attack_add_remove_kletka_number",glowing_kletka_number_selected,"add")
+	
+	%ChoosingMultipleCells.cells_choosen(already_clicked,type,_data)
+
+func dash_char_info_for_phantasm(char_info,data):
+	#on server
+	var multiple_cells_choosen = data.get("multiple_cells_choosen")
+	var starting_cell_id = data.get("choose_starting_cell_id")
+
+	var last_kletka=multiple_cells_choosen[-1]
+	var kletka_to_dash=find_nearest_free_cell(last_kletka)
+	var kletki_to_dash_array=multiple_cells_choosen.duplicate(true)
+	kletki_to_dash_array[-1]=kletka_to_dash
+	var temp_kletka_id=starting_cell_id
+	if kletka_to_dash==-1:
+		pass#no available kletki nearly impossible
+	else:
+		for kletka in kletki_to_dash_array:
+			rpc("move_player_from_kletka_id1_to_id2",char_info,temp_kletka_id,kletka,false,true)
+			await get_tree().create_timer(0.5).timeout
+			temp_kletka_id=kletka
+		await get_tree().create_timer(2).timeout
+		var cur_char_cell_id = get_current_kletka_id_for_char_info(char_info)
+		print("cur_char_cell_id=",cur_char_cell_id," kletka_to_dash=",kletka_to_dash)
+		move_player_from_kletka_id1_to_id2(char_info,cur_char_cell_id,kletka_to_dash)
+
+func get_char_info_dics_on_cells_id(cells_ids_array)->Array:
+	var output = []
+	for cell_id in cells_ids_array:
+		if cell_id in kletka_id_to_char_info:
+			for char_info:CharInfo in kletka_id_to_char_info[cell_id]:
+				output.append(char_info.to_dictionary())
+	return output
+
+func get_enemies_char_info_dics_on_cells_id_for_char_info(cells_ids_array:Array,char_info:CharInfo)->Array:
+	var output = []
+	var enemies_char_info = players_handler.get_enemies_teams_char_info_for_char_info(char_info)
+	for cell_id in cells_ids_array:
+		if cell_id in kletka_id_to_char_info:
+			for char_info_on_cell:CharInfo in kletka_id_to_char_info[cell_id]:
+				if char_info_on_cell in enemies_char_info:
+					output.append(char_info_on_cell.to_dictionary())
+	return output
+
+func filter_cells_with_chars_only(cells_ids_array)->Array:
+	var output = []
+	for cell_id in cells_ids_array:
+		if cell_id in kletka_id_to_char_info:
+			output.append(cell_id)
+	return output
+
+func filter_cells_with_enemies_only(cells_ids_array)->Array:
+	var output = []
+	for cell_id in cells_ids_array:
+		if cell_id in kletka_id_to_char_info:
+			output.append(cell_id)
+	return output
+
+
+func line_attack_phantasm_by_char_info(char_info,phantasm_config,dash:bool=false,net_data:Dictionary={}):
 	
 	var amount=phantasm_config["Range"]
 	var already_clicked=[]
-	var temp_current_kletka=get_current_kletka_id()
+	var temp_current_kletka=get_current_kletka_id_for_char_info(char_info)
 	var move_ck=[]
 	var attacked_enemies=[]
-	var phantasm_damage=phantasm_config["Damage"]
-	current_action="wait"
-	for count in range(amount):
-		print("get_current_kletka_id()="+str(temp_current_kletka)+" connected[get_current_kletka_id()]="+str(connected[temp_current_kletka]))
-		for i in connected[temp_current_kletka]:
-			if already_clicked.has(i) or i==get_current_kletka_id():
-				continue
-			move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
-		pass
-		print("move_ck="+str(move_ck))
-		if !move_ck.size()<=0:
-			choose_glowing_cletka_by_ids_array(move_ck)
-			await glow_kletka_pressed_signal
-		#current_action="wait"
-		move_ck=[]
-		print("cr-klet="+str(temp_current_kletka))
-		temp_current_kletka=glowing_kletka_number_selected
-		already_clicked.append(temp_current_kletka)
-		rpc("line_attack_add_remove_kletka_number",glowing_kletka_number_selected,"add")
+	#for count in range(amount):
+	#	print("get_current_kletka_id()="+str(temp_current_kletka)+" connected[get_current_kletka_id()]="+str(connected[temp_current_kletka]))
+	#	for i in connected[temp_current_kletka]:
+	#		if already_clicked.has(i) or i==get_current_kletka_id():
+	#			continue
+	#		move_ck.append(int(glow_array[i].name.trim_prefix("glow ")))#.visible=true
+	#	pass
+	#	print("move_ck="+str(move_ck))
+	#	if !move_ck.size()<=0:
+	#		choose_glowing_cletka_by_ids_array(move_ck)
+	#		await glow_kletka_pressed_signal
+	#	#current_action="wait"
+	#	move_ck=[]
+	#	print("cr-klet="+str(temp_current_kletka))
+	#	temp_current_kletka=glowing_kletka_number_selected
+	#	already_clicked.append(temp_current_kletka)
+	#	rpc("line_attack_add_remove_kletka_number",glowing_kletka_number_selected,"add")
 	
-	if dash:
-		var last_kletka=already_clicked[-1]
-		var kletka_to_dash=find_nearest_free_cell(last_kletka)
-		var kletki_to_dash_array=already_clicked.duplicate(true)
-		kletki_to_dash_array[-1]=kletka_to_dash
-		var temp_kletka_id=get_current_kletka_id()
-		if kletka_to_dash==-1:
-			pass#no available kletki nearly impossible
-		else:
-			for kletka in kletki_to_dash_array:
-				rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),temp_kletka_id,kletka,false,true)
-				await get_tree().create_timer(0.5).timeout
-				temp_kletka_id=kletka
-			await get_tree().create_timer(2).timeout
-			print("get_current_kletka_id()=",get_current_kletka_id()," kletka_to_dash=",kletka_to_dash)
-			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),get_current_kletka_id(),kletka_to_dash)
-
-
-	await await_dice_including_rerolls("Attack")
-	await hide_dice_rolls_with_timeout(1)
-	
-	for kletka in already_clicked:
-		if kletka in occupied_kletki.keys():
-			var uniq_ids_on_kletka=[]
-			for node in occupied_kletki[kletka]:
-				uniq_ids_on_kletka.append(node.uniq_id)
-
-			# if self char uniq id is on this kletka
-			if players_handler.intersect(uniq_ids_on_kletka,[get_current_self_char_info().get_uniq_id()]):
-				rpc("line_attack_add_remove_kletka_number",kletka,"remove")
-				await get_tree().create_timer(1).timeout
-				continue
-			var etmp=await attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
-			if typeof(etmp)==TYPE_STRING:
-				if etmp=="ERROR":
-					continue
-			attacked_enemies.append(etmp)
-			if phantasm_config.has("effect_on_success_attack"):
-				if attack_responce_string!="evaded" or attack_responce_string!="parried":
-					players_handler.use_skill(phantasm_config["effect_on_success_attack"])
+	net_data.merge(
+		{
+			"pu_id":char_info.pu_id,
+			"current_char_info_dic":char_info.to_dictionary(),
+			"phantasm_data":phantasm_config,
+			"dash_phantasm":dash,
 			
-		rpc("line_attack_add_remove_kletka_number",kletka,"remove")
-		await get_tree().create_timer(1).timeout
+			"amount_cells_to_choose":phantasm_config["Range"],
+			"type_of_cells_choose":"line_attack",
+			"choose_starting_cell_id":get_current_kletka_id_for_char_info(char_info),
+
+		},true
+	)
+
+	fsm.change_state_for_pu_ud(char_info.pu_id,"ChoosingMultipleCells",net_data)
+	#if dash:
+	#	var last_kletka=already_clicked[-1]
+	#	var kletka_to_dash=find_nearest_free_cell(last_kletka)
+	#	var kletki_to_dash_array=already_clicked.duplicate(true)
+	#	kletki_to_dash_array[-1]=kletka_to_dash
+	#	var temp_kletka_id=get_current_kletka_id()
+	#	if kletka_to_dash==-1:
+	#		pass#no available kletki nearly impossible
+	#	else:
+	#		for kletka in kletki_to_dash_array:
+	#			rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),temp_kletka_id,kletka,false,true)
+	#			await get_tree().create_timer(0.5).timeout
+	#			temp_kletka_id=kletka
+	#		await get_tree().create_timer(2).timeout
+	#		print("get_current_kletka_id()=",get_current_kletka_id()," kletka_to_dash=",kletka_to_dash)
+	#		rpc("move_player_from_kletka_id1_to_id2",get_current_self_char_info(),get_current_kletka_id(),kletka_to_dash)
+
+
+	#await await_dice_including_rerolls("Attack")
+	#await hide_dice_rolls_with_timeout(1)
+	
+
+
+	#TODO
+	#for kletka in already_clicked:
+	#	if kletka in kletka_id_to_char_info.keys():
+	#		var uniq_ids_on_kletka=[]
+	#		for node in kletka_id_to_char_info[kletka]:
+	#			uniq_ids_on_kletka.append(node.uniq_id)
+#
+	#		# if self char uniq id is on this kletka
+	#		if players_handler.intersect(uniq_ids_on_kletka,[char_info.get_uniq_id()]):
+	#			line_attack_add_remove_kletka_number(kletka,"remove")
+	#			await get_tree().create_timer(1).timeout
+	#			continue
+	#		var etmp=await attack_player_on_kletka_id(kletka,"Phantasm",false,phantasm_config)
+	#		if typeof(etmp)==TYPE_STRING:
+	#			if etmp=="ERROR":
+	#				continue
+	#		attacked_enemies.append(etmp)
+	#		if phantasm_config.has("effect_on_success_attack"):
+	#			if attack_responce_string!="evaded" or attack_responce_string!="parried":
+	#				players_handler.use_skill(phantasm_config["effect_on_success_attack"])
+	#		
+	#	line_attack_add_remove_kletka_number(kletka,"remove")
+	#	await get_tree().create_timer(1).timeout
 	#hide_dice_rolls_with_timeout(4)
 	
 
@@ -3156,11 +3303,11 @@ func line_attack_phantasm(phantasm_config,dash:bool=false):
 func line_attack_add_remove_kletka_number(number,add_or_remove="add"):
 	match add_or_remove:
 		"add":
-			var captur_klet=Node2D.new()
+			var captur_klet=CAPTUR_KLET.instantiate()
 			var pos = cell_positions[int(number)]
 			captur_klet.position = pos
 			captur_klet.name="attack "+str(number)
-			captur_klet.set_script(CapturedKletkaScript)
+			#captur_klet.set_script(CapturedKletkaScript)
 			captur_klet.color=Color.DARK_RED
 			captured_kletki_node.add_child(captur_klet,true)
 			captured_kletki_nodes_dict[number]=captur_klet
@@ -3590,7 +3737,9 @@ func _on_command_spell_transfer_button_pressed():
 
 	info_table_show(tr("CHOOSE_PLAYER_TO_TRANSFER_COMMAND_SPELL"))
 	await info_ok_button.pressed
+	#TODO
 	var pu_id_to_cast_to=await players_handler.choose_single_in_range(999)
+	
 	pu_id_to_cast_to=pu_id_to_cast_to[0]
 
 	if players_handler.pu_id_to_command_spells_int[pu_id_to_cast_to]>=3:

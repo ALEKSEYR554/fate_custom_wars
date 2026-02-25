@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://76njdkfx4roi"]
+[gd_scene load_steps=48 format=3 uid="uid://76njdkfx4roi"]
 
 [ext_resource type="Script" uid="uid://gac36rced45l" path="res://scripts/field_script.gd" id="1_oabkp"]
 [ext_resource type="Script" uid="uid://c40rsjvmastjp" path="res://scripts/fsm/StateMachine.gd" id="2_h561p"]
@@ -42,7 +42,10 @@
 [ext_resource type="Script" uid="uid://j3ksbe2nvds5" path="res://scripts/GUI/rating_script.gd" id="21_kjouk"]
 [ext_resource type="Script" uid="uid://biis44ia7q8yo" path="res://scripts/fsm/states/ReleasePresenceConcealmentState.gd" id="21_ktmm4"]
 [ext_resource type="Script" uid="uid://brn0kpfeaxirh" path="res://scripts/GUI/uploade_images.gd" id="22_ok628"]
+[ext_resource type="Script" uid="uid://dhul7wi0kug8c" path="res://scripts/fsm/states/UsingPhantasmState.gd" id="22_srs77"]
 [ext_resource type="Texture2D" uid="uid://b50grborsgnuw" path="res://images/sun.png" id="23_bv76b"]
+[ext_resource type="Script" uid="uid://c7wvqpw06yfpr" path="res://scripts/fsm/states/ChoosingMultipleCellsState.gd" id="24_q02os"]
+[ext_resource type="Script" uid="uid://cg8py7jtfjvxx" path="res://scripts/fsm/states/ChoosingCustomState.gd" id="24_ssbvh"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1bpim"]
 properties/0/path = NodePath(".:connected")
@@ -56,9 +59,10 @@ properties/1/replication_mode = 2
 process_mode = 1
 script = ExtResource("1_oabkp")
 
-[node name="StateMachine" type="Node" parent="."]
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
 unique_name_in_owner = true
 script = ExtResource("2_h561p")
+initial_state = NodePath("Idle")
 
 [node name="Idle" type="Node" parent="StateMachine"]
 script = ExtResource("3_aca2m")
@@ -76,6 +80,7 @@ script = ExtResource("5_rn0lg")
 script = ExtResource("7_aa6mp")
 
 [node name="ChoosingTarget" type="Node" parent="StateMachine"]
+unique_name_in_owner = true
 script = ExtResource("7_ju72t")
 
 [node name="ChoosingUnitOnCell" type="Node" parent="StateMachine"]
@@ -125,6 +130,17 @@ script = ExtResource("20_ihap7")
 
 [node name="ReleasePresenceConcealment" type="Node" parent="StateMachine"]
 script = ExtResource("21_ktmm4")
+
+[node name="UsingPhantasm" type="Node" parent="StateMachine"]
+script = ExtResource("22_srs77")
+
+[node name="ChoosingMultipleCells" type="Node" parent="StateMachine"]
+unique_name_in_owner = true
+script = ExtResource("24_q02os")
+
+[node name="ChoosingCustom" type="Node" parent="StateMachine"]
+unique_name_in_owner = true
+script = ExtResource("24_ssbvh")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_1bpim")

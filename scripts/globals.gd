@@ -6,7 +6,7 @@ var menu_left:bool=false
 const MAX_NICKNAME_SIZE:int=15
 const MAX_UNITS:int=100
 const MAX_UNITS_FOR_USER_TOTAL:int=400
-
+const CUSTOM_TYPES = {PHANTASM = "phantasm", POTION_CREATING = "potion creating", POTION_USING = "potion using", BUFF_CHOOSING="buff choosing"}
 var start_teams_amount=2
 
 var self_pu_id: String = ""

@@ -1,0 +1,25 @@
+choose_allie_for_pu_id -> get_allies_cells_ids_for_char_info
+
+choose_enemie -> get_enemies_cells_ids_for_char_info
+
+get_enemies_teams -> get_enemies_teams_for_char_info
+
+get_maximum_overcharge_name_available -> get_maximum_overcharge_name_available_for_char_info
+
+use_phantasm -> use_phantasm_for_char_info
+
+
+
+
+
+
+
+
+var tab_node = custom_choices_tab_container.get_tab_control(tab)
+var custom_id_to_skill = tab_node.get_meta("skill_info")
+
+
+
+
+
+

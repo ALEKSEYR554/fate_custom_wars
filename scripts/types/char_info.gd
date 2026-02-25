@@ -1,9 +1,7 @@
 extends Resource
 class_name CharInfo
 
-
 var pu_id:String
-#var node:Node2D 
 var unit_id:int
 var servant_name:String
 
@@ -16,9 +14,6 @@ func _init(_pu_id:String, _unit_id:int):
 
 func is_valid()->bool:
 	return pu_id!="" and unit_id>=0# and node!=null
-
-#func get_init_id()->int:
-#	return node.unit_id
 
 func get_node()->Node2D:
 	return Globals.pu_id_player_info[pu_id]["units"][unit_id]
@@ -46,6 +41,4 @@ func get_latest_dice_roll()->Dictionary:
 	return dice_rolls_history[-1]
 
 func get_servant_name()->String:
-
-	
 	return get_node().get_script().get_file().get_basename()

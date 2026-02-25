@@ -4,7 +4,7 @@ func enter(_data:Dictionary={}):
 	super.enter(_data)
 	print("Entering Wait State")
 	
-	field.current_action="wait"
+	#field.current_action="wait"
 	
 	field.blinking_glow_button=false
 	field.glow_cletki_node.visible = false

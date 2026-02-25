@@ -38,7 +38,10 @@ func enter(_data:Dictionary={}):
 
 @rpc("any_peer","call_local","reliable")
 func handle_network_message(message: String, net_data: Dictionary):
+	#TODO
 	#var set_dices=players_handler.char_info_has_active_buff(get_current_self_char_info(),"Faceless Moon")
+	var pu_id = net_data.get("pu_id","")
+	var char_info = CharInfo.from_dictionary(net_data.get("char_info_dic"))
 	match message:
 		"attack_after_attacker_dice_roll":
 			field.attack_after_attacker_dice_roll(net_data)
@@ -48,6 +51,13 @@ func handle_network_message(message: String, net_data: Dictionary):
 			field.evade_rolled(net_data)
 		"defence_rolleds":
 			field.defence_rolled(net_data)
+		"dash_line_attack":
+			field.add_line_attack_cells(net_data)
+			field.dash_char_info_for_phantasm(char_info,net_data)
+			fsm.change_state_for_pu_ud(pu_id,"Attacking",net_data)
+		"attack_line_attack":
+			field.add_line_attack_cells(net_data)
+			fsm.change_state_for_pu_ud(pu_id,"Attacking",net_data)
 
 func exit():
 	
